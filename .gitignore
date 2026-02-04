@@ -6,3 +6,4 @@ docs/build
 .env
 webapp/.env
 .vscode/
+gamey/.secrets/yovi-en2a-firebase-adminsdk-fbsvc-4e0265d79c.json

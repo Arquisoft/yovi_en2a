@@ -34,6 +34,9 @@ pub mod core;
 pub mod gamey_error;
 pub mod notation;
 pub mod bot_server;
+
+// Data base folder
+pub mod db;
 pub use bot::*;
 pub use cli::*;
 pub use core::*;

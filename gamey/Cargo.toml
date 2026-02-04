@@ -35,6 +35,12 @@ thiserror = "1.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 tokio = { version = "1.0", features = ["full"] }
+# Firebase
+reqwest = { version = "0.11", features = ["json", "rustls-tls"] }
+jsonwebtoken = "9"
+chrono = "0.4"
+firestore-client-rust = "0.5.0"
+dotenvy = "0.15.7"
 
 [dev-dependencies]
 tower = { version = "0.5", features = ["util"] }
