@@ -1,0 +1,65 @@
+/* SettingsSection.css */
+
+.settings-panel {
+  flex: 1; /* Ocupa el resto del espacio a la derecha de la sidebar */
+  padding: 2.5rem;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.settings-panel-header h2 {
+  color: var(--primary-color);
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.tab-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.control-group label {
+  font-size: 0.85rem;
+  color: #aaa;
+  text-transform: uppercase;
+}
+
+/* Estilización de los inputs */
+input[type="range"] {
+  accent-color: var(--primary-color);
+  width: 100%;
+  cursor: pointer;
+}
+
+.close-button {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.close-button:hover {
+  background: #ff4444;
+}

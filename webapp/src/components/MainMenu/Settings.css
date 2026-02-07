@@ -1,0 +1,146 @@
+/* Settings.css */
+
+.settings-overlay {
+  position: fixed;
+  inset: 0; /* Shorthand for top/left/right/bottom: 0 */
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  backdrop-filter: blur(0.5rem);
+  padding: 1rem; /* Buffer for small screens */
+}
+
+.settings-container {
+  background: #121212;
+  width: 90%;
+  max-width: 50rem; /* Fallback for very large screens */
+  height: 80vh;
+  border-radius: 1rem;
+  border: 0.06rem solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 0 3rem rgba(0, 0, 0, 0.9);
+}
+
+/* GLOBAL HEADER */
+.settings-global-header {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 0.06rem solid rgba(255, 255, 255, 0.05);
+  padding: 0.8rem 1.5rem;
+}
+
+.settings-title {
+  color: var(--primary-color);
+  font-size: 0.9rem; /* Smaller title as requested */
+  margin: 0;
+  letter-spacing: 0.3rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.settings-body {
+  display: flex;
+  flex: 1;
+  min-height: 0; /* Important for inner scrolling to work */
+}
+
+/* SIDEBAR */
+.settings-sidebar {
+  width: 25%;
+  min-width: 10rem;
+  background: rgba(0, 0, 0, 0.15);
+  border-right: 0.06rem solid rgba(255, 255, 255, 0.05);
+  overflow-y: auto;
+}
+
+.sidebar-buttons button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #666;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  transition: 0.2s;
+}
+
+.sidebar-buttons button.active {
+  color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 0.25rem solid var(--primary-color);
+}
+
+/* MAIN PANEL & SCROLLBAR */
+.settings-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #181818;
+  min-width: 0;
+}
+
+.tab-content {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto; /* Independent scroll for each section */
+}
+
+/* Custom Scrollbar Styling */
+.tab-content::-webkit-scrollbar,
+.settings-sidebar::-webkit-scrollbar {
+  width: 0.4rem;
+}
+
+.tab-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 1rem;
+}
+
+/* RESPONSIVE: Mobile Adaptability */
+@media (max-width: 48rem) {
+  .settings-container {
+    width: 95%;
+    height: 90vh;
+  }
+
+  .settings-body {
+    flex-direction: column; /* Stack sidebar on top of content */
+  }
+
+  .settings-sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 0.06rem solid rgba(255, 255, 255, 0.05);
+  }
+
+  .sidebar-buttons {
+    flex-direction: row; /* Horizontal scrolling tabs for mobile */
+    overflow-x: auto;
+  }
+
+  .sidebar-buttons button {
+    width: auto;
+    padding: 0.8rem 1.2rem;
+    white-space: nowrap;
+    border-left: none;
+    border-bottom: 0.2rem solid transparent;
+  }
+
+  .sidebar-buttons button.active {
+    border-bottom: 0.2rem solid var(--primary-color);
+  }
+}

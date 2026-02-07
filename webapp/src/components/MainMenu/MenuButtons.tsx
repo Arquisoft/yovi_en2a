@@ -1,13 +1,14 @@
+import './MenuButtons.css'
 import React from 'react';
 
-interface MainMenuOptionProps {
+interface MenuButtonsProps { 
   label: string;
   onClick: () => void;
   disabled?: boolean;
-  img?: string | null; // Nuevo parámetro opcional
+  img?: string | null;
 }
 
-const MainMenuOption: React.FC<MainMenuOptionProps> = ({
+const MenuButtons: React.FC<MenuButtonsProps> = ({
   label,
   onClick,
   disabled = false,
@@ -18,6 +19,7 @@ const MainMenuOption: React.FC<MainMenuOptionProps> = ({
       className="main-menu-option"
       onClick={onClick}
       disabled={disabled}
+      name={label}
     >
       {img ? (
         <img src={img} alt={label} className="menu-button-image" />
@@ -28,4 +30,4 @@ const MainMenuOption: React.FC<MainMenuOptionProps> = ({
   );
 };
 
-export default MainMenuOption;
+export default MenuButtons;

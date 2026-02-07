@@ -1,0 +1,91 @@
+.main-menu-option {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  /* Changed 2px to 0.125rem */
+  border: 0.125rem solid transparent;
+}
+
+/* Specific style for the top right menu buttons */
+.top-right-menu .main-menu-option {
+  /* Changed 48px to 3rem */
+  width: 3rem;
+  height: 3rem;
+  /* Changed 8px to 0.5rem */
+  padding: 0.5rem;
+  /* Changed 10px to 0.625rem */
+  border-radius: 0.625rem;
+  background: var(--bg-overlay); 
+  /* Changed 4px to 0.25rem */
+  backdrop-filter: blur(0.25rem); 
+}
+
+.top-right-menu .menu-button-image {
+  filter: brightness(0) invert(1);
+}
+
+.main-menu-option:hover {
+  border-color: var(--accent-color);
+  background-color: #4b52cc;
+  transform: scale(1.05);
+}
+
+.menu-button-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.main-menu-option[name="Log In"] {
+  background-color: rgba(0, 0, 0, 0.88); 
+  color: #ffffff;
+  font-weight: 800;
+  /* Changed 1px to 0.0625rem */
+  border: 0.0625rem solid rgba(255, 255, 255, 0.25);
+  /* Changed 4px/14px to 0.25rem/0.875rem */
+  box-shadow: 0 0.25rem 0.875rem rgba(0, 0, 0, 0.35); 
+  /* Changed 3px to 0.1875rem */
+  backdrop-filter: blur(0.1875rem); 
+  transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .1s ease;
+}
+
+.main-menu-option[name="Log In"]:hover {
+  background-color: rgba(0, 0, 0, 0.96); 
+  border-color: rgba(255, 255, 255, 0.4);
+  /* Changed 6px/18px to 0.375rem/1.125rem */
+  box-shadow: 0 0.375rem 1.125rem rgba(0, 0, 0, 0.45);
+  /* Changed -1px to -0.0625rem */
+  transform: translateY(-0.0625rem);
+}
+
+.main-menu-option[name="Log In"]:focus-visible {
+  /* Changed 3px to 0.1875rem */
+  outline: 0.1875rem solid #3a8fff;
+  /* Changed 2px to 0.125rem */
+  outline-offset: 0.125rem;
+}
+
+.main-menu-option[name="Play as Guest"] {
+  background-color: rgba(0, 0, 0, 0.65); 
+  color: #ffffff;
+  /* Changed 1px to 0.0625rem */
+  border: 0.0625rem solid rgba(255, 255, 255, 0.22);
+  /* Changed 5px to 0.3125rem */
+  backdrop-filter: blur(0.3125rem);
+  transition: background-color .2s ease, border-color .2s ease, transform .1s ease;
+}
+
+.main-menu-option[name="Play as Guest"]:hover {
+  background-color: rgba(0, 0, 0, 0.78);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.main-menu-option[name="Play as Guest"]:focus-visible {
+  /* Changed 3px to 0.1875rem */
+  outline: 0.1875rem solid #3a8fff;
+  /* Changed 2px to 0.125rem */
+  outline-offset: 0.125rem;
+}
