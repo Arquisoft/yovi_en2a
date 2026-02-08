@@ -1,0 +1,95 @@
+/* Settings.css */
+
+/* We use .menu-body from layout, but add sidebar-specific behavior */
+.settings-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* SIDEBAR: Specific to Settings navigation */
+.settings-sidebar {
+  width: 25%;
+  min-width: 10rem;
+  background: rgba(0, 0, 0, 0.15);
+  border-right: 0.0625rem solid rgba(255, 255, 255, 0.05);
+  overflow-y: auto;
+}
+
+.sidebar-buttons button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #666;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  transition: 0.2s;
+}
+
+.sidebar-buttons button.active {
+  color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 0.25rem solid var(--primary-color);
+}
+
+/* MAIN PANEL */
+.settings-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #181818;
+  min-width: 0;
+}
+
+/* Section specific scrolling */
+.tab-content {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+/* Custom Scrollbar (inherited colors from theme) */
+.tab-content::-webkit-scrollbar,
+.settings-sidebar::-webkit-scrollbar {
+  width: 0.4rem;
+}
+
+.tab-content::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 1rem;
+}
+
+/* RESPONSIVE: Mobile Adaptability remains here */
+@media (max-width: 48rem) {
+  .settings-body {
+    flex-direction: column; 
+  }
+
+  .settings-sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
+  }
+
+  .sidebar-buttons {
+    display: flex; /* Ensure horizontal layout */
+    overflow-x: auto;
+  }
+
+  .sidebar-buttons button {
+    width: auto;
+    padding: 0.8rem 1.2rem;
+    white-space: nowrap;
+    border-left: none;
+    border-bottom: 0.2rem solid transparent;
+  }
+
+  .sidebar-buttons button.active {
+    border-bottom: 0.2rem solid var(--primary-color);
+  }
+}

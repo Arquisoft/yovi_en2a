@@ -19,15 +19,15 @@ const SettingsMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const currentSection = sections.find(s => s.id === activeTabId);
 
   return (
-    <div className="settings-overlay">
-        <div className="settings-container">
+    <div className="top-right-menu-overlay">
+        <div className="top-right-menu-container">
         
         {/* GLOBAL HEADER: Top row */}
-        <header className="settings-global-header">
-            <h2 className="settings-title">SETTINGS</h2>
+        <header className="top-right-menu-global-header">
+            <h2 className="top-right-menu-title">SETTINGS</h2>
         </header>
 
-        <div className="settings-body">
+        <div className="top-right-menu-body">
             {/* SIDEBAR: Navigation column */}
             <nav className="settings-sidebar">
             <div className="sidebar-buttons">

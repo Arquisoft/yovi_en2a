@@ -1,0 +1,118 @@
+/* 1. LAYOUT ADJUSTMENT */
+.ranking-body {
+  /* Forces vertical layout to house the panel and header */
+  flex-direction: column !important; 
+  background: #181818;
+}
+
+/* 2. RANKING PANEL */
+/* Ensures the content fills the container when no sidebar is present */
+.ranking-panel {
+  flex: 1;              /* Spans full available width */
+  display: flex;
+  flex-direction: column; /* Vertical stack for nav-header and content */
+  min-width: 0;         /* Fixes flexbox overflow issues */
+  height: 100%;         
+}
+
+/* 3. SUB-NAVIGATION HEADER */
+.ranking-nav-header {
+  padding: 2rem 2rem 1rem 2rem; /* Optimized top padding for "snug" fit */
+  display: flex;
+  flex-direction: row;      /* Horizontal alignment */
+  flex-wrap: nowrap;        /* Prevents elements from wrapping to a new line */
+  justify-content: space-between;
+  align-items: center;      /* Vertically centers tabs with the close button */
+  background: rgba(255, 255, 255, 0.01);
+  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
+}
+
+.ranking-tabs {
+  display: flex;
+  gap: 1rem;
+}
+
+/* 4. TAB BUTTONS */
+.ranking-tab-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  color: #888;
+  padding: 0.6rem 1.8rem;
+  border-radius: 0.4rem;
+  cursor: pointer;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.1rem;
+  transition: all 0.2s ease;
+}
+
+.ranking-tab-btn.active {
+  background: var(--primary-color);
+  color: #000;
+  border-color: var(--primary-color);
+}
+
+.ranking-tab-btn:hover:not(.active) {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* 5. MAIN CONTENT AREA */
+.ranking-content {
+  flex: 1;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* Necessary for internal scroll functionality */
+}
+
+/* 6. CLOSE BUTTON */
+.close-button {
+  background: transparent;
+  border: none;
+  color: #555;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;          /* Larger hit area for better UX */
+  display: flex;            /* Center the 'X' icon internally */
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  flex-shrink: 0;           /* Prevents the button from shrinking or disappearing */
+}
+
+.close-button:hover {
+  color: #fff;
+}
+
+/* 7. RESPONSIVE: MOBILE ADAPTABILITY */
+@media (max-width: 48rem) {
+  /* Reduce side margins for small screens */
+  .ranking-nav-header {
+    padding: 0.5rem 1rem; 
+    gap: 0.5rem;
+  }
+
+  .ranking-content {
+    padding: 1rem 1rem; /* Maximize table width on mobile */
+  }
+
+  /* Handle horizontal tab scrolling if items exceed screen width */
+  .ranking-tabs {
+    gap: 0.5rem;
+    overflow-x: auto; 
+    padding-bottom: 0.2rem;
+  }
+
+  .ranking-tab-btn {
+    padding: 0.5rem 1rem; 
+    font-size: 0.7rem;      
+    white-space: nowrap;    /* Keeps text on a single line */
+  }
+
+  .close-button {
+    font-size: 1rem;
+    padding: 0.4rem;
+  }
+}

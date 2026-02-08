@@ -1,0 +1,56 @@
+/* TopRightMenuLayout.css */
+
+/* The blurry darkened background for any modal */
+.top-right-menu-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  backdrop-filter: blur(0.5rem);
+  padding: 1rem;
+}
+
+/* The main container box */
+.top-right-menu-container {
+  background: #121212;
+  width: 90%;
+  max-width: 50rem;
+  height: 80vh;
+  border-radius: 1rem;
+  border: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 0 3rem rgba(0, 0, 0, 0.9);
+}
+
+/* Common Header for all menus */
+.top-right-menu-global-header{
+  width: 100%;
+  background: rgba(255, 255, 255, 0.02);
+  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
+  padding: 0.8rem 1.5rem;
+}
+
+/* The specific title style (small, spaced, uppercase) */
+.top-right-menu-title {
+  color: var(--primary-color);
+  font-size: 6vw;
+  margin: 0;
+  letter-spacing: 0.4rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+/* The main body area below the header */
+.top-right-menu-body {
+  display: flex;
+  flex: 1;
+  min-height: 0; 
+}

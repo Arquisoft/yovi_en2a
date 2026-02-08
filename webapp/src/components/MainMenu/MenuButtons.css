@@ -4,25 +4,21 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease-in-out;
-  /* Changed 2px to 0.125rem */
   border: 0.125rem solid transparent;
 }
 
 /* Specific style for the top right menu buttons */
 .top-right-menu .main-menu-option {
-  /* Changed 48px to 3rem */
   width: 3rem;
   height: 3rem;
-  /* Changed 8px to 0.5rem */
   padding: 0.5rem;
-  /* Changed 10px to 0.625rem */
   border-radius: 0.625rem;
   background: var(--bg-overlay); 
-  /* Changed 4px to 0.25rem */
   backdrop-filter: blur(0.25rem); 
 }
 
 .top-right-menu .menu-button-image {
+  /* Makes dark icons appear white */
   filter: brightness(0) invert(1);
 }
 
@@ -39,15 +35,14 @@
   pointer-events: none;
 }
 
+/* --- TEXT BASED OPTIONS (Log In / Guest) --- */
+
 .main-menu-option[name="Log In"] {
   background-color: rgba(0, 0, 0, 0.88); 
   color: #ffffff;
   font-weight: 800;
-  /* Changed 1px to 0.0625rem */
   border: 0.0625rem solid rgba(255, 255, 255, 0.25);
-  /* Changed 4px/14px to 0.25rem/0.875rem */
   box-shadow: 0 0.25rem 0.875rem rgba(0, 0, 0, 0.35); 
-  /* Changed 3px to 0.1875rem */
   backdrop-filter: blur(0.1875rem); 
   transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease, transform .1s ease;
 }
@@ -55,25 +50,19 @@
 .main-menu-option[name="Log In"]:hover {
   background-color: rgba(0, 0, 0, 0.96); 
   border-color: rgba(255, 255, 255, 0.4);
-  /* Changed 6px/18px to 0.375rem/1.125rem */
   box-shadow: 0 0.375rem 1.125rem rgba(0, 0, 0, 0.45);
-  /* Changed -1px to -0.0625rem */
   transform: translateY(-0.0625rem);
 }
 
 .main-menu-option[name="Log In"]:focus-visible {
-  /* Changed 3px to 0.1875rem */
   outline: 0.1875rem solid #3a8fff;
-  /* Changed 2px to 0.125rem */
   outline-offset: 0.125rem;
 }
 
 .main-menu-option[name="Play as Guest"] {
   background-color: rgba(0, 0, 0, 0.65); 
   color: #ffffff;
-  /* Changed 1px to 0.0625rem */
   border: 0.0625rem solid rgba(255, 255, 255, 0.22);
-  /* Changed 5px to 0.3125rem */
   backdrop-filter: blur(0.3125rem);
   transition: background-color .2s ease, border-color .2s ease, transform .1s ease;
 }
@@ -84,8 +73,44 @@
 }
 
 .main-menu-option[name="Play as Guest"]:focus-visible {
-  /* Changed 3px to 0.1875rem */
   outline: 0.1875rem solid #3a8fff;
-  /* Changed 2px to 0.125rem */
   outline-offset: 0.125rem;
+}
+
+/* --- MOBILE OPTIMIZATIONS --- */
+
+@media (max-width: 48rem) {
+  /* Compact top-right buttons for mobile screens */
+  .top-right-menu .main-menu-option {
+    width: 2.75rem;
+    height: 2.75rem;
+    padding: 0.6rem;
+  }
+
+  /* Disable hover transform on touch devices to prevent "sticky" states */
+  .main-menu-option:hover {
+    transform: none;
+    border-color: transparent;
+  }
+
+  /* Provide tactile feedback on press instead of hover */
+  .main-menu-option:active {
+    transform: scale(0.95);
+    background-color: var(--accent-color);
+    opacity: 0.9;
+  }
+
+  /* Increase touch targets for text-based buttons */
+  .main-menu-option[name="Log In"],
+  .main-menu-option[name="Play as Guest"] {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.9rem;
+    backdrop-filter: blur(0.125rem);
+  }
+
+  .main-menu-option[name="Log In"]:hover,
+  .main-menu-option[name="Play as Guest"]:hover {
+    transform: none;
+    box-shadow: 0 0.25rem 0.875rem rgba(0, 0, 0, 0.35);
+  }
 }

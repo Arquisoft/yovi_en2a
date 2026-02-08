@@ -1,0 +1,50 @@
+/* RankingElement.css */
+
+.ranking-item {
+  display: grid;
+  grid-template-columns: 4rem 1fr 6rem; /* Same layout as header */
+  padding: 1.2rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 0.5rem;
+  border: 0.0625rem solid rgba(255, 255, 255, 0.05);
+  transition: transform 0.2s ease, background 0.2s ease;
+  align-items: center;
+}
+
+.ranking-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  transform: translateX(0.2rem);
+}
+
+.rank-time {
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: bold;
+  text-align: right;
+}
+
+/* Podium highlights */
+.pos-1 { border-left: 0.25rem solid #ffd700; color: #ffd700; background: rgba(255, 215, 0, 0.05); }
+.pos-2 { border-left: 0.25rem solid #c0c0c0; color: #c0c0c0; }
+.pos-3 { border-left: 0.25rem solid #cd7f32; color: #cd7f32; }
+
+@media (max-width: 48rem) {
+  .ranking-item {
+    /* Reducimos la columna de posición y tiempo para dar más espacio al nombre */
+    grid-template-columns: 2.5rem 1fr 5rem; 
+    padding: 0.8rem 0.6rem; /* Filas más compactas */
+    font-size: 0.85rem;     /* Fuente ligeramente más pequeña */
+  }
+
+  .ranking-item:hover {
+    transform: none; /* Desactivamos el desplazamiento lateral en táctil para evitar saltos */
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .pos-1, .pos-2, .pos-3 {
+    border-left-width: 0.15rem; /* Bordes de podio más finos en móvil */
+  }
+
+  .rank-time {
+    font-size: 0.8rem; /* El tiempo puede ser un poco más pequeño */
+  }
+}

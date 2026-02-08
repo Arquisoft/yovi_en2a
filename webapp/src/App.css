@@ -34,3 +34,58 @@ body {
   margin: 0 auto;
   padding: 0 2rem;
 }
+
+/* --- RANGE INPUT STYLING --- */
+
+input[type="range"] {
+  -webkit-appearance: none; /* Required to override default browser styles */
+  appearance: none;
+  width: 100%;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* 1. The Track (The horizontal line) */
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 0.4rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* 2. The Thumb (The draggable circle/square) */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; /* Overrides default look */
+  appearance: none;
+  height: 1.2rem;
+  width: 1.2rem;
+  background: var(--primary-color);
+  border-radius: 50%;
+  margin-top: -0.45rem; /* Centers thumb on the track (track_height/2 - thumb_height/2) */
+  box-shadow: 0 0 0.6rem var(--primary-color); /* Glow effect */
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+/* Interaction effects */
+input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+  background: #ffffff; /* Turns white when dragging */
+}
+
+/* Firefox Specific Styles */
+input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 0.4rem;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+}
+
+input[type="range"]::-moz-range-thumb {
+  height: 1.2rem;
+  width: 1.2rem;
+  background: var(--primary-color);
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 0 0.6rem var(--primary-color);
+}
