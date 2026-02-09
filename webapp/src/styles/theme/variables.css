@@ -1,0 +1,16 @@
+/* Centralized design tokens and theme variables */
+:root {
+  /* Colors */
+  --primary-color: #007bff;
+  --primary-hover: #0056b3;
+  --accent-color: #ff5733;
+  --bg-overlay: rgba(0, 0, 0, 0.6);
+  --y-white: #f5f5f5;
+  
+  /* Typography */
+  --font-main: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  /* Effects */
+  --glow-primary: 0 0 0.6rem var(--primary-color);
+  --track-bg: rgba(255, 255, 255, 0.1);
+}

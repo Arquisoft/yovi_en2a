@@ -1,7 +1,7 @@
 import './TopRightMenu.css'
-import './TopRightMenuLayout.css'
+import '../../styles/layout/TopRightMenuLayout.css'
 import React, { useState } from 'react';
-import MenuButtons from '../mainMenu/MenuButtons';
+import MenuButtons from '../MainMenu/MenuButtons';
 import helpIcon from '../../assets/help_icon.svg';
 import rankingIcon from '../../assets/ranking_icon.svg';
 import volumeUnmuteIcon from '../../assets/volume_unmute_icon.svg';
@@ -10,7 +10,7 @@ import configIcon from '../../assets/settings_icon.svg';
 import userIcon from '../../assets/user_icon.svg';
 
 // Component imports
-import SettingsMenu from './Settings.tsx';
+import SettingsMenu from './settings/Settings.tsx';
 import Ranking from './ranking/Ranking.tsx';
 
 /** * Defines the possible active menu states. 

@@ -1,5 +1,6 @@
-import './App.css'
-import MainMenu from './components/mainMenu/MainMenu';
+import './styles/theme/global.css'
+import './styles/theme/variables.css'
+import MainMenu from './components/MainMenu/MainMenu';
 
 function App() {
   return (

@@ -1,12 +1,4 @@
-:root {
-  --primary-color: #007bff;
-  --primary-hover: #0056b3;
-  --accent-color: #ff5733;
-  --bg-overlay: rgba(0, 0, 0, 0.6);
-  --y-white: #f5f5f5;
-  --font-main: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-}
-
+/* Basic reset and document structure */
 * {
   box-sizing: border-box;
 }
@@ -15,7 +7,8 @@ body {
   margin: 0;
   min-height: 100vh;
   width: 100%;
-  background-image: url('./assets/background_image_gameY.png');
+  /* Make sure the path to assets is correct relative to this file */
+  background-image: url('../../assets/background_image_gameY.png');
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -35,49 +28,48 @@ body {
   padding: 0 2rem;
 }
 
-/* --- RANGE INPUT STYLING --- */
+/* --- GLOBAL RANGE INPUT STYLING --- */
 
 input[type="range"] {
-  -webkit-appearance: none; /* Required to override default browser styles */
+  -webkit-appearance: none;
   appearance: none;
   width: 100%;
   background: transparent;
   cursor: pointer;
 }
 
-/* 1. The Track (The horizontal line) */
+/* Track styling */
 input[type="range"]::-webkit-slider-runnable-track {
   width: 100%;
   height: 0.4rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--track-bg);
   border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
-/* 2. The Thumb (The draggable circle/square) */
+/* Thumb styling (Chrome, Safari, Edge) */
 input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; /* Overrides default look */
+  -webkit-appearance: none;
   appearance: none;
   height: 1.2rem;
   width: 1.2rem;
   background: var(--primary-color);
   border-radius: 50%;
-  margin-top: -0.45rem; /* Centers thumb on the track (track_height/2 - thumb_height/2) */
-  box-shadow: 0 0 0.6rem var(--primary-color); /* Glow effect */
+  margin-top: -0.45rem; /* Centers thumb: (track_h/2 - thumb_h/2) */
+  box-shadow: var(--glow-primary);
   transition: transform 0.1s ease, box-shadow 0.2s ease;
 }
 
-/* Interaction effects */
 input[type="range"]:active::-webkit-slider-thumb {
   transform: scale(1.2);
-  background: #ffffff; /* Turns white when dragging */
+  background: #ffffff;
 }
 
-/* Firefox Specific Styles */
+/* Firefox Support */
 input[type="range"]::-moz-range-track {
   width: 100%;
   height: 0.4rem;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--track-bg);
   border-radius: 1rem;
 }
 
@@ -87,5 +79,5 @@ input[type="range"]::-moz-range-thumb {
   background: var(--primary-color);
   border: none;
   border-radius: 50%;
-  box-shadow: 0 0 0.6rem var(--primary-color);
+  box-shadow: var(--glow-primary);
 }
