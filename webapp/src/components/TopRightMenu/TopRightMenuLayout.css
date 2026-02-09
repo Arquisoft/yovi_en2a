@@ -54,3 +54,9 @@
   flex: 1;
   min-height: 0; 
 }
+
+@media (max-width: 48rem) {
+  .top-right-menu-body {
+    flex-direction: column;
+  }
+}

@@ -30,6 +30,10 @@
   transition: 0.2s;
 }
 
+.sidebar-buttons button{
+  font-size: 1.1rem;
+}
+
 .sidebar-buttons button.active {
   color: var(--primary-color);
   background: rgba(255, 255, 255, 0.03);
@@ -43,6 +47,7 @@
   flex-direction: column;
   background: #181818;
   min-width: 0;
+  min-height: 0; 
 }
 
 /* Section specific scrolling */
@@ -65,25 +70,30 @@
 
 /* RESPONSIVE: Mobile Adaptability remains here */
 @media (max-width: 48rem) {
-  .settings-body {
-    flex-direction: column; 
-  }
-
   .settings-sidebar {
     width: 100%;
-    height: auto;
+    min-width: 100%;
+    flex-shrink: 0;
+    min-height: 3.5rem;
+    overflow: hidden;
     border-right: none;
     border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
   }
 
   .sidebar-buttons {
-    display: flex; /* Ensure horizontal layout */
+    display: flex;
+    flex-wrap: nowrap;
     overflow-x: auto;
+    overflow-y: hidden;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
   }
 
   .sidebar-buttons button {
-    width: auto;
-    padding: 0.8rem 1.2rem;
+    max-width: 10rem;
+    height: 3.5rem;
+    line-height: 3.5rem;
+    padding: 0 1.25rem;
     white-space: nowrap;
     border-left: none;
     border-bottom: 0.2rem solid transparent;
