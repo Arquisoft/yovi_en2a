@@ -1,0 +1,146 @@
+/* EndGame.css */
+
+/* EndGame Title */
+.endgame .endgame-title {
+  font-size: 5rem;
+  line-height: 0.1;
+}
+
+/* Subtitle */
+.endgame .endgame-subtitle {
+  font-size: 1rem;         
+  /* Adjusted margin */
+  margin-top: -2rem;        
+  color: #fff; 
+  text-transform: uppercase;
+  letter-spacing: 0.7vw;    
+  font-weight: 500;         
+}
+
+.endgame-stats {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+}
+
+/* Section Title for Stats */
+.endgame-section-title {
+  margin: 2rem 0 0 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.2rem;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.endgame-stats {
+  display: grid;
+  grid-template-rows: repeat(3, minmax(0, auto));
+  gap: 1rem;
+}
+
+.stat-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 0.0625rem solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+
+.stat-label {
+  color: #555;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+/* Buttons */
+.endgame-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
+/* Custom Button Style for Play Again */
+.endgame-play-again {
+  min-width: 200px;
+  padding: 0.9rem 1.6rem;
+
+  background: linear-gradient(135deg, #4da3ff, #2f7fe0);
+  color: #fff;
+
+  border: none;
+  border-radius: 14px;
+
+  font-size: 0.9rem;
+  font-weight: 900;
+  letter-spacing: 0.12rem;
+  text-transform: uppercase;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 20px rgba(77, 163, 255, 0.35),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+.endgame-menu {
+  min-width: 180px;
+  padding: 0.85rem 1.4rem;
+
+  background: rgba(255, 255, 255, 0.06);
+  color: #e0e0e0;
+
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.1rem;
+  text-transform: uppercase;
+
+  cursor: pointer;
+}
+
+.endgame-play-again:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow:
+    0 10px 28px rgba(77, 163, 255, 0.45),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.endgame-play-again:active {
+  transform: translateY(0);
+  box-shadow:
+    0 4px 12px rgba(77, 163, 255, 0.35);
+}
+
+
+@media (max-width: 48rem) {
+  .endgame .endgame-title {
+    font-size: 2.5rem;
+    line-height: 1.1;
+    letter-spacing: 0.12rem;
+    text-align: center;
+    word-break: keep-all;
+  }
+
+  .endgame .endgame-subtitle {
+    font-size: 0.85rem;
+    letter-spacing: 0.12rem;
+    margin-top: -2rem;
+    text-align: center;
+  }
+}
