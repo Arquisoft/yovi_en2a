@@ -3,7 +3,6 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-introduction-and-goals]]
 == Introduction and Goals
 
-This is my documentation, the format looks horrible please send help. Pelape does not provide me with information nor money for my pc, i hate him
 ifdef::arc42help[]
 [role="arc42help"]
 ****
