@@ -73,6 +73,36 @@ together with a mapping table showing the relationships between channels and inp
 ****
 endif::arc42help[]
 
+The following table describes the technical interfaces and the channels used to link the system components and external entities.
+
+[cols="1,3", options="header"]
+|===
+|Component / Channel |Description
+|**User Device** |Computer, laptop, or mobile device used to access the system via a secure HTTPS connection.
+|**Web Application (Frontend)** |Developed in TypeScript. Manages matches, communicates with the Rust module, and interacts with Firebase and the Bot API.
+|**Rust Game Logic Module** |Component responsible for match outcomes and bot moves. Exposes a web service endpoint for the Frontend.
+|**Firebase Database** |Cloud persistence layer for user information and statistics via Firebase SDK.
+|**Public API for Bots** |Interface for external bots to interact with the system over HTTPS.
+|**Deployment Platform (Azure)** |Cloud infrastructure hosting the Rust backend and WebApp, ensuring HTTPS and availability.
+|===
+
+image::Technical_Context_Component_diagram.png[Diagrama de Contexto, width=600, align="center"]
+
+==== Mapping Input/Output to Channels
+
+The following table maps the domain-specific inputs and outputs to their respective technical channels and protocols.
+
+[cols="1,2,2", options="header"]
+|===
+|Channel |Input |Output
+|**HTTPS (Browser → WebApp)** |User moves, strategy, login info. |Board updates, results, statistics.
+|**HTTP JSON/YEN (WebApp → Rust)** |Board state (YEN), active player, strategy. |Match outcome, bot move.
+|**Firebase SDK (WebApp ↔ Firebase)** |User registration, results, statistics. |Data persistence and retrieval.
+|**HTTPS (API → Bot)** |Board state (YEN), strategy parameters. |Bot move response.
+|===
+
+image::Technical_Sequence_Component_diagram.png[Diagrama de Secuencia, width=600, align="center"]
+
 **<Diagram or Table>**
 
 **<optionally: Explanation of technical interfaces>**
