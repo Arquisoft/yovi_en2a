@@ -6,12 +6,12 @@ ifndef::imagesdir[:imagesdir: ../images]
 ifdef::arc42help[]
 [role="arc42help"]
 ****
-Describes the relevant requirements and the driving forces that software architects and development team must consider. 
+Describes the relevant requirements and the driving forces that software architects and development team must consider.
 These include
 
-* underlying business goals, 
-* essential features, 
-* essential functional requirements, 
+* underlying business goals,
+* essential features,
+* essential functional requirements,
 * quality goals for the architecture and
 * relevant stakeholders and their expectations
 ****
@@ -51,7 +51,7 @@ ifdef::arc42help[]
 [role="arc42help"]
 ****
 .Contents
-The top three (max five) quality goals for the architecture whose fulfillment is of highest importance to the major stakeholders. 
+The top three (max five) quality goals for the architecture whose fulfillment is of highest importance to the major stakeholders.
 We really mean quality goals for the architecture. Don't confuse them with project goals.
 They are not necessarily identical.
 
@@ -60,7 +60,7 @@ Consider this overview of potential topics (based upon the ISO 25010 standard):
 image::01_2_iso-25010-topics-EN.drawio.png["Categories of Quality Requirements"]
 
 .Motivation
-You should know the quality goals of your most important stakeholders, since they will influence fundamental architectural decisions. 
+You should know the quality goals of your most important stakeholders, since they will influence fundamental architectural decisions.
 Make sure to be very concrete about these qualities, avoid buzzwords.
 If you as an architect do not know how the quality of your work will be judged...
 
@@ -96,6 +96,14 @@ endif::arc42help[]
 [options="header",cols="1,2,2"]
 |===
 |Role/Name|Contact|Expectations
-| _<Role-1>_ | _<Contact-1>_ | _<Expectation-1>_
-| _<Role-2>_ | _<Contact-2>_ | _<Expectation-2>_
+| _Owner [Client]_ | _link:mailto:labra@uniovi.es[Jose Emilio Labra Gayo]_ | _He is the main client of the system, for he enforces expected behaviors and has to be the most satisfied stakeholder._
+| _Dev Team_ | _link:mailto:UO294024@uniovi.es[Jaime Alonso], link:mailto:UO295426@uniovi.es[Pelayo Pérez], link:mailto:UO300568@uniovi.es[Ana Calleja], link:mailto:UO289899@uniovi.es[David García], link:mailto:UO300652@uniovi.es[Matías Valle]_ | _They are the ones that implement and determine whether a problem may be solved given the constraints, being able to discuss with the client (Labra)._
+| _Game Y rules_ | link:https://en.wikipedia.org/wiki/Y_(game)[Official Wiki - Game  Y] | _Inmutable statement that define de rules for playing the vanilla version of the game. Shall be followed._
+| _Final users_ | There is no direct communication though social media or polls may be useful | _They will be the main enjoyers of the system, they shall communicate errors and tell thing they are not really keen on or improvements. The system shall be design expecting them to use it._
+| _Server_ | ??? | It will include all of the different parts of the game dockerized allowing acccess to all users.
+| _Google Workspace DDBB_ | Firebase| It is a no relational DDBB that will store all the persistent information regarding the users and the games.
+| _..._ | _..._ | _..._
 |===
+
+image:Stakeholders.png[Stakeholders Map]
+
