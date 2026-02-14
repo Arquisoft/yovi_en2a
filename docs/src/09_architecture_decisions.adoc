@@ -3,6 +3,139 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-design-decisions]]
 == Architecture Decisions
 
+This section documents the most important architectural decisions made during the development of the system.  
+Each decision includes its context, the chosen option, and the rationale.
+
+---
+
+=== ADR-001: Separation into Web Application and Rust Game Engine
+
+*Status:* Accepted
+
+*Context:*  
+The assignment requires the system to be composed of at least two subsystems:
+- A web application implemented in TypeScript.
+- A game logic module implemented in Rust.
+
+*Decision:*  
+The system will follow a **service-oriented architecture** where:
+- The web application handles the user interface, API, and user management.
+- The Rust module provides game logic (win detection and move suggestion) through a web service.
+
+*Rationale:*  
+- Required by the assignment.
+- Separates concerns between UI and game logic.
+- Rust provides high performance for algorithmic computations.
+
+*Consequences:*  
+- Requires inter-service communication via HTTP and JSON.
+- Adds deployment and integration complexity.
+
+---
+
+=== ADR-002: Communication via JSON using YEN Notation
+
+*Status:* Accepted
+
+*Context:*  
+The assignment specifies that both subsystems must communicate using JSON messages following YEN notation.
+
+*Decision:*  
+All communication between the web application and the Rust service will use:
+- HTTP requests
+- JSON payloads
+- YEN notation for game states
+
+*Rationale:*  
+- Mandatory requirement from the assignment.
+- JSON is simple, widely supported, and easy to debug.
+
+*Consequences:*  
+- Both services must implement serialization and validation of YEN data.
+- Changes to the notation would affect both subsystems.
+
+---
+
+=== ADR-003: Use of Firebase as the Database
+
+*Status:* Accepted
+
+*Context:*  
+The system requires user registration, match history, and statistics storage.
+
+Possible options:
+- Self-hosted database (PostgreSQL, MySQL)
+- Managed cloud database
+- Firebase
+
+*Decision:*  
+Use **Firebase** as the main data storage solution.
+
+*Rationale:*  
+- Fully managed service with minimal setup.
+- Built-in authentication and real-time database features.
+- Reduces infrastructure and maintenance effort.
+- Suitable for small-to-medium academic projects.
+
+*Consequences:*  
+- Vendor lock-in to Firebase ecosystem.
+- Limited flexibility compared to self-hosted databases.
+- Requires internet connectivity for all operations.
+
+---
+
+=== ADR-004: Cloud Deployment of the Application
+
+*Status:* Accepted
+
+*Context:*  
+The assignment requires the system to be publicly accessible via the web.
+
+Possible hosting options:
+- Local/on-premise server
+- Traditional VM hosting
+- Cloud platform (Vercel, Railway, Azure)
+
+*Decision:*  
+Deploy the system on a cloud platform, with the final choice between:
+- Vercel
+- Railway
+- Azure
+
+*Rationale:*  
+- Meets the public deployment requirement.
+- Simplifies infrastructure management.
+- Enables CI/CD and easy scaling.
+
+*Consequences:*  
+- Requires configuration for cloud environments.
+- Possible cost considerations.
+- Platform-specific deployment setups.
+
+---
+
+=== ADR-005: External REST API for Bots
+
+*Status:* Accepted
+
+*Context:*  
+The assignment requires an API that allows external bots to interact with the system and play games.
+
+*Decision:*  
+Expose a REST-style HTTP API that:
+- Accepts JSON requests.
+- Uses YEN notation for game state.
+- Provides endpoints for game interaction.
+
+*Rationale:*  
+- REST is simple and widely supported.
+- Easy integration with external bots.
+- Matches the JSON communication requirement.
+
+*Consequences:*  
+- Requires proper authentication and validation.
+- Must be fully documented.
+
 
 ifdef::arc42help[]
 [role="arc42help"]
