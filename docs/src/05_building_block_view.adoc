@@ -1,5 +1,7 @@
 ifndef::imagesdir[:imagesdir: ../images]
 
+=== Level 1
+
 [[section-building-block-view]]
 == Building Block View
 
