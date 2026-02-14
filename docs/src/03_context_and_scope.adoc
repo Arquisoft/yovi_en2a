@@ -101,7 +101,7 @@ The following table maps the domain-specific inputs and outputs to their respect
 |**HTTPS (API → Bot)** |Board state (YEN), strategy parameters. |Bot move response.
 |===
 
-image::Technical_Sequence_Component_diagram.png[Diagrama de Secuencia, width=600, align="center"]
+image::Technical_Context_Sequence_diagram.png[Diagrama de Secuencia, width=600, align="center"]
 
 **<Diagram or Table>**
 
