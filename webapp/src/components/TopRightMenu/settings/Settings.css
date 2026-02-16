@@ -30,10 +30,6 @@
   transition: 0.2s;
 }
 
-.sidebar-buttons button{
-  font-size: 1.1rem;
-}
-
 .sidebar-buttons button.active {
   color: var(--primary-color);
   background: rgba(255, 255, 255, 0.03);

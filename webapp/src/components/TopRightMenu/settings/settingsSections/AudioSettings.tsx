@@ -19,7 +19,7 @@ const VolumeSlider: React.FC<{ label: string; defaultValue: number }> = ({ label
           max="100" 
           value={value}
           className="volume-range"
-          onInput={(e) => setValue(parseInt(e.currentTarget.value))}
+          onInput={(e) => setValue(Number.parseInt(e.currentTarget.value))}
           onMouseDown={() => setIsActive(true)}
           onMouseUp={() => setIsActive(false)}
           onTouchStart={() => setIsActive(true)}

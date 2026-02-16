@@ -23,7 +23,11 @@
 }
 
 /* Podium highlights */
-.pos-1 { border-left: 0.25rem solid #ffd700; color: #ffd700; background: rgba(255, 215, 0, 0.05); }
+.pos-1 {
+  border-left: 0.25rem solid #ffd700;
+  background: rgba(255, 215, 0, 0.1);
+  color: #856404;
+}
 .pos-2 { border-left: 0.25rem solid #c0c0c0; color: #c0c0c0; }
 .pos-3 { border-left: 0.25rem solid #cd7f32; color: #cd7f32; }
 

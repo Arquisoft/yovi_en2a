@@ -9,12 +9,13 @@ export class GameSettings implements SettingsSection {
       <div className="tab-panel">
         <h3>Game Preferences</h3>
         <div className="control-group checkbox">
-          <label>Show move hints</label>
-          <input type="checkbox" defaultChecked />
+          <label htmlFor="show-hints">Show move hints</label>
+          <input id="show-hints" type="checkbox" defaultChecked />
         </div>
+
         <div className="control-group checkbox">
-          <label>Confirm moves</label>
-          <input type="checkbox" />
+          <label htmlFor="confirm-moves">Confirm moves</label>
+          <input id="confirm-moves" type="checkbox" />
         </div>
       </div>
     );
