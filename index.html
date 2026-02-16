@@ -1304,31 +1304,9 @@ Refer to details in the following sections.</p>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_whitebox_overall_system">5.1. Whitebox Overall System</h3>
-<div class="listingblock">
+<div class="imageblock">
 <div class="content">
-<pre>Failed to generate image: Could not load PlantUML. Either require 'asciidoctor-diagram-plantuml' or specify the location of the PlantUML JAR(s) using the 'DIAGRAM_PLANTUML_CLASSPATH' environment variable. Alternatively a PlantUML binary can be provided (plantuml-native in $PATH).
-@startuml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
-
-LAYOUT_WITH_LEGEND()
-
-title Building Block View (Level 1) - Gamey System with Firebase
-
-Person(player, "Player", "User interacting with the game and managing their profile.")
-System_Ext(firebase, "Firebase", "External platform providing Authentication, Firestore (NoSQL), and Hosting.")
-
-System_Boundary(c1, "Gamey Ecosystem") {
-    Container(webapp, "Webapp", "React, TS, Vite", "Main UI. Handles real-time game rendering and Firebase SDK integration.")
-    Container(users_svc, "Users Service", "Node.js, Express", "Internal management service. Validates tokens via Firebase Admin SDK.")
-    Container(gamey_engine, "Game Engine", "Rust", "High-performance core for game rules, notations, and bot orchestration.")
-}
-
-Rel(player, webapp, "Uses", "HTTPS")
-Rel(webapp, firebase, "Auth / Sync data", "Firebase SDK (Web)")
-Rel(webapp, users_svc, "Business requests", "JSON/HTTPS")
-Rel(webapp, gamey_engine, "Submits moves", "WebSockets/gRPC")
-Rel(users_svc, firebase, "Verify tokens / Admin DB access", "Firebase Admin SDK")
-@enduml</pre>
+<img src="./images/level1-overall.png" alt="level1 overall" width="612" height="977">
 </div>
 </div>
 <div class="dlist">
@@ -1445,23 +1423,9 @@ Rel(users_svc, firebase, "Verify tokens / Admin DB access", "Firebase Admin SDK"
 <h3 id="_level_2">5.2. Level 2</h3>
 <div class="sect3">
 <h4 id="_white_box_game_engine_rust">5.2.1. White Box <em>Game Engine (Rust)</em></h4>
-<div class="listingblock">
+<div class="imageblock">
 <div class="content">
-<pre>Failed to generate image: Could not load PlantUML. Either require 'asciidoctor-diagram-plantuml' or specify the location of the PlantUML JAR(s) using the 'DIAGRAM_PLANTUML_CLASSPATH' environment variable. Alternatively a PlantUML binary can be provided (plantuml-native in $PATH).
-@startuml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
-
-Container_Boundary(gamey_internal, "Game Engine (Rust)") {
-    Component(core, "Core Logic", "Rust Mod", "State machine and rules.")
-    Component(notation, "Notation Parser", "Rust Mod", "Processes game notations (FEN/PGN).")
-    Component(bot_server, "Bot Manager", "Rust Mod", "Handles AI agent lifecycle.")
-    Component(gamey_error, "Error Handler", "Rust Mod", "Domain-specific error types.")
-}
-
-Rel(bot_server, core, "Queries rules")
-Rel(core, notation, "Serializes state")
-Rel(core, gamey_error, "Triggers")
-@enduml</pre>
+<img src="./images/level2-gamey.png" alt="level2 gamey" width="433" height="528">
 </div>
 </div>
 <div class="paragraph">
@@ -1575,17 +1539,9 @@ building block instances depicted in this diagram.&gt;</em></p>
 <div class="paragraph">
 <p>It is possible to use a sequence diagram:</p>
 </div>
-<div class="listingblock">
+<div class="imageblock">
 <div class="content">
-<pre>Failed to generate image: Could not load PlantUML. Either require 'asciidoctor-diagram-plantuml' or specify the location of the PlantUML JAR(s) using the 'DIAGRAM_PLANTUML_CLASSPATH' environment variable. Alternatively a PlantUML binary can be provided (plantuml-native in $PATH).
-actor Alice
-actor Bob
-database Pod as "Bob's Pod"
-Alice -&gt; Bob: Authentication Request
-Bob --&gt; Alice: Authentication Response
-Alice  --&gt; Pod: Store route
-Alice -&gt; Bob: Another authentication Request
-Alice &lt;-- Bob: another authentication Response</pre>
+<img src="./images/Sequence%20diagram.png" alt="Sequence diagram" width="332" height="335">
 </div>
 </div>
 </div>
@@ -1608,38 +1564,9 @@ Alice &lt;-- Bob: another authentication Response</pre>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_infrastructure_level_1">7.1. Infrastructure Level 1</h3>
-<div class="listingblock">
+<div class="imageblock">
 <div class="content">
-<pre>Failed to generate image: Could not load PlantUML. Either require 'asciidoctor-diagram-plantuml' or specify the location of the PlantUML JAR(s) using the 'DIAGRAM_PLANTUML_CLASSPATH' environment variable. Alternatively a PlantUML binary can be provided (plantuml-native in $PATH).
-@startuml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
-
-title Deployment View - Cloud Infrastructure (Production)
-
-Deployment_Node(browser, "User's Device", "Web Browser"){
-    Container(ui, "Webapp (Static Assets)", "React/Vite", "Delivered via CDN")
-}
-
-Deployment_Node(firebase_cloud, "Firebase Platform", "Managed Services"){
-    Deployment_Node(auth, "Firebase Auth", "Identity Provider")
-    Deployment_Node(db, "Firestore", "NoSQL Database")
-}
-
-Deployment_Node(cloud, "Cloud Provider", "Container Service"){
-    Deployment_Node(node_pod, "Users Service Node", "Docker Container"){
-        Container(users_app, "Users API", "Node.js", "Handles business logic")
-    }
-    Deployment_Node(rust_pod, "Game Engine Node", "Docker Container"){
-        Container(game_app, "Game Engine", "Rust Binary", "Handles game logic")
-    }
-}
-
-Rel(ui, auth, "Authenticates via", "HTTPS/SDK")
-Rel(ui, users_app, "API calls", "HTTPS/JSON")
-Rel(ui, game_app, "Game moves", "WebSockets")
-Rel(users_app, auth, "Verifies tokens", "Admin SDK")
-Rel(users_app, db, "Reads/Writes", "Admin SDK")
-@enduml</pre>
+<img src="./images/deployment-lvl1.png" alt="deployment lvl1" width="504" height="707">
 </div>
 </div>
 <div class="dlist">
