@@ -45,6 +45,30 @@ See https://docs.arc42.org/section-1/[Introduction and Goals] in the arc42 docum
 ****
 endif::arc42help[]
 
+==== Related to Gameplay
+
+* The system must allow users to play a complete match of the classic Game Y, following the official rules and supporting different board sizes.
+* The application must allow the user to select the difficulty level before starting a match.
+* The system must correctly detect the win condition and determine when a match has ended.
+* After the match finishes, the system must display an end-game summary screen including relevant statistics such as match duration, number of moves, difficulty level, and winner.
+* The application must allow users to view rankings, including local and global rankings.
+* The system must provide a tutorial or help section explaining the rules of Game Y and how to interact with the interface.
+
+==== Related to the AI Service
+
+* The system must provide an AI opponent capable of generating valid moves according to the selected difficulty level.
+* The AI must always generate legal moves and must never violate the rules of Game Y.
+
+==== Related to the Persistence Layer
+
+* The system must store user accounts and authentication data securely.
+* This service must store match results, including outcome, duration, difficulty, and player statistics.
+
+==== Related to the Authentication System
+
+* The system must allow users to register or log in with valid credentials.
+* It also shall include an option to play as a Guest without requiring authentication.
+
 === Quality Goals
 
 ifdef::arc42help[]
