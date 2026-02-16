@@ -35,6 +35,7 @@ endif::arc42help[]
 ifdef::arc42help[]
 [role="arc42help"]
 ****
+
 .Contents
 Specification of *all* communication partners (users, IT-systems, ...) with explanations of domain specific inputs and outputs or interfaces.
 Optionally you can add domain specific formats or communication protocols.
@@ -48,13 +49,19 @@ All kinds of diagrams that show the system as a black box and specify the domain
 Alternatively (or additionally) you can use a table.
 The title of the table is the name of your system, the three columns contain the name of the communication partner, the inputs, and the outputs.
 
+
 ****
 endif::arc42help[]
+The folloing table includes the different bussines components of the application, ecxplaining for each their points of interaction with the rest of the system.
 
-**<Diagram or Table>**
-
-**<optionally: Explanation of external domain interfaces>**
-
+[cols="1,2,2,2", options="header"]
+|===
+|Element |Description |Inputs |Outputs 
+|**Player** | Takes part in the game, is able to create a user in the application and launch a game either against a bot or against a local opponent | the current state of the game and any requested statistics | their username and password as well as their moves and requests
+|**Interface** | Shows the user the current state of the match as well as any relevant information | all the user's interactions with its components as well as the moves and information obtained from the game engine and database respectively  |  the updated state of the game and statistics
+|**Engine** | generates the bot moves in a PvE game | the user's move coordinates | the following bot move
+|**Database** | stores infromation about past matches | the data from played games | information requested by the player to be displayed by the ui
+|===
 === Technical Context
 
 ifdef::arc42help[]
