@@ -3,6 +3,78 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-architecture-constraints]]
 == Architecture Constraints
 
+=== Technical Constraints
+
+|===
+|Constraint |Explanation
+
+|Web application must be implemented in TypeScript/JavaScript
+|The frontend and external API are required to be developed using TypeScript/JavaScript as specified in the assignment.
+
+|Bot logic must be implemented in Rust
+|The game engine responsible for move suggestion and win detection must be developed as a separate Rust module.
+
+|Communication between subsystems via JSON using YEN notation
+|The web application and the Rust service must exchange data using JSON messages following the YEN game notation defined in the assignment.
+
+|Service-oriented architecture
+|The Rust module must expose its functionality through a web service interface callable by the web application.
+
+|Use of Firebase as the database
+|User data, match history, and statistics must be stored in Firebase, as chosen by the team.
+
+|Deployment on a cloud platform
+|The system must be publicly accessible. The backend services will be deployed on a cloud provider (e.g., Vercel, Railway, or Azure).
+
+|Public external API for bots
+|The system must expose a documented API allowing external bots to access game data and play matches.
+
+|Browser-based execution
+|The frontend must run in standard modern web browsers without requiring special installations.
+|===
+
+---
+
+=== Organizational Constraints
+
+|===
+|Constraint |Explanation
+
+|Assignment requirements define core functionality
+|The system must implement at least the classic version of Game Y with player-vs-machine mode and variable board size.
+
+|Public deployment required
+|The application must be accessible through the web as part of the evaluation criteria.
+
+|Documentation must follow arc42
+|Architecture documentation must comply with the arc42 structure provided by the course.
+
+|Quality requirements for evaluation
+|The project must include testing (unit, integration, and e2e), CI/CD, monitoring, and proper repository management.
+
+|Team-based academic project
+|Decisions must consider limited time, resources, and team size typical of a university assignment.
+|===
+
+---
+
+=== Conventions and Standards
+
+|===
+|Constraint |Explanation
+
+|Use of YEN notation for game state
+|All game states exchanged between components must follow the defined YEN notation format.
+
+|REST-style API with JSON
+|All external and internal services will communicate using JSON over HTTP.
+
+|Version control with Git
+|All source code and documentation will be managed using a Git repository.
+
+|Code quality and testing practices
+|The project must include automated tests and follow agreed coding standards.
+|===
 
 ifdef::arc42help[]
 [role="arc42help"]

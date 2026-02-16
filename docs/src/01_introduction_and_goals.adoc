@@ -45,6 +45,30 @@ See https://docs.arc42.org/section-1/[Introduction and Goals] in the arc42 docum
 ****
 endif::arc42help[]
 
+==== Related to Gameplay
+
+* The system must allow users to play a complete match of the classic Game Y, following the official rules and supporting different board sizes.
+* The application must allow the user to select the difficulty level before starting a match.
+* The system must correctly detect the win condition and determine when a match has ended.
+* After the match finishes, the system must display an end-game summary screen including relevant statistics such as match duration, number of moves, difficulty level, and winner.
+* The application must allow users to view rankings, including local and global rankings.
+* The system must provide a tutorial or help section explaining the rules of Game Y and how to interact with the interface.
+
+==== Related to the AI Service
+
+* The system must provide an AI opponent capable of generating valid moves according to the selected difficulty level.
+* The AI must always generate legal moves and must never violate the rules of Game Y.
+
+==== Related to the Persistence Layer
+
+* The system must store user accounts and authentication data securely.
+* This service must store match results, including outcome, duration, difficulty, and player statistics.
+
+==== Related to the Authentication System
+
+* The system must allow users to register or log in with valid credentials.
+* It also shall include an option to play as a Guest without requiring authentication.
+
 === Quality Goals
 
 ifdef::arc42help[]
@@ -68,6 +92,29 @@ If you as an architect do not know how the quality of your work will be judged..
 A table with quality goals and concrete scenarios, ordered by priorities
 ****
 endif::arc42help[]
+
+[options="header",cols="1,3"]
+|===
+| Quality Goal | Description
+
+| Functional Suitability
+| The system shall correctly implement the classic version of Game Y, including win-condition verification for any supported board size. All user-facing features (play game, select strategy, view statistics) and API operations shall behave according to the specified requirements.
+
+| Performance Efficiency
+| For a standard match, the system shall return a computer move or API response within 1 second under normal load. The architecture shall support at least 20 concurrent players without noticeable degradation in responsiveness.
+
+| Reliability
+| The system shall consistently determine correct game outcomes and suggested moves, with an error rate of less than 1% in win detection or AI move generation. User data and match history shall not be lost during normal operation.
+
+| Usability
+| First-time users shall be able to start and complete a game without external help. The web interface shall clearly display the board state, available actions, and game status. The learning time for basic gameplay should be less than 30 minutes.
+
+| Maintainability
+| The architecture shall allow new AI strategies, difficulty levels, or Game Y variants to be added without major refactoring. Clear module boundaries and documented interfaces shall enable developers to modify or extend functionality efficiently.
+
+| Security
+| User accounts and personal data shall be protected through proper authentication and authorization mechanisms. API endpoints shall restrict access to authorized clients and prevent unauthorized manipulation of game or user data.
+|===
 
 === Stakeholders
 

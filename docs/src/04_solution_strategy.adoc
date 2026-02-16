@@ -3,6 +3,15 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-solution-strategy]]
 == Solution Strategy
 
+=== Technical Decisions
+* **Firebase** is the chosen data base management tool for our project. 
+* All of the bot logic will be implemented in **rust**.
+* We will implement our user interface using the **react** javaScript library because it allows us to organize and reuse our ui components easily.
+* **Docker** will be used to launch the project in the same way regardless of hardware.
+
+=== Organizational Decisions
+* We are using github to organize the project's developement, using the wiki to document our meetings and using the branch protection features to avoid mistakes and make sure every push to a main brach is reviewed by another team member.  
+
 
 ifdef::arc42help[]
 [role="arc42help"]
