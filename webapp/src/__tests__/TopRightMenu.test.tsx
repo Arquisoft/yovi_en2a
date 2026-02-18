@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, test, expect } from 'vitest'
-import TopRightMenu from '../components/TopRightMenu/TopRightMenu'
+import TopRightMenu from '../components/topRightMenu/TopRightMenu'
 import '@testing-library/jest-dom'
 
 describe('TopRightMenu Component', () => {

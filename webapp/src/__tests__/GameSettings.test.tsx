@@ -1,6 +1,6 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import { describe, test, expect } from 'vitest'
-import { GameSettings } from '../components/TopRightMenu/settings/settingsSections/GameSettings'
+import { GameSettings } from '../components/topRightMenu/settings/settingsSections/GameSettings'
 import '@testing-library/jest-dom'
 
 describe('GameSettings Strategy', () => {

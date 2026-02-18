@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { describe, test, expect, afterEach } from 'vitest'
-import { AudioSettings } from '../components/TopRightMenu/settings/settingsSections/AudioSettings'
+import { AudioSettings } from '../components/topRightMenu/settings/settingsSections/AudioSettings'
 import '@testing-library/jest-dom'
 
 describe('AudioSettings Strategy', () => {

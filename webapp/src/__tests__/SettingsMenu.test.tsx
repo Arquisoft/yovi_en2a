@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, test, expect, vi } from 'vitest'
-import SettingsMenu from '../components/TopRightMenu/settings/Settings'
+import SettingsMenu from '../components/topRightMenu/settings/Settings'
 import '@testing-library/jest-dom'
 
 describe('SettingsMenu Component', () => {

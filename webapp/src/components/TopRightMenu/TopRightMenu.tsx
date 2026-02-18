@@ -1,7 +1,7 @@
 import './TopRightMenu.css'
 import '../../styles/layout/TopRightMenuLayout.css'
 import React, { useState } from 'react';
-import MenuButtons from '../MainMenu/MenuButtons';
+import MenuButtons from '../generalComponents/MenuButtons.tsx';
 import helpIcon from '../../assets/help_icon.svg';
 import rankingIcon from '../../assets/ranking_icon.svg';
 import volumeUnmuteIcon from '../../assets/volume_unmute_icon.svg';

@@ -1,7 +1,7 @@
 // MainMenu.tsx
 import './MainMenu.css'
-import MenuButtons from './MenuButtons';
-import TopRightMenu from '../TopRightMenu/TopRightMenu';
+import MenuButtons from '../generalComponents/MenuButtons';
+import TopRightMenu from '../topRightMenu/TopRightMenu';
 
 const MainMenu = () => {
   return (

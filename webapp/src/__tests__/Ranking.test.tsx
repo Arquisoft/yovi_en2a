@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, test, expect, vi } from 'vitest'
-import Ranking from '../components/TopRightMenu/ranking/Ranking'
+import Ranking from '../components/topRightMenu/ranking/Ranking'
 import '@testing-library/jest-dom'
 
 describe('Ranking Component', () => {
