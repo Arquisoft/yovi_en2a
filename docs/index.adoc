@@ -6,7 +6,7 @@
 // configure EN settings for asciidoc
 include::src/config.adoc[]
 
-= image:arc42-logo.png[arc42] yovi_0
+= image:arc42-logo.png[arc42] yovi_en2a
 :revnumber: 8.2 EN
 :revdate: January 2023
 :revremark: (based upon AsciiDoc version)
@@ -27,9 +27,6 @@ ifdef::backend-html5[]
 </style>
 ++++
 endif::backend-html5[]
-
-
-include::src/about-arc42.adoc[]
 
 // horizontal line
 ***
@@ -97,4 +94,8 @@ include::src/11_technical_risks.adoc[]
 // 12. Glossary
 include::src/12_glossary.adoc[]
 
+:numbered:
 
+***
+
+include::src/about-arc42.adoc[]
