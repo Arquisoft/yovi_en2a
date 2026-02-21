@@ -1,0 +1,113 @@
+.game-mode-container {
+  width: 90%;
+  max-width: 50rem;
+  margin: 2rem auto;
+  padding: 2rem;
+  border: 0.1rem solid #ccc;
+  border-radius: 1rem;
+  background-color: #f9f9f9;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+  justify-content: center;
+  position: relative;
+}
+
+.title {
+  font-size: 2rem;
+  margin: 0;
+}
+
+.tooltip-container {
+  position: relative;
+}
+
+.info-button {
+  font-size: 1.25rem;
+  padding: 0.5em 0.75em;
+  border: none;
+  background: #eee;
+  border-radius: 50%;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.tooltip {
+  visibility: hidden;
+  width: 15rem;
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  position: absolute;
+  top: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.875rem;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.tooltip-container:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.image-container img {
+  width: 100%;
+  max-height: 20rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
+}
+
+.difficulty-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.arrow {
+  font-size: 1.5rem;
+  padding: 0.5em 1em;
+  cursor: pointer;
+  border: none;
+  background: #eee;
+  border-radius: 0.5rem;
+}
+
+.difficulty-box {
+  min-width: 6rem;
+  padding: 0.5rem 1rem;
+  text-align: center;
+  border: 0.1rem solid #ccc;
+  border-radius: 0.5rem;
+  background-color: #fff;
+  font-size: 1rem;
+}
+
+.play-button {
+  margin-top: 1rem;
+  padding: 0.75em 2em;
+  font-size: 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  background-color: #07780b;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.play-button:hover {
+  background-color: #45a049;
+}

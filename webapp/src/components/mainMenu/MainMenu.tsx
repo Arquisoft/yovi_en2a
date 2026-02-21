@@ -1,9 +1,12 @@
 // MainMenu.tsx
 import './MainMenu.css'
+import { useNavigate } from 'react-router-dom';
 import MenuButtons from '../generalComponents/MenuButtons';
 import TopRightMenu from '../topRightMenu/TopRightMenu';
 
 const MainMenu = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="main-menu">
       {/* Right most section*/}
@@ -23,7 +26,7 @@ const MainMenu = () => {
         />
         <MenuButtons 
           label="Play as Guest" 
-          onClick={() => console.log('Play as Guest')} 
+          onClick={() => navigate("/gameSelection")} 
         />
       </div>
     </div>
