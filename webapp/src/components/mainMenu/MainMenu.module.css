@@ -1,0 +1,79 @@
+.mainMenu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mainTitle {
+  font-size: 10vw;
+  margin: 0;
+  line-height: 0.8;
+  text-shadow: 0.125rem 0.125rem 0.625rem rgba(0, 0, 0, 0.5);
+}
+
+.subtitle {
+  font-size: 1.8vw;
+  margin-top: -3vw;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 0.8vw;
+  font-weight: 500;
+  text-shadow: 0.125rem 0.125rem 0.4rem rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
+}
+
+.mainMenuButtons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 3vw;
+}
+
+/* --- TARGETING THE BUTTONS FROM THE PARENT --- */
+
+/* Base style for any MenuButton inside MainMenuButtons */
+.mainMenuButtons :global(.mainMenuOption) {
+  padding: 0.8rem 2rem;
+  min-width: 15rem;
+  border-radius: 0.5rem;
+}
+
+.mainMenuButtons :global(.mainMenuOption)[name="Log In"] {
+  background-color: rgba(0, 0, 0, 0.88);
+  color: #ffffff;
+  font-weight: 800;
+  border: 0.0625rem solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0.25rem 0.875rem rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(0.1875rem);
+}
+
+.mainMenuButtons :global(.mainMenuOption)[name="Log In"]:hover {
+  background-color: rgba(0, 0, 0, 0.96);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-0.0625rem);
+}
+
+.mainMenuButtons :global(.mainMenuOption)[name="Play as Guest"] {
+  background-color: rgba(63, 62, 62, 0.2);
+  color: #ffffff;
+  border: 0.0625rem solid rgba(160, 160, 160, 0.4);
+  backdrop-filter: blur(0.25rem);
+}
+
+.mainMenuButtons :global(.mainMenuOption)[name="Play as Guest"]:hover {
+  background-color: rgba(0, 0, 0, 0.78);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+@media (max-width: 48rem) {
+  .mainTitle { font-size: 15vw; }
+  .subtitle { font-size: 3.5vw; margin-top: -1vw; letter-spacing: 0.4vw; }
+  .mainMenuButtons { margin-top: 8vw; width: 80%; }
+  
+  .mainMenuButtons :global(.mainMenuOption) {
+    padding: 0.8rem 1.2rem;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+}

@@ -1,0 +1,53 @@
+.selectionPanel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3rem; /* Increased gap for better breathing room */
+  width: 100%;
+  margin-top: 1rem;
+  padding: 0 2rem;
+  position: relative;
+  min-height: 400px; /* Ensures layout stability */
+}
+
+.arrow {
+  font-size: 3rem;
+  padding: 1rem;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: var(--primary-color);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+  z-index: 10;
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.arrow:hover {
+  color: #ffffff;
+  transform: scale(1.2);
+  text-shadow: var(--glow-primary); /* Uses your global blue glow */
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.5; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(5px); }
+}
+
+.arrow.left {
+  animation-direction: reverse;
+}
+
+/* Mobile adjustments */
+@media (max-width: 48rem) {
+  .selectionPanel {
+    gap: 1rem;
+  }
+  
+  .arrow {
+    font-size: 2rem;
+  }
+}

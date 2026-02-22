@@ -1,0 +1,24 @@
+/* Shared layout shell */
+.tabPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.tabPanel h3 {
+  margin: 0;
+  color: white;
+  font-size: 1.1rem;
+}
+
+.controlGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.controlGroup label {
+  font-size: 0.85rem;
+  color: #aaa;
+  text-transform: uppercase;
+}

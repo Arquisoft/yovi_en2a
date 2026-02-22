@@ -1,0 +1,36 @@
+.mainMenuOption {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease-in-out;
+  border: 0.125rem solid transparent;
+  background: none;
+  color: inherit;
+  font-family: inherit;
+}
+
+.menuButtonImage {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.mainMenuOption:hover {
+  border-color: var(--accent-color);
+  background-color: #4b52cc;
+  transform: scale(1.05);
+}
+
+@media (max-width: 48rem) {
+  .mainMenuOption:hover {
+    transform: none;
+    border-color: transparent;
+  }
+  .mainMenuOption:active {
+    transform: scale(0.95);
+    background-color: var(--accent-color);
+    opacity: 0.9;
+  }
+}

@@ -1,0 +1,73 @@
+/* Main container occupying the full viewport */
+.selectionWindowContainer {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* Vertically center the game mode options */
+  padding: 2rem;
+  overflow: hidden;
+}
+
+/* Specific positioning for the small top-right utility menu */
+.topRightCorner {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+  z-index: 100;
+}
+
+/* Heading section styling */
+.mainTitle {
+  margin-bottom: 3rem;
+  animation: fadeInDown 0.8s ease-out; /* Entry animation */
+}
+
+.mainTitle h2 {
+  font-size: clamp(2rem, 5vw, 4rem); /* Fluid typography based on screen size */
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.6rem;
+  font-weight: 900;
+  margin: 0;
+  /* Neon glow effect using your primary theme color from global variables */
+  text-shadow: 0 0 1.5rem rgba(255, 255, 255, 0.3),
+               0 0 0.5rem var(--primary-color);
+  opacity: 0.9;
+}
+
+/* Wrapper for the SelectionPanel component */
+.selectionPanelWrapper {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: fadeInUp 1s ease-out;
+}
+
+/* Entrance Animations - These are automatically scoped to this module */
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 48rem) {
+  .mainTitle h2 {
+    letter-spacing: 0.2rem;
+    font-size: 1.8rem;
+  }
+  
+  .selectionWindowContainer {
+    justify-content: flex-start; /* Stack content from the top on small screens */
+    padding-top: 6rem; /* Ensure enough space for the top-right menu */
+  }
+}

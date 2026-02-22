@@ -1,21 +1,23 @@
-// SelectionWindow.tsx
 import TopRightMenu from '../topRightMenu/TopRightMenu';
 import SelectionPanel from './selectionPanel/SelectionPanel'
+import styles from './SelectionWindow.module.css';
 
 const SelectionWindow = () => {
   return (
-    <div className="top-right-menu">
-      {/* Right most section*/}
-      <TopRightMenu/>
+    <div className={styles.selectionWindowContainer}>
+      {/* Absolute positioned corner menu */}
+      <div className={styles.topRightCorner}>
+        <TopRightMenu />
+      </div>
 
-      {/* Title */}
-      <div className="main-title">
+      {/* Title section */}
+      <div className={styles.mainTitle}>
         <h2>SELECT YOUR GAME MODE</h2>
       </div>
 
-      {/* Selection panel */}
-      <div className="selection-panel">
-        <SelectionPanel/>
+      {/* Selection panel content */}
+      <div className={styles.selectionPanelWrapper}>
+        <SelectionPanel />
       </div>
     </div>
   );

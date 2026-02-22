@@ -1,4 +1,5 @@
-import './SettingsSection.css'
+import baseStyles from './SettingsSection.module.css';
+import accountStyles from './AccountSettings.module.css';
 import type { SettingsSection } from "./SettingsStrategy";
 
 export class AccountSettings implements SettingsSection {
@@ -6,12 +7,12 @@ export class AccountSettings implements SettingsSection {
   label = 'Account';
   render() {
     return (
-      <div className="tab-panel">
+      <div className={baseStyles.tabPanel}>
         <h3>Profile Management</h3>
-        <div className="account-info">
+        <div className={accountStyles.accountInfo}>
           <p>Logged in as: <strong>Guest</strong></p>
         </div>
-        <button className="danger-btn">Log Out</button>
+        <button className={accountStyles.dangerBtn}>Log Out</button>
       </div>
     );
   }
