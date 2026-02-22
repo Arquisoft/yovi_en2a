@@ -1,53 +1,80 @@
-.selectionPanel {
+/* SelectionPanel.module.css */
+
+.selectionPanelContainer {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 3rem; /* Increased gap for better breathing room */
-  width: 100%;
-  margin-top: 1rem;
-  padding: 0 2rem;
+  width: 95vw; /* Occupies almost all width */
+  max-width: 1400px;
+  gap: 1rem;
+  margin: 0 auto;
   position: relative;
-  min-height: 400px; /* Ensures layout stability */
+}
+
+.carouselViewport {
+  flex: 1;
+  overflow-x: auto; /* Allows swiping/scrolling */
+  scroll-behavior: smooth;
+  padding: 2rem 0;
+  /* Hide scrollbar for Chrome/Safari/Webkit */
+}
+
+.carouselViewport::-webkit-scrollbar {
+  display: none;
+}
+
+.modesWrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start; /* Elements start from the left */
+  align-items: center;
+  gap: 2.5rem;
+  /* If you want the items to stay on the right when there's only one, 
+     change justify-content to flex-end */
+}
+
+.modeItem {
+  flex: 0 0 350px; /* Fixed width for each game mode card */
+  transition: transform 0.3s ease;
+}
+
+.modeItem:hover {
+  transform: scale(1.05);
 }
 
 .arrow {
   font-size: 3rem;
   padding: 1rem;
   cursor: pointer;
-  background: none;
+  background: rgba(255, 255, 255, 0.05);
   border: none;
+  border-radius: 50%;
   color: var(--primary-color);
   transition: all 0.3s ease;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
-  text-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-  z-index: 10;
-  animation: pulse 2s infinite ease-in-out;
 }
 
 .arrow:hover {
+  background: rgba(255, 255, 255, 0);
   color: #ffffff;
-  transform: scale(1.2);
-  text-shadow: var(--glow-primary); /* Uses your global blue glow */
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.5; transform: translateX(0); }
-  50% { opacity: 1; transform: translateX(5px); }
-}
-
-.arrow.left {
-  animation-direction: reverse;
+  transform: scale(1.1);
+  text-shadow: 0 0 10px var(--primary-color);
 }
 
 /* Mobile adjustments */
 @media (max-width: 48rem) {
-  .selectionPanel {
-    gap: 1rem;
+  .selectionPanelContainer {
+    width: 100vw;
+    gap: 0.5rem;
   }
-  
+
+  .modeItem {
+    flex: 0 0 80vw; /* Cards take up most of the screen on mobile */
+  }
+
   .arrow {
-    font-size: 2rem;
+    display: none; /* Hide arrows on mobile, use touch swipe instead */
   }
 }

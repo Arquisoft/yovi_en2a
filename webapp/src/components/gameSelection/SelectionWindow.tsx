@@ -1,24 +1,25 @@
+import React from 'react';
 import TopRightMenu from '../topRightMenu/TopRightMenu';
-import SelectionPanel from './selectionPanel/SelectionPanel'
+import SelectionPanel from './selectionPanel/SelectionPanel';
 import styles from './SelectionWindow.module.css';
 
-const SelectionWindow = () => {
+const SelectionWindow: React.FC = () => {
   return (
     <div className={styles.selectionWindowContainer}>
-      {/* Absolute positioned corner menu */}
+      {/* 1. Utility Menu (Top Right) */}
       <div className={styles.topRightCorner}>
         <TopRightMenu />
       </div>
 
-      {/* Title section */}
-      <div className={styles.mainTitle}>
+      {/* 2. Title Section */}
+      <header className={styles.mainTitle}>
         <h2>SELECT YOUR GAME MODE</h2>
-      </div>
+      </header>
 
-      {/* Selection panel content */}
-      <div className={styles.selectionPanelWrapper}>
+      {/* 3. Container Section */}
+      <main className={styles.selectionPanelWrapper}>
         <SelectionPanel />
-      </div>
+      </main>
     </div>
   );
 };
