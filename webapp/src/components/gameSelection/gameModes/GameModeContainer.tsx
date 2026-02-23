@@ -3,6 +3,7 @@ import type { GameMode, Difficulty } from "./GameMode";
 import { Difficulty as DifficultyValues } from "./GameMode";
 // 1. Import styles as an object
 import styles from "./GameModeContainer.module.css";
+import imagenGameY from "../../../assets/background_image_gameY.png";
 
 type Props = {
   mode: GameMode;
@@ -28,45 +29,47 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
   const currentDifficulty = difficulties[currentDifficultyIndex];
 
   return (
-    // 2. Apply styles using the styles object
     <div className={styles.gameModeContainer}>
+      {/* Superior: Título y Ayuda */}
       <div className={styles.header}>
         <h2 className={styles.title}>{mode.label}</h2>
         <div className={styles.tooltipContainer}>
           <button className={styles.infoButton}>?</button>
-          <span className={styles.tooltip}>{mode.description}</span>
+          <div className={styles.tooltip}>{mode.description}</div>
         </div>
       </div>
 
+      {/* Centro: Imagen */}
       <div className={styles.imageContainer}>
         <img
-          src={`https://via.placeholder.com/400x200?text=${encodeURIComponent(
-            mode.label
-          )}`}
+          src={imagenGameY}
           alt={mode.label}
         />
       </div>
 
-      <div className={styles.difficultyContainer}>
-        {currentDifficultyIndex > 0 ? (
-          <button className={styles.arrow} onClick={decreaseDifficulty}>
+      {/* Inferior: Selector de Dificultad */}
+      <div className={styles.difficultySection}>
+        <span className={styles.difficultyLabel}>Difficulty</span>
+        <div className={styles.difficultySelector}>
+          <button 
+            className={styles.arrow} 
+            onClick={decreaseDifficulty}
+            style={{ visibility: currentDifficultyIndex > 0 ? 'visible' : 'hidden' }}
+          >
             ←
           </button>
-        ) : (
-          <div className={styles.arrow} style={{ visibility: 'hidden' }}>←</div>
-        )}
-
-        <div className={styles.difficultyBox}>{currentDifficulty}</div>
-
-        {currentDifficultyIndex < difficulties.length - 1 ? (
-          <button className={styles.arrow} onClick={increaseDifficulty}>
+          <div className={styles.difficultyBox}>{currentDifficulty}</div>
+          <button 
+            className={styles.arrow} 
+            onClick={increaseDifficulty}
+            style={{ visibility: currentDifficultyIndex < difficulties.length - 1 ? 'visible' : 'hidden' }}
+          >
             →
           </button>
-        ) : (
-          <div className={styles.arrow} style={{ visibility: 'hidden' }}>→</div>
-        )}
+        </div>
       </div>
 
+      {/* Fondo: Acción Principal */}
       <button
         className={styles.playButton}
         onClick={() => {
@@ -74,7 +77,7 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
           mode.start();
         }}
       >
-        Play
+        PLAY
       </button>
     </div>
   );
