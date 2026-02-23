@@ -1,23 +1,50 @@
-/* SelectionPanel.module.css */
-
 .selectionPanelContainer {
+  position: relative;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   width: 100%;
   max-width: 90rem;
   margin: 0 auto;
-  position: relative;
-  /* Ensure the container itself can grow to fill long screens */
-  min-height: 70vh;
+  height: 100%;
+  padding: 0.5rem 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Flechas centradas verticalmente */
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 3rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.left {
+  left: 0;
+}
+
+.right {
+  right: 0;
 }
 
 .carouselViewport {
   flex: 1;
   width: 100%;
+  height: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   scroll-behavior: smooth;
-  /* Padding top/bottom allows space for hover scale without clipping */
-  padding: 4rem 0;
+  padding: 2rem 0;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
   scroll-snap-type: x mandatory;
@@ -30,66 +57,32 @@
 .modesWrapper {
   display: flex;
   flex-direction: row;
-  /* This is vital: forces all cards to match the height of the container/tallest card */
-  align-items: stretch; 
+  align-items: stretch;
   gap: 2.5rem;
-  padding: 0 10%;
-  /* Height for tall phones */
-  min-height: 38rem; 
+  padding: 0 8%;
+  height: 100%;
 }
 
 .modeItem {
   flex: 0 0 auto;
-  /* Relative width for mobile, capped for desktop */
   width: 75vw;
-  min-width: 17.5rem; /* ~280px */
-  max-width: 24rem;   /* ~380px */
-  
+  min-width: 17.5rem;
+  max-width: 24rem;
+  height: 100%;
+  display: flex;
+  overflow: hidden;
   scroll-snap-align: center;
   transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  position: relative;
-  display: flex; /* Makes the inner GameModeContainer fill the stretched height */
 }
 
-/* Arrows - Styled for absolute window priority */
-.arrow {
-  display: none; /* Mobile first: arrows hidden */
-  font-size: 3rem;
-  width: 4.5rem;
-  height: 4.5rem;
-  cursor: pointer;
-  background: transparent;
-  border: none;
-  color: #ffffff;
-  z-index: 100;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-}
-
-/* DESKTOP CONFIG */
+/* Desktop */
 @media (min-width: 48.1rem) {
-  .selectionPanelContainer {
-    min-height: auto;
-  }
-
-  .carouselViewport {
-    scroll-snap-type: none;
-    padding: 5rem 1rem;
-  }
-
-  .modesWrapper {
-    gap: 4rem;
-    padding: 0 4rem;
-    min-height: auto;
-  }
-
   .modeItem {
     width: 22rem;
   }
 
   .modeItem:hover {
-    transform: scale(1.06);
+    transform: scale(1.04);
     z-index: 50;
   }
 
@@ -98,31 +91,13 @@
   }
 
   .arrow:hover {
-    transform: scale(1.15);
+    transform: translateY(-50%) scale(1.15);
   }
 }
 
-/* MOBILE FIXES */
+/* Mobile */
 @media (max-width: 48rem) {
-  .modesWrapper {
-    /* Responsive height for long screens: 
-       if the screen is very tall, the wrapper follows */
-    min-height: 60vh; 
-    gap: 1.5rem;
-  }
-
   .modeItem:hover {
-    /* Disable scale on touch to prevent focus/clipping issues */
     transform: none;
-  }
-}
-
-/* ULTRA NARROW DEVICES */
-@media (max-width: 310px) {
-  .modeItem {
-    min-width: 90vw;
-  }
-  .modesWrapper {
-    padding: 0 5%;
   }
 }
