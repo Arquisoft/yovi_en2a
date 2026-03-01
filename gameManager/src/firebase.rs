@@ -52,7 +52,7 @@ async fn get_connection() -> Result<FirestoreDb, Box<dyn Error>> {
 /// * `Err` - If the document is missing or the network is down.
 pub async fn read_db<T>(table_name: &str, id: &str) -> Result<T, Box<dyn Error>>
 where
-        for<'de> T: DBData + Send + Sync,
+        for<'de> T: DBData,
 {
     // Get the Firestore connection
     let db = get_connection().await?;
@@ -84,7 +84,7 @@ where
 /// * `data` - Reference to the object you want to save.
 pub async fn insert_db<T>(table_name: &str, id: &str, data: &T) -> Result<(), Box<dyn Error>>
 where
-        for<'de> T: Serialize + Deserialize<'de> + DBData + Send + Sync,
+        for<'de> T: DBData,
 {
     // Get connection
     let db = get_connection().await?;
@@ -109,20 +109,12 @@ where
     Ok(())
 }
 
-/// A specific helper to print Match info to the console.
-/// This is mostly for debugging to see if things are working.
-pub async fn read_matches(id: &str) -> Result<(), Box<dyn Error>> {
-    let resultado = read_db::<Match>("Match", id).await;
-
-    match resultado {
-        Ok(u) => println!("Match found: {:?}", u),
-        Err(_) => println!("Could not find ID {}", id),
-    }
-    Ok(())
-}
-
 /// Shorthand to get a Match struct directly from the "Match" collection.
 pub async fn get_match_by_id(id: &str) -> Result<Match, Box<dyn Error>> {
     let match_data: Match = read_db("Match", id).await?;
     Ok(match_data)
+}
+
+pub async fn insert_match_by_id(id: &str, match_data: Match) -> Result<(), Box<dyn Error>> {
+    insert_db("Match", id, match_data).await?;
 }

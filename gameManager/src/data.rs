@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-pub trait DBData: Serialize + for<'de> Deserialize<'de> + std::fmt::Debug {}
+pub trait DBData: Serialize + for<'de> Deserialize<'de> + std::fmt::Debug  + Send + Sync {}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct Match{
