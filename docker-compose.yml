@@ -31,6 +31,16 @@ services:
     networks:
       - monitor-net
 
+  auth-engine:
+    build: ./userAuthentification
+    container_name: userAuthentification
+    ports:
+      - "4001:4001"
+    networks:
+      - monitor-net
+    environment:
+      - FIREBASE_PROJECT_ID=tu-id-aqui
+
   prometheus:
     image: prom/prometheus
     container_name: prometheus
