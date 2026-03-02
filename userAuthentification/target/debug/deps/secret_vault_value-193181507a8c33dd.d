@@ -1,8 +1,0 @@
-C:\Users\matia\Desktop\UNI\UNI-3ºYEAR\2_CUATRI\ASW\Project\yovi_en2a\userAuthentification\target\debug\deps\secret_vault_value-193181507a8c33dd.d: C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\lib.rs C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\value.rs C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\value_serde.rs C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\value_proto.rs
-
-C:\Users\matia\Desktop\UNI\UNI-3ºYEAR\2_CUATRI\ASW\Project\yovi_en2a\userAuthentification\target\debug\deps\libsecret_vault_value-193181507a8c33dd.rmeta: C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\lib.rs C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\value.rs C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\value_serde.rs C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\value_proto.rs
-
-C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\lib.rs:
-C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\value.rs:
-C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\value_serde.rs:
-C:\Users\matia\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\secret-vault-value-0.3.10\src\value_proto.rs:
