@@ -1,0 +1,103 @@
+.selectionPanelContainer {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 90rem;
+  margin: 0 auto;
+  height: 100%;
+  padding: 0.5rem 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Flechas centradas verticalmente */
+.arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 3rem;
+  width: 4.5rem;
+  height: 4.5rem;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  z-index: 100;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.left {
+  left: 0;
+}
+
+.right {
+  right: 0;
+}
+
+.carouselViewport {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  padding: 2rem 0;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
+}
+
+.carouselViewport::-webkit-scrollbar {
+  display: none;
+}
+
+.modesWrapper {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 2.5rem;
+  padding: 0 8%;
+  height: 100%;
+}
+
+.modeItem {
+  flex: 0 0 auto;
+  width: 75vw;
+  min-width: 17.5rem;
+  max-width: 24rem;
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+  scroll-snap-align: center;
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Desktop */
+@media (min-width: 48.1rem) {
+  .modeItem {
+    width: 22rem;
+  }
+
+  .modeItem:hover {
+    transform: scale(1.04);
+    z-index: 50;
+  }
+
+  .arrow {
+    display: flex;
+  }
+
+  .arrow:hover {
+    transform: translateY(-50%) scale(1.15);
+  }
+}
+
+/* Mobile */
+@media (max-width: 48rem) {
+  .modeItem:hover {
+    transform: none;
+  }
+}

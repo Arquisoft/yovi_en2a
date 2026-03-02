@@ -1,22 +1,23 @@
-import './App.css'
-import AuthForm from './AuthForm';
-import reactLogo from './assets/react.svg'
+import './styles/theme/global.css'
+import './styles/theme/variables.css'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import MainMenu from './components/mainMenu/MainMenu';
+import SelectionWindow from './components/gameSelection/SelectionWindow';
+import LoginForm from './components/auth/LoginForm';
+import RegisterForm from './components/auth/RegisterForm';
+
 
 function App() {
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank" rel="noreferrer">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
+    <Router>
+      <Routes>
+        <Route path="/" element={<MainMenu />} />
+        <Route path="/login" element={<LoginForm/>}/>
+        <Route path="/register" element={<RegisterForm/>}/>
+        <Route path="/gameSelection" element={<SelectionWindow/>}/>
 
-      <h2>Welcome to the Software Arquitecture 2025-2026 course</h2>
-      <AuthForm />
-    </div>
+      </Routes>
+    </Router>
   );
 }
 

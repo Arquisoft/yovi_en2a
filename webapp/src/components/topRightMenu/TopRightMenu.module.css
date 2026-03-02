@@ -1,0 +1,50 @@
+/* TopRightMenu.module.css */
+
+.topRightMenu {
+  position: absolute;
+  top: 1rem;
+  right: 1rem; /* This forces it to the top-right corner */
+  display: flex;
+  flex-direction: row; /* Horizontal layout */
+  justify-content: flex-end; /* Align buttons to the right inside the container */
+  gap: 0.5rem;
+  z-index: 100;
+  
+  /* Debugging tip: add 'background: red;' here temporarily 
+     to see if the container is actually where you think it is */
+}
+
+/* We target the static class we added in MenuButtons.tsx */
+.topRightMenu :global(.mainMenuOption) {
+  width: 3.3rem;
+  height: 3.3rem;
+  min-width: unset; /* Remove any min-width from the main menu buttons */
+  padding: 0.4rem;
+  border-radius: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topRightMenu :global(.menuButtonImage) {
+  filter: brightness(0) invert(1); /* Used to transform any icon into white, 
+  the brightness(0) transforms the icon into pure black without 
+  mattering the original color and invert(1) to the oposite that 
+  in this case is white */
+  width: 100%;
+  height: 100%;
+  object-fit: contain; /* Scale the icon into the container */
+}
+
+@media (max-width: 48rem) {
+  .topRightMenu {
+    top: 0.5rem;
+    right: 0.5rem;
+  }
+  .topRightMenu :global(.mainMenuOption) {
+    width: 2.8rem;
+    height: 2.8rem;
+  }
+}
