@@ -22,7 +22,7 @@
         <div className={styles.mainMenuButtons}>
           <MenuButtons 
             label="Log In" 
-            onClick={() => console.log('Log In')} 
+            onClick={() => navigate("/login")} 
           />
           <MenuButtons 
             label="Play as Guest" 

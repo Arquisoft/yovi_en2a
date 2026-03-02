@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import styles from './AuthForm.module.css';
 
-interface LoginFormProps {
-  onSwitchToRegister: () => void;
-}
-
-const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
+const LoginForm: React.FC = () => {
+  const navigate = useNavigate();
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
@@ -35,8 +35,9 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       const data = await res.json();
       if (res.ok) {
         setResponseMessage(data.message);
-        setEmail('');
-        setPassword('');
+        setTimeout(() => {
+            navigate('/gameSelection');
+        }, 1000);
       } else {
         setError(data.error || 'Server error occurred.');
       }
@@ -48,50 +49,47 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="auth-form">
+    <form onSubmit={handleSubmit} className={styles.authForm}>
       <h2>Login</h2>
 
-      <div className="form-group">
+      <div className={styles.formGroup}>
         <label htmlFor="login-email">Email address</label>
         <input
           type="email"
           id="login-email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="form-input"
+          className={styles.formInput}
         />
       </div>
 
-      <div className="form-group">
+      <div className={styles.formGroup}>
         <label htmlFor="login-password">Password</label>
         <input
           type="password"
           id="login-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
-          className="form-input"
+          className={styles.formInput}
         />
       </div>
 
-      <button type="submit" className="submit-button" disabled={loading}>
+      <button type="submit" className={styles.submitButton} disabled={loading}>
         {loading ? 'Processing...' : 'Login'}
       </button>
 
-      <div
-        style={{ marginTop: '15px', cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
-        onClick={onSwitchToRegister}
-      >
+      <Link to="/register" className={styles.linkText}>
         If you haven't registered yet, click here
-      </div>
+      </Link>
 
       {responseMessage && (
-        <div className="success-message" style={{ marginTop: 12, color: 'green' }}>
+        <div className={styles.successMessage}>
           {responseMessage}
         </div>
       )}
 
       {error && (
-        <div className="error-message" style={{ marginTop: 12, color: 'red' }}>
+        <div className={styles.errorMessage}>
           {error}
         </div>
       )}
