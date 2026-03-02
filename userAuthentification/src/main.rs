@@ -13,6 +13,8 @@ mod user_auth;
 mod auth_utils; 
 mod firebase;
 
+use user_auth::{register_user, login_user};
+
 // --- SERDE STRUCTS FOR REQUESTS AND RESPONSES ---
 
 #[derive(Deserialize)]
