@@ -1,5 +1,5 @@
 import './App.css'
-import RegisterForm from './RegisterForm';
+import AuthForm from './AuthForm';
 import reactLogo from './assets/react.svg'
 
 function App() {
@@ -15,7 +15,7 @@ function App() {
       </div>
 
       <h2>Welcome to the Software Arquitecture 2025-2026 course</h2>
-      <RegisterForm />
+      <AuthForm />
     </div>
   );
 }

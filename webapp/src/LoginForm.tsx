@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 
-interface RegisterFormProps {
-  onSwitchToLogin: () => void;
+interface LoginFormProps {
+  onSwitchToRegister: () => void;
 }
 
-const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
   const [email, setEmail] = useState('');
-  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [responseMessage, setResponseMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +16,7 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     setResponseMessage(null);
     setError(null);
 
-    if (!email.trim() || !username.trim() || !password.trim()) {
+    if (!email.trim() || !password.trim()) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -25,19 +24,18 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
     setLoading(true);
     try {
       const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
-      const res = await fetch(`${API_URL}/api/register`, {
+      const res = await fetch(`${API_URL}/api/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, username, password }),
+        body: JSON.stringify({ email, password }),
       });
 
       const data = await res.json();
       if (res.ok) {
         setResponseMessage(data.message);
         setEmail('');
-        setUsername('');
         setPassword('');
       } else {
         setError(data.error || 'Server error occurred.');
@@ -51,13 +49,13 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
 
   return (
     <form onSubmit={handleSubmit} className="auth-form">
-      <h2>Register</h2>
+      <h2>Login</h2>
 
       <div className="form-group">
-        <label htmlFor="register-email">Email address</label>
+        <label htmlFor="login-email">Email address</label>
         <input
           type="email"
-          id="register-email"
+          id="login-email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="form-input"
@@ -65,21 +63,10 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
       </div>
 
       <div className="form-group">
-        <label htmlFor="register-username">Username</label>
-        <input
-          type="text"
-          id="register-username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="form-input"
-        />
-      </div>
-
-      <div className="form-group">
-        <label htmlFor="register-password">Password</label>
+        <label htmlFor="login-password">Password</label>
         <input
           type="password"
-          id="register-password"
+          id="login-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           className="form-input"
@@ -87,14 +74,14 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
       </div>
 
       <button type="submit" className="submit-button" disabled={loading}>
-        {loading ? 'Processing...' : 'Sign Up'}
+        {loading ? 'Processing...' : 'Login'}
       </button>
 
       <div
         style={{ marginTop: '15px', cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
-        onClick={onSwitchToLogin}
+        onClick={onSwitchToRegister}
       >
-        Already have an account? Click here to login
+        If you haven't registered yet, click here
       </div>
 
       {responseMessage && (
@@ -112,4 +99,4 @@ const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
   );
 };
 
-export default RegisterForm;
+export default LoginForm;

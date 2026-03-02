@@ -17,7 +17,10 @@ static INIT_CRYPTO: Once = Once::new();
 /// because of how modern Rust crates handle TLS.
 async fn get_connection() -> Result<FirestoreDb, Box<dyn Error>> {
     // Try to load the .env file if it exists
-    let _ = dotenv();
+    match dotenvy::dotenv() {
+        Ok(_) => println!("INFO: Archivo .env cargado correctamente."),
+        Err(e) => println!("ADVERTENCIA: No se pudo cargar el .env. Detalle: {}", e),
+    }
 
     // This block only runs the very first time the function is called.
     // Rust is very strict about crypto providers now!

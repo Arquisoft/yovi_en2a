@@ -14,3 +14,4 @@ rustls = { version = "0.23", features = ["ring"] }
 tokio = { version = "1.0", features = ["full"] }
 anyhow = "1.0"
 thiserror = "1.0"
+axum = "0.7"

@@ -26,19 +26,49 @@ app.use((req, res, next) => {
 
 app.use(express.json());
 
-app.post('/createuser', async (req, res) => {
-  const username = req.body && req.body.username;
+// RUTA DE REGISTRO
+app.post('/api/register', async (req, res) => {
+  const { email, username, password } = req.body;
   try {
-    // Simulate a 1 second delay to mimic processing/network latency
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Aquí hacemos puente hacia el microservicio en Rust (asumiendo que corre en el puerto 8000)
+    const rustResponse = await fetch('http://127.0.0.1:8000/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, username, password })
+    });
+    
+    if (!rustResponse.ok) {
+      const errorText = await rustResponse.text();
+      return res.status(400).json({ error: errorText });
+    }
 
-    const message = `Hello ${username}! welcome to the course!`;
-    res.json({ message });
+    res.json({ message: 'User registered successfully!' });
   } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(500).json({ error: 'Internal server error communicating with database service.' });
   }
 });
 
+// RUTA DE LOGIN
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const rustResponse = await fetch('http://127.0.0.1:8000/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+
+    if (!rustResponse.ok) {
+      const errorText = await rustResponse.text();
+      return res.status(401).json({ error: errorText });
+    }
+
+    const userData = await rustResponse.json();
+    res.json({ message: `Welcome back, ${userData.username}!` });
+  } catch (err) {
+    res.status(500).json({ error: 'Internal server error communicating with database service.' });
+  }
+});
 
 if (require.main === module) {
   app.listen(port, () => {
@@ -46,4 +76,4 @@ if (require.main === module) {
   })
 }
 
-module.exports = app
+module.exports = app;
