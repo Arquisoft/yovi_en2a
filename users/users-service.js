@@ -44,6 +44,7 @@ app.post('/api/register', async (req, res) => {
 
     res.json({ message: 'User registered successfully!' });
   } catch (err) {
+    console.error('[Error] Fallo en la comunicación al registrar usuario:', err);
     res.status(500).json({ error: 'Internal server error communicating with database service.' });
   }
 });
@@ -66,6 +67,7 @@ app.post('/api/login', async (req, res) => {
     const userData = await rustResponse.json();
     res.json({ message: `Welcome back, ${userData.username}!` });
   } catch (err) {
+    console.error('[Error] Fallo en la comunicación al iniciar sesión:', err);
     res.status(500).json({ error: 'Internal server error communicating with database service.' });
   }
 });
