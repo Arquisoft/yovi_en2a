@@ -116,5 +116,6 @@ pub async fn get_match_by_id(id: &str) -> Result<Match, Box<dyn Error>> {
 }
 
 pub async fn insert_match_by_id(id: &str, match_data: Match) -> Result<(), Box<dyn Error>> {
-    insert_db("Match", id, match_data).await?;
+    insert_db("Match", id, &match_data).await?;
+    Ok(())
 }

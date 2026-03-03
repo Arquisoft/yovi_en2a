@@ -51,6 +51,34 @@ services:
     networks:
       - monitor-net
 
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - monitor-net
+
+  gameManager:
+    build: ./gameManager
+    container_name: gameManager
+    image: ghcr.io/arquisoft/yovi_en2a-gamemanager:latest
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_URL=redis://redis:6379
+    networks:
+      - monitor-net
+
+
 networks:
   monitor-net:
     driver: bridge
+
+volumes:
+  redis-data:
+
