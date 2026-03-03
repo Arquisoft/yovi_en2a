@@ -36,12 +36,13 @@ describe('AudioSettings Strategy', () => {
     expect(slider.value).toBe('40')
 
     // 2. Test onMouseDown (Line 23)
+    // Use regex match on className to bypass CSS Modules hashing
     fireEvent.mouseDown(slider)
-    expect(tooltip).toHaveClass('visible')
+    expect(tooltip.className).toMatch(/visible/i)
 
     // 3. Test onMouseUp (Line 24)
     fireEvent.mouseUp(slider)
-    expect(tooltip).not.toHaveClass('visible')
+    expect(tooltip.className).not.toMatch(/visible/i)
   })
 
   test('should handle all touch interactions (Covers lines 25-26)', () => {
@@ -53,10 +54,10 @@ describe('AudioSettings Strategy', () => {
 
     // 1. Test onTouchStart (Line 25)
     fireEvent.touchStart(slider)
-    expect(tooltip).toHaveClass('visible')
+    expect(tooltip.className).toMatch(/visible/i)
 
     // 2. Test onTouchEnd (Line 26)
     fireEvent.touchEnd(slider)
-    expect(tooltip).not.toHaveClass('visible')
+    expect(tooltip.className).not.toMatch(/visible/i)
   })
 })

@@ -1,44 +1,59 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, test, expect, vi } from 'vitest'
+import { describe, test, expect, vi, beforeEach } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import MainMenu from '../components/mainMenu/MainMenu'
 import '@testing-library/jest-dom'
 
+// 1. Create a mock function to track navigation
+const mockNavigate = vi.fn()
+
+// 2. Mock react-router-dom to replace useNavigate with our tracked function
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...actual as any,
+    useNavigate: () => mockNavigate,
+  }
+})
+
 describe('MainMenu Component', () => {
   
+  // Clear the mock before each test to ensure a clean slate
+  beforeEach(() => {
+    mockNavigate.mockClear()
+  })
+
   test('renders title and subtitle correctly', () => {
-    render(<MainMenu />)
+    render(<MemoryRouter><MainMenu /></MemoryRouter>)
     
     expect(screen.getByText(/GAMEY/i)).toBeInTheDocument()
     expect(screen.getByText(/Three sides, one goal/i)).toBeInTheDocument()
   })
 
   test('renders the action buttons with correct labels', () => {
-    render(<MainMenu />)
+    render(<MemoryRouter><MainMenu /></MemoryRouter>)
     
-    // Verificamos que los botones que vienen de MenuButtons existan
     expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /play as guest/i })).toBeInTheDocument()
   })
 
-  test('calls console.log when buttons are clicked', async () => {
+  test('calls navigation when buttons are clicked', async () => {
     const user = userEvent.setup()
-    
-    // Espiamos el console.log para ver si se llama
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {})
-    
-    render(<MainMenu />)
+    render(<MemoryRouter><MainMenu /></MemoryRouter>)
 
-    // Click en Log In
     const loginBtn = screen.getByRole('button', { name: /log in/i })
     await user.click(loginBtn)
-    expect(consoleSpy).toHaveBeenCalledWith('Log In')
+    
+    // 3. Verify that the app tried to navigate to the login route
+    // Adjust '/login' if your actual route is different!
+    expect(mockNavigate).toHaveBeenCalledWith('/login')
 
-    // Click en Guest
     const guestBtn = screen.getByRole('button', { name: /play as guest/i })
     await user.click(guestBtn)
-    expect(consoleSpy).toHaveBeenCalledWith('Play as Guest')
-
-    consoleSpy.mockRestore()
+    
+    // Verify navigation for guest play
+    // Adjust '/game' or '/selection' based on your actual route!
+    expect(mockNavigate).toHaveBeenCalledWith('/gameSelection')
   })
 })

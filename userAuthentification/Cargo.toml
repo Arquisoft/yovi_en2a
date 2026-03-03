@@ -15,3 +15,7 @@ tokio = { version = "1.0", features = ["full"] }
 anyhow = "1.0"
 thiserror = "1.0"
 axum = "0.7"
+
+[dev-dependencies]
+rand = "0.8"
+serial_test = "3.4.0"

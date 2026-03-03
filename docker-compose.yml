@@ -39,7 +39,7 @@ services:
     networks:
       - monitor-net
     environment:
-      - FIREBASE_PROJECT_ID=tu-id-aqui
+      - FIREBASE_PROJECT_ID=yovi-en2a
 
   prometheus:
     image: prom/prometheus

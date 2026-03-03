@@ -1,31 +1,31 @@
-use game_manager::firebase::{insert_db, get_match_by_id};
-use game_manager::data::{Match};
+// tests/db_tests.rs
+use userAuthentification::firebase::{insert_user_by_id, get_user_by_id};
+use userAuthentification::user_data::User;
 use serial_test::serial;
 
 #[tokio::test]
 #[serial]
-async fn test_full_match_cycle() {
-
-    let test_id = "test_3";
-    let match_data = Match {
-        player1id: "1".to_string(),
-        player2id: "1".to_string(),
-        result: "1 Win".to_string(),
+async fn test_full_user_db_cycle() {
+    let test_id = "test_db_user_123@example.com";
+    let user_data = User {
+        email: test_id.to_string(),
+        username: "db_tester".to_string(),
+        password_hash: "dummy_hashed_pwd".to_string(),
     };
 
-    let insert_result = insert_db("Match", test_id, &match_data).await;
-
+    // Test Insert
+    let insert_result = insert_user_by_id(test_id, &user_data).await;
     if let Err(ref e) = insert_result {
-        eprintln!("Error detallado de Firestore: {}", e);
+        eprintln!("Detailed Firestore error: {}", e);
     }
+    assert!(insert_result.is_ok(), "Failed to insert user: {:?}", insert_result.err());
 
-    assert!(insert_result.is_ok(), "Fallo al insertar: {:?}", insert_result.err());
-    let read_result: Result<Match, _> = get_match_by_id(test_id).await;
-    assert!(read_result.is_ok(), "Fallo al leer el Match insertado");
+    // Test Read
+    let read_result = get_user_by_id(test_id).await;
+    assert!(read_result.is_ok(), "Failed to read the inserted User");
 
-    let fetched:Match = read_result.unwrap();
-    assert_eq!(fetched.player1id, "1");
-    assert_eq!(fetched.player2id, "1");
-    assert_eq!(fetched.result, "1 Win");
+    let fetched = read_result.unwrap();
+    assert_eq!(fetched.email, test_id);
+    assert_eq!(fetched.username, "db_tester");
+    assert_eq!(fetched.password_hash, "dummy_hashed_pwd");
 }
-
