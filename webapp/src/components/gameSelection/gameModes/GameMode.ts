@@ -16,6 +16,7 @@ export interface GameMode {
   label: string;
   currentLevel: Difficulty;
   description: string;
+  size: number;
   start: () => React.ReactNode;
 }
 

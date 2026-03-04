@@ -3,16 +3,16 @@ import React from "react";
 import type { GameMode } from "./GameMode";
 import { Difficulty } from "./GameMode";
 
-export class NormalMode implements GameMode {
-  id = "normal";
+export class LocalMode implements GameMode {
+  id = "local";
 
-  label = "Normal Mode";
-
-  size = 8;
+  label = "Local Mode";
 
   currentLevel = Difficulty.Normal;
 
-  description = "Normal mode that follows the classical rules of the gamey game. Play against a bot and try to connect the three sizes to win.";
+  size = 8;
+
+  description = "Normal mode that follows the classical rules of the gamey game. Play locally against a friend and try to connect the three sizes to win.";
 
   start(): React.ReactNode {
     return (

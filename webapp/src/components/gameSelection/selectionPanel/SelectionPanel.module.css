@@ -1,7 +1,8 @@
 .selectionPanelContainer {
   position: relative;
   display: flex;
-  align-items: stretch;
+  flex-direction: row; /* Explicitly set to row */
+  align-items: center; /* Centers the arrows vertically */
   width: 100%;
   max-width: 90rem;
   margin: 0 auto;
@@ -11,45 +12,38 @@
   overflow: hidden;
 }
 
-/* Flechas centradas verticalmente */
+/* Let the arrows behave as normal flex items */
 .arrow {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
   font-size: 3rem;
   width: 4.5rem;
   height: 4.5rem;
+  flex-shrink: 0; /* CRUCIAL: Prevents the viewport from squishing the arrows */
   cursor: pointer;
   background: transparent;
   border: none;
   color: #ffffff;
   z-index: 100;
-  display: none;
+  display: none; /* Hidden on mobile by default */
   align-items: center;
   justify-content: center;
-}
-
-.left {
-  left: 0;
-}
-
-.right {
-  right: 0;
+  transition: transform 0.2s ease; /* Adds a smooth transition for the hover effect */
 }
 
 .carouselViewport {
   flex: 1;
+  align-self: stretch; /* Forces the viewport to take the full height of the container */
   width: 100%;
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-behavior: smooth;
   padding: 2rem 0;
-  scrollbar-width: none;
-  -webkit-overflow-scrolling: touch;
-  scroll-snap-type: x mandatory;
+  scrollbar-width: none; /* Hides scrollbar in Firefox */
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  scroll-snap-type: x mandatory; /* Enables snapping to the closest item */
 }
 
+/* Hides scrollbar in WebKit browsers (Chrome, Safari, Edge) */
 .carouselViewport::-webkit-scrollbar {
   display: none;
 }
@@ -59,26 +53,48 @@
   flex-direction: row;
   align-items: stretch;
   gap: 2.5rem;
-  padding: 0 8%;
+  /* Set left padding to match the exact gap. Right padding is 0 to avoid browser bugs */
+  padding-left: 2.5rem;
+  padding-right: 0; 
   height: 100%;
+}
+
+/* * CRUCIAL FIX: WebKit/Blink browsers often ignore right-padding on scrolling flex containers. 
+ * This invisible pseudo-element forces exactly 2.5rem of space at the very end of the scroll,
+ * perfectly matching the gap between items to keep it symmetrical.
+ */
+.modesWrapper::after {
+  content: "";
+  display: block;
+  flex: 0 0 0.1rem; /* Matches the gap perfectly */
 }
 
 .modeItem {
   flex: 0 0 auto;
-  width: 75vw;
+  width: 75vw; /* Base width for mobile (shows mostly 1 card) */
   min-width: 17.5rem;
   max-width: 24rem;
   height: 100%;
   display: flex;
   overflow: hidden;
-  scroll-snap-align: center;
+  scroll-snap-align: center; /* Snaps the center of the card to the center of the viewport */
   transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* Desktop */
-@media (min-width: 48.1rem) {
+/* --- RESPONSIVE BREAKPOINTS --- */
+
+/* Mobile (Up to 48rem) */
+@media (max-width: 48rem) {
+  .modeItem:hover {
+    transform: none; /* Disable scale effect on touch devices */
+  }
+}
+
+/* Tablet (Between 48.1rem and 64rem) */
+@media (min-width: 48.1rem) and (max-width: 64rem) {
   .modeItem {
-    width: 22rem;
+    width: 42vw; /* Fluid width allows the card to grow nicely on tablets */
+    max-width: 28rem; /* Higher cap so it uses the extra space well */
   }
 
   .modeItem:hover {
@@ -91,13 +107,27 @@
   }
 
   .arrow:hover {
-    transform: translateY(-50%) scale(1.15);
+    transform: scale(1.15); /* Slightly enlarges the arrow on hover */
   }
 }
 
-/* Mobile */
-@media (max-width: 48rem) {
+/* Desktop (Greater than 64rem) */
+@media (min-width: 64.1rem) {
+  .modeItem {
+    width: 24rem; /* Safely locks to a fixed width so it doesn't get ridiculously massive on wide monitors */
+    max-width: none;
+  }
+
   .modeItem:hover {
-    transform: none;
+    transform: scale(1.04);
+    z-index: 50;
+  }
+
+  .arrow {
+    display: flex;
+  }
+
+  .arrow:hover {
+    transform: scale(1.15);
   }
 }
