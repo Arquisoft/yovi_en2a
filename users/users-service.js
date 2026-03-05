@@ -31,7 +31,7 @@ app.post('/api/register', async (req, res) => {
   const { email, username, password } = req.body;
   try {
     // Aquí hacemos puente hacia el microservicio en Rust (asumiendo que corre en el puerto 8000)
-    const rustResponse = await fetch('http://127.0.0.1:8000/register', {
+    const rustResponse = await fetch('http://auth-engine:4001/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, username, password })
@@ -53,7 +53,7 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   try {
-    const rustResponse = await fetch('http://127.0.0.1:8000/login', {
+    const rustResponse = await fetch('http://auth-engine:4001/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
