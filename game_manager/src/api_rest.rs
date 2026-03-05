@@ -19,12 +19,10 @@ struct AppState {
 
 async fn create_match(
     State(state): State<AppState>,
-    Json(_payload): Json<NewMatchRequest>
+    Json(payload): Json<NewMatchRequest>
 ) -> Json<NewMatchResponse> {
     let new_id = Uuid::new_v4().to_string();
-
-    let _ = redis_client::save_match_state(&state.redis_pool, &new_id, 0).await;
-
+    let _ = crate::redis_client::save_match_state(&state.redis_pool, &new_id, 0).await;
     Json(NewMatchResponse { match_id: new_id })
 }
 

@@ -1,4 +1,5 @@
 const express = require('express');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 const app = express();
 const port = 3000;
 const swaggerUi = require('swagger-ui-express');
@@ -27,26 +28,26 @@ app.use((req, res, next) => {
   next();
 });
 
-const gameManagerProxy = createProxyMiddleware({
+app.use(express.json());
+
+app.use('/game', createProxyMiddleware({
   target: GAME_MANAGER_URL,
   changeOrigin: true,
   pathRewrite: {
-    '^/game': '', // Opcional: elimina /game de la URL al llegar a Rust
+    '^/game': '',
   },
-  onProxyReq: (proxyReq, req, res) => {
-    // Si usas express.json() antes, hay que re-escribir el body para el proxy
-    if (req.body) {
-      const bodyData = JSON.stringify(req.body);
-      proxyReq.setHeader('Content-Type', 'application/json');
-      proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
-      proxyReq.write(bodyData);
-    }
-  }
-});
+  on: {
+    proxyReq: (proxyReq, req, res) => {
+      if (req.body && Object.keys(req.body).length > 0) {
+        const bodyData = JSON.stringify(req.body);
+        proxyReq.setHeader('Content-Type', 'application/json');
+        proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+        proxyReq.write(bodyData);
+      }
+    },
+  },
+}));
 
-app.use('/game', gameManagerProxy);
-
-app.use(express.json());
 
 app.post('/createuser', async (req, res) => {
   const username = req.body && req.body.username;
