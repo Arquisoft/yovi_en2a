@@ -6,8 +6,11 @@ const fs = require('node:fs');
 const YAML = require('js-yaml');
 const promBundle = require('express-prom-bundle');
 
+
 const metricsMiddleware = promBundle({includeMethod: true});
 app.use(metricsMiddleware);
+
+const GAME_MANAGER_URL = process.env.GAMEMANAGER_URL || 'http://localhost:5000';
 
 try {
   const swaggerDocument = YAML.load(fs.readFileSync('./openapi.yaml', 'utf8'));
@@ -23,6 +26,25 @@ app.use((req, res, next) => {
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });
+
+const gameManagerProxy = createProxyMiddleware({
+  target: GAME_MANAGER_URL,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/game': '', // Opcional: elimina /game de la URL al llegar a Rust
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    // Si usas express.json() antes, hay que re-escribir el body para el proxy
+    if (req.body) {
+      const bodyData = JSON.stringify(req.body);
+      proxyReq.setHeader('Content-Type', 'application/json');
+      proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
+      proxyReq.write(bodyData);
+    }
+  }
+});
+
+app.use('/game', gameManagerProxy);
 
 app.use(express.json());
 
@@ -45,5 +67,7 @@ if (require.main === module) {
     console.log(`User Service listening at http://localhost:${port}`)
   })
 }
+
+
 
 module.exports = app
