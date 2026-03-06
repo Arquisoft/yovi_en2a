@@ -82,8 +82,8 @@ async fn main() {
         .route("/register", post(register_handler))
         .route("/login", post(login_handler));
 
-    // Define the address and port (127.0.0.1:8000 matches the Express fetch URL)
-    let addr = "127.0.0.1:8000";
+    // AQUI ESTA LA MAGIA: 0.0.0.0 para que Docker lo exponga, y 4001 para que coincida con Express
+    let addr = "0.0.0.0:4001";
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     
     println!("Rust Auth API listening on http://{}", addr);

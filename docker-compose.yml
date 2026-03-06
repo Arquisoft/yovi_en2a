@@ -40,7 +40,9 @@ services:
       - monitor-net
     environment:
       - FIREBASE_PROJECT_ID=yovi-en2a
-
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json 
+    volumes:
+      - ./userAuthentification/.secrets/yovi-en2a-firebase-adminsdk-fbsvc-4e0265d79c.json:/app/credentials.json:ro
   prometheus:
     image: prom/prometheus
     container_name: prometheus
