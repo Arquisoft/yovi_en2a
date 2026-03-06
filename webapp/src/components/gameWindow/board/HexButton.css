@@ -1,0 +1,52 @@
+.hex {
+  /* Base size */
+  --hex-w: 64px;              
+  --hex-h: 64px;
+
+  width: var(--hex-w);
+  height: var(--hex-h);
+
+  background: rgba(119, 118, 118, 0.862);
+  border: 1px solid rgba(57, 56, 56, 0.559);
+
+  /* Create the hexagonal shape using clip-path. */
+  clip-path: polygon(
+    50% 0%,
+    100% 25%,
+    100% 75%,
+    50% 100%,
+    0% 75%,
+    0% 25%
+  );
+}
+
+/* If the hex is not disabled, add hover and active effects to pop up */
+.hex:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+}
+
+/* When the button is pressed, it goes back to its original position and gets slightly brighter */
+.hex:active:not(:disabled) {
+  transform: translateY(0px);
+  filter: brightness(1.06);
+}
+
+/* When the button is disabled, it becomes darker and the cursor changes to not-allowed */
+.hex__content {
+  font-weight: 900;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.92);
+  user-select: none;
+}
+
+/* Disabled state: visual view by low opacity */
+.hex:disabled {
+  opacity: 0.5;
+}
+
+/* Player1 turns with color blue */
+.hex--player1 { background: rgba(77, 163, 255, 0.855); border-color: rgba(7,126,254,0.8); }
+
+/* Player2 turns with color red */
+.hex--player2 { background: rgba(255,80,80,0.62); border-color: rgb(255, 3, 3); }
