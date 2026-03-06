@@ -1,0 +1,23 @@
+[package]
+name = "game_manager"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+gamey = { path = "../gamey" } # Ajusta la ruta según tu carpeta
+dotenvy = "0.15"
+firestore = "0.47"
+rustls = { version = "0.23", features = ["ring"] }
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.0", features = ["full"] }
+axum = "0.8.8"
+uuid = { version = "1.21.0", features = ["v4"] }
+redis = { version = "0.24", features = ["tokio-comp", "connection-manager"] }
+bb8-redis = "0.14"
+
+[dev-dependencies]
+serial_test = "3.0"
+
+[[bin]]
+name = "game_manager"
+path = "src/main.rs"

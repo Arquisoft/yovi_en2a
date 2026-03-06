@@ -117,8 +117,13 @@ pub async fn get_user_by_id(id: &str) -> Result<User, Box<dyn Error>> {
     Ok(user_data)
 }
 
-
+<<<<<<<< HEAD:userAuthentification/src/firebase.rs
+/// Shorthand to insert a User struct directly into the "Users" collection.
+pub async fn insert_user_by_id(id: &str, user_data: &User) -> Result<(), Box<dyn Error>> {
+    insert_db("Users", id, user_data).await
+========
 pub async fn insert_match_by_id(id: &str, match_data: Match) -> Result<(), Box<dyn Error>> {
     insert_db("Match", id, &match_data).await?;
     Ok(())
+>>>>>>>> feature/gameManagement:game_manager/src/firebase.rs
 }
