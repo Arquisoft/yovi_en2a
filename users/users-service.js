@@ -20,6 +20,19 @@ try {
   console.log(e);
 }
 
+app.get('/', (req, res) => {
+  res.json({
+    service: "User Service",
+    status: "online",
+    version: "1.0.0",
+    endpoints: {
+      docs: "/api-docs",
+      game: "/game",
+      createUser: "/createuser"
+    }
+  });
+});
+
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
@@ -28,16 +41,15 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
-
-app.use('/game', createProxyMiddleware({
+const gameManagerProxy = createProxyMiddleware({
   target: GAME_MANAGER_URL,
   changeOrigin: true,
   pathRewrite: {
-    '^/game': '',
+    '^/game': '', // Removes /game from the prefix when forwarding
   },
   on: {
     proxyReq: (proxyReq, req, res) => {
+      // Fix for body-parser issues: manually re-writing the body if it was already parsed
       if (req.body && Object.keys(req.body).length > 0) {
         const bodyData = JSON.stringify(req.body);
         proxyReq.setHeader('Content-Type', 'application/json');
@@ -46,10 +58,12 @@ app.use('/game', createProxyMiddleware({
       }
     },
   },
-}));
+});
+
+app.use('/game', gameManagerProxy);
 
 
-app.post('/createuser', async (req, res) => {
+app.post('/createuser', express.json(), async (req, res) => {
   const username = req.body && req.body.username;
   try {
     // Simulate a 1 second delay to mimic processing/network latency

@@ -22,9 +22,12 @@ async fn get_connection() -> Result<FirestoreDb, Box<dyn Error>> {
     // This block only runs the very first time the function is called.
     // Rust is very strict about crypto providers now!
     INIT_CRYPTO.call_once(|| {
-        let provider = rustls::crypto::ring::default_provider();
-        let _ = provider.install_default();
-        println!("INFO: Global CryptoProvider (Ring) installed.");
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .expect("Failed to install Ring CryptoProvider");
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .ok();
     });
 
     // Check if the project ID is in our environment variables

@@ -5,6 +5,8 @@ services:
     image: ghcr.io/arquisoft/yovi_en2a-users:latest
     ports:
       - "3000:3000"
+    environment:
+      - GAMEMANAGER_URL=http://game_manager:5000
     networks:
       - monitor-net
 
@@ -24,7 +26,7 @@ services:
       - GAMEMANAGER_URL=http://game_manager:5000
     depends_on:
       - users
-      - gameManager
+      - game_manager
     networks:
       - monitor-net
 
@@ -57,26 +59,30 @@ services:
     networks:
       - monitor-net
 
-  gameManager:
-    build: ./game_manager
+  game_manager:
+    build:
+      context: .
+      dockerfile: game_manager/Dockerfile
     container_name: game_manager
     image: ghcr.io/arquisoft/yovi_en2a-gamemanager:latest
-    ports:
-      - "5000:5000"
+    expose:
+      - "5000"
     environment:
       - PORT=5000
       - REDIS_HOST=redis_db
       - REDIS_PORT=6379
+      - GAMEY=gamey
     depends_on:
       - redis_db
+      - gamey
     networks:
       - monitor-net
 
   redis_db:
       image: redis:alpine
       container_name: redis_db
-      ports:
-        - "6379:6379"
+      expose:
+        - "6379"
       networks:
         - monitor-net
       # Opcional: Persistencia para que no se borren las partidas al reiniciar
