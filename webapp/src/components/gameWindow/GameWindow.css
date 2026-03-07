@@ -1,0 +1,45 @@
+.game-window {
+  min-height: 100vh;
+  width: 100%;
+  box-sizing: border-box;
+
+  display: grid;
+  grid-template-rows: 4.25rem 1fr 5rem;
+  grid-template-columns: 1fr 22rem;
+  grid-template-areas:
+    "top top"
+    "center right"
+    "bottom right";
+
+  gap: 1rem;
+  padding: 1rem;
+
+  overflow-x: hidden;
+
+}
+
+.center-area {
+  grid-area: center;
+
+  display: flex;
+  justify-content: center; 
+  align-items: center;   
+
+  padding-left: 15rem;
+  padding-bottom: 4rem;
+  min-height: 0;             
+}
+
+.center-area::before {
+  content: "";
+  position: absolute;
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(
+    circle,
+    rgba(0, 100, 255, 0.15) 0%,
+    transparent 70%
+  );
+  filter: blur(90px);
+  z-index: 0;
+}

@@ -93,6 +93,7 @@ describe('RegisterForm Full Coverage', () => {
     expect(await screen.findByText(/network error/i)).toBeInTheDocument()
   })
 
+
   test('ensures loading state is reset in finally block', async () => {
     const user = userEvent.setup()
     globalThis.fetch = vi.fn().mockResolvedValueOnce({
@@ -109,5 +110,6 @@ describe('RegisterForm Full Coverage', () => {
     await screen.findByText(/done/i)
     expect(button).not.toBeDisabled()
     expect(button).toHaveTextContent(/Sign Up/i)
+
   })
 })

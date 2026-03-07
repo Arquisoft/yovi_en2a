@@ -11,6 +11,7 @@ describe('App Component Root', () => {
     
     // Check for a core element to confirm it's being displayed
     const mainTitle = screen.getByText(/GAMEY/i)
+
     expect(mainTitle).toBeInTheDocument()
   })
 

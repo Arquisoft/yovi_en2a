@@ -1,0 +1,12 @@
+.top-right-menu {
+  position: absolute;
+  /* Changed 20px to 1.25rem */
+  top: 1.25rem;
+  /* Changed 20px to 1.25rem */
+  right: 1.25rem;
+  display: flex;
+  /* Changed 10px to 0.625rem */
+  gap: 0.625rem;
+  /* Keeps the layer on top */
+  z-index: 10; 
+}
