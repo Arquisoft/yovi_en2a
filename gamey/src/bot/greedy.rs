@@ -24,8 +24,8 @@ impl YBot for GreedyBot {
         let bot_player: PlayerId = board.next_player()?;
 
 
-        // Score every available cell with a 3-tuple so max_by_key resolves
-        // ties in priority order: own-neighbours → side-bonus → centrality.
+        // Score every available cell with a 2-tuple
+        // ties in priority order: own-neighbours → centrality.
         let best_index = available
             .iter()
             .copied()
@@ -39,8 +39,12 @@ impl YBot for GreedyBot {
                     .filter(|n| board.cell_owner(n) == Some(bot_player))
                     .count();
 
-                //Centrality: total neighbours (more = more central).
-                let centrality = nbrs.len();
+                //Centrality: calculated based on position in the table.
+                let cx = coords.x() as i32;
+                let cy = coords.y() as i32;
+                let cz = coords.z() as i32;
+
+                let centrality = -((cx - cy).abs() + (cy - cz).abs() + (cz - cx).abs());
 
                 (own_neighbours, centrality)
             })?;
