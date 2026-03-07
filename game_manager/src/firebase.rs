@@ -5,8 +5,8 @@ use std::env;
 use dotenvy::dotenv;
 use std::sync::Once;
 
-// We import the User struct and DBData trait from user_data.rs
-use crate::user_data::{User, DBData};
+// We import the data structures from data.rs where they match with the firebase definition
+use crate::data::{Match, DBData};
 
 /// We use a `Once` static to make sure the crypto provider is only initialized once.
 /// If we don't do this, the app might panic if we call `get_connection` multiple times.
@@ -17,17 +17,17 @@ static INIT_CRYPTO: Once = Once::new();
 /// because of how modern Rust crates handle TLS.
 async fn get_connection() -> Result<FirestoreDb, Box<dyn Error>> {
     // Try to load the .env file if it exists
-    match dotenvy::dotenv() {
-        Ok(_) => println!("INFO: Archivo .env cargado correctamente."),
-        Err(e) => println!("ADVERTENCIA: No se pudo cargar el .env. Detalle: {}", e),
-    }
+    let _ = dotenv();
 
     // This block only runs the very first time the function is called.
     // Rust is very strict about crypto providers now!
     INIT_CRYPTO.call_once(|| {
-        let provider = rustls::crypto::ring::default_provider();
-        let _ = provider.install_default();
-        println!("INFO: Global CryptoProvider (Ring) installed.");
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .expect("Failed to install Ring CryptoProvider");
+        rustls::crypto::ring::default_provider()
+            .install_default()
+            .ok();
     });
 
     // Check if the project ID is in our environment variables
@@ -40,13 +40,14 @@ async fn get_connection() -> Result<FirestoreDb, Box<dyn Error>> {
     Ok(db)
 }
 
+
 /// Fetches a single document from a Firestore collection and maps it to a type `T`.
 ///
 /// # Type Parameters
 /// * `T`: The target structure. It needs to implement [`DBData`] (and Send/Sync for async safety).
 ///
 /// # Arguments
-/// * `table_name` - The name of the Firestore collection (like "Users").
+/// * `table_name` - The name of the Firestore collection (like "Users" or "Matches").
 /// * `id` - The specific ID of the document you want.
 ///
 /// # Returns
@@ -111,19 +112,13 @@ where
     Ok(())
 }
 
-/// Shorthand to get a User struct directly from the "Users" collection.
-pub async fn get_user_by_id(id: &str) -> Result<User, Box<dyn Error>> {
-    let user_data: User = read_db("Users", id).await?;
-    Ok(user_data)
+/// Shorthand to get a Match struct directly from the "Match" collection.
+pub async fn get_match_by_id(id: &str) -> Result<Match, Box<dyn Error>> {
+    let match_data: Match = read_db("Match", id).await?;
+    Ok(match_data)
 }
 
-<<<<<<<< HEAD:userAuthentification/src/firebase.rs
-/// Shorthand to insert a User struct directly into the "Users" collection.
-pub async fn insert_user_by_id(id: &str, user_data: &User) -> Result<(), Box<dyn Error>> {
-    insert_db("Users", id, user_data).await
-========
 pub async fn insert_match_by_id(id: &str, match_data: Match) -> Result<(), Box<dyn Error>> {
     insert_db("Match", id, &match_data).await?;
     Ok(())
->>>>>>>> feature/gameManagement:game_manager/src/firebase.rs
 }

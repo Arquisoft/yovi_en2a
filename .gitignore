@@ -1,6 +1,7 @@
 node_modules
 coverage
 gamey/target
+**/target
 userAuthentification/target
 lcov.info
 docs/build

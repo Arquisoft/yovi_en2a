@@ -1,5 +1,5 @@
 const express = require('express');
-const { createProxyMiddleware } = require('http-proxy-middleware');
+const { createProxyMiddleware, fixRequestBody } = require('http-proxy-middleware');
 const app = express();
 const port = 3000;
 const swaggerUi = require('swagger-ui-express');
@@ -7,11 +7,11 @@ const fs = require('node:fs');
 const YAML = require('js-yaml');
 const promBundle = require('express-prom-bundle');
 
-
 const metricsMiddleware = promBundle({includeMethod: true});
 app.use(metricsMiddleware);
 
 const GAME_MANAGER_URL = process.env.GAMEMANAGER_URL || 'http://localhost:5000';
+const AUTH_URL = process.env.AUTH_URL || 'http://localhost:4001';
 
 try {
   const swaggerDocument = YAML.load(fs.readFileSync('./openapi.yaml', 'utf8'));
@@ -28,7 +28,16 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(express.json());
+app.use('/api', createProxyMiddleware({
+  target: AUTH_URL,
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api': '',
+  },
+  on: {
+    proxyReq: fixRequestBody,
+  },
+}));
 
 app.use('/game', createProxyMiddleware({
   target: GAME_MANAGER_URL,
@@ -37,69 +46,15 @@ app.use('/game', createProxyMiddleware({
     '^/game': '',
   },
   on: {
-    proxyReq: (proxyReq, req, res) => {
-      if (req.body && Object.keys(req.body).length > 0) {
-        const bodyData = JSON.stringify(req.body);
-        proxyReq.setHeader('Content-Type', 'application/json');
-        proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData));
-        proxyReq.write(bodyData);
-      }
-    },
+    proxyReq: fixRequestBody,
   },
 }));
 
-
-app.post('/createuser', async (req, res) => {
-  const username = req.body && req.body.username;
-  try {
-    // Aquí hacemos puente hacia el microservicio en Rust (asumiendo que corre en el puerto 8000)
-    const rustResponse = await fetch('http://auth-engine:4001/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, username, password })
-    });
-    
-    if (!rustResponse.ok) {
-      const errorText = await rustResponse.text();
-      return res.status(400).json({ error: errorText });
-    }
-
-    res.json({ message: 'User registered successfully!' });
-  } catch (err) {
-    console.error('[Error] Fallo en la comunicación al registrar usuario:', err);
-    res.status(500).json({ error: 'Internal server error communicating with database service.' });
-  }
-});
-
-// RUTA DE LOGIN
-app.post('/api/login', async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    const rustResponse = await fetch('http://auth-engine:4001/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-
-    if (!rustResponse.ok) {
-      const errorText = await rustResponse.text();
-      return res.status(401).json({ error: errorText });
-    }
-
-    const userData = await rustResponse.json();
-    res.json({ message: `Welcome back, ${userData.username}!` });
-  } catch (err) {
-    console.error('[Error] Fallo en la comunicación al iniciar sesión:', err);
-    res.status(500).json({ error: 'Internal server error communicating with database service.' });
-  }
-});
-
+app.use(express.json());
 if (require.main === module) {
   app.listen(port, () => {
     console.log(`User Service listening at http://localhost:${port}`)
   })
 }
 
-
-module.exports = app
-
+module.exports = app;
