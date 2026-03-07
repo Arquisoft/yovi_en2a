@@ -67,20 +67,19 @@
 .closeButton {
   background: transparent;
   border: none;
-  color: white;
-  width: 2.2rem;
-  height: 2.2rem;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  color: #555;
   font-size: 1.2rem;
-  transition: background-color 0.2s, transform 0.1s;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  flex-shrink: 0;
 }
 
 .closeButton:hover {
-  background-color: #ff4444; 
+  color: #ff4444;
   transform: scale(1.1);
 }
 

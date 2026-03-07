@@ -35,11 +35,13 @@ async fn login_handler(Json(payload): Json<LoginRequest>) -> impl IntoResponse {
 
             (StatusCode::OK, Json(response)).into_response()
         }
-        Err(e) => {
-            (StatusCode::UNAUTHORIZED, e.to_string()).into_response()
-        }
+        Err(e) => (StatusCode::UNAUTHORIZED, Json(serde_json::json!({
+            "error": e.to_string()
+        }))).into_response()
     }
 }
+
+
 
 pub async fn run() {
     let app = Router::new()

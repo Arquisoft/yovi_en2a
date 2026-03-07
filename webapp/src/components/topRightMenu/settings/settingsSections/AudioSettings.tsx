@@ -1,11 +1,6 @@
-<<<<<<< HEAD
 import React, { useState } from 'react';
 import baseStyles from './SettingsSection.module.css';
 import audioStyles from './AudioSettings.module.css';
-=======
-import  { useState } from 'react';
-import './SettingsSection.css';
->>>>>>> feature/gameWindow
 import type { SettingsSection } from "./SettingsStrategy";
 
 const VolumeSlider: React.FC<{ label: string; defaultValue: number }> = ({ label, defaultValue }) => {
@@ -13,7 +8,6 @@ const VolumeSlider: React.FC<{ label: string; defaultValue: number }> = ({ label
   const [isActive, setIsActive] = useState(false);
 
   return (
-<<<<<<< HEAD
     <div className={baseStyles.controlGroup}>
       <div className={audioStyles.labelRow}>
         {/* The base module handles the generic label styling */}
@@ -21,46 +15,23 @@ const VolumeSlider: React.FC<{ label: string; defaultValue: number }> = ({ label
       </div>
       
       <div className={audioStyles.sliderContainer}>
-=======
-    <div className="control-group">
-      <div className="label-row">
-        <label>{label}</label>
-      </div>
-      
-      <div className="slider-container">
->>>>>>> feature/gameWindow
         <input 
           type="range" 
           min="0" 
           max="100" 
           value={value}
-<<<<<<< HEAD
           className={audioStyles.volumeRange}
-=======
-          className="volume-range"
->>>>>>> feature/gameWindow
           onInput={(e) => setValue(Number.parseInt(e.currentTarget.value))}
           onMouseDown={() => setIsActive(true)}
           onMouseUp={() => setIsActive(false)}
           onTouchStart={() => setIsActive(true)}
           onTouchEnd={() => setIsActive(false)}
           style={{
-<<<<<<< HEAD
-=======
-            // Dynamic track fill
->>>>>>> feature/gameWindow
             background: `linear-gradient(to right, var(--primary-color) ${value}%, rgba(255, 255, 255, 0.1) ${value}%)`
           }}
         />
-        
-<<<<<<< HEAD
         <div 
           className={`${audioStyles.volumeTooltip} ${isActive ? audioStyles.visible : ''}`}
-=======
-        {/* The Tooltip */}
-        <div 
-          className={`volume-tooltip ${isActive ? 'visible' : ''}`}
->>>>>>> feature/gameWindow
           style={{ left: `${value}%` }}
         >
           {value}
@@ -73,16 +44,10 @@ const VolumeSlider: React.FC<{ label: string; defaultValue: number }> = ({ label
 export class AudioSettings implements SettingsSection {
   id = 'audio';
   label = 'Audio';
-<<<<<<< HEAD
   
   render() {
     return (
       <div className={baseStyles.tabPanel}>
-=======
-  render() {
-    return (
-      <div className="tab-panel">
->>>>>>> feature/gameWindow
         <h3>Sound Settings</h3>
         <VolumeSlider label="Master Volume" defaultValue={80} />
         <VolumeSlider label="Music Volume" defaultValue={50} />

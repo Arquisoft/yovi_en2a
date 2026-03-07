@@ -1,29 +1,36 @@
 import "./GameWindow.css";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import TopLeftHeader from "./topLeftHeader/TopLeftHeader";
 import TopRightMenu from "../topRightMenu/TopRightMenu";
 import Board from "./board/Board";
 import RightPanel from "./rightPanel/RightPanel";
 import { Game } from "../../model/Game";
 
-type Props = {
-  size: number;
-};
+const GameWindow = () => {
+  const { size: sizeParam } = useParams();
 
-const GameWindow = ({ size = 8 }: Props) => {
+  const parsedSize = Number.parseInt(sizeParam ?? "8", 10);
+  const size = Number.isNaN(parsedSize) ? 8 : parsedSize;
+
   const [game, setGame] = useState(new Game(size));
 
-  //create a new reference to the game
+  useEffect(() => {
+    if (game.board.size !== size) {
+      setGame(new Game(size));
+    }
+  }, [size, game.board.size]);
+
   function refreshGame() {
-    const newGame = new Game(game.board.size);
+    const newGame = new Game(game.board.size, game.players); 
     newGame.board = game.board;
     newGame.currentPlayer = game.currentPlayer;
     newGame.lastMove = game.lastMove;
     setGame(newGame);
   }
 
-  function handlePlace(row: number, col: number) {
-    const ok = game.placeCell(row, col);
+  function handlePlace(x: number, y: number, z: number) {
+    const ok = game.placeCell(x, y, z); 
     if (ok) refreshGame();
   }
 

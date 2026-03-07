@@ -1,13 +1,14 @@
-export type Player = 1 | 2;
-
+export type Player = string;
 export class Cell {
-  row: number;
-  col: number;
+  x: number;
+  y: number;
+  z: number;
   owner: Player | null;
 
-  constructor(row: number, col: number) {
-    this.row = row;
-    this.col = col;
+  constructor(x: number, y: number, z: number) {
+    this.x = x;
+    this.y = y;
+    this.z = z;
     this.owner = null;
   }
 }

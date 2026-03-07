@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link} from 'react-router-dom';
 import styles from './AuthForm.module.css';
 
@@ -12,6 +12,28 @@ const RegisterForm: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // 1. State to store the CSRF token
+  const [csrfToken, setCsrfToken] = useState<string>('');
+  const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
+
+  // 2. Fetch the CSRF token when the component mounts
+  useEffect(() => {
+    const fetchCsrfToken = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/csrf-token`, {
+          // Required for the browser to accept and store the response cookie
+          credentials: 'include' 
+        });
+        const data = await res.json();
+        setCsrfToken(data.csrfToken);
+      } catch (err) {
+        console.error('Failed to fetch CSRF token', err);
+      }
+    };
+    
+    fetchCsrfToken();
+  }, [API_URL]);
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setResponseMessage(null);
@@ -24,12 +46,15 @@ const RegisterForm: React.FC = () => {
 
     setLoading(true);
     try {
-      const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3000';
       const res = await fetch(`${API_URL}/api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          // 3. Send the token in the header to match the cookie in the backend
+          'X-CSRF-Token': csrfToken
         },
+        // 4. VERY IMPORTANT: Tells fetch to send the invisible CSRF cookie
+        credentials: 'include',
         body: JSON.stringify({ email, username, password }),
       });
 
@@ -37,10 +62,10 @@ const RegisterForm: React.FC = () => {
       if (res.ok) {
         setResponseMessage(data.message);
         setTimeout(() => {
-            navigate('/login');
+          navigate('/login');
         }, 1500);
       } else {
-        setError(data.error || 'Server error occurred.');
+        setError(data.error || 'Registration failed.');
       }
     } catch (err: any) {
       setError(err.message || 'A network error occurred.');

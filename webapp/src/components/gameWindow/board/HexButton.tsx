@@ -3,15 +3,15 @@ import "./HexButton.css";
 type Props = {
   onClick?: () => void;
   isDisabled?: boolean;
-  owner?: 1 | 2 | null;
-
+  // Cambiamos el tipo para aceptar la nueva notación YEN
+  owner?: string | null; 
 };
 
-
-export default function HexButton({ onClick, isDisabled, owner }: Props) {
+export default function HexButton({ onClick, isDisabled, owner }: Readonly<Props>) {
+  // Actualizamos la lógica para mapear "B" y "R" a tus clases CSS existentes
   const ownerClass = 
-    owner === 1 ? "hex--player1" : 
-    owner === 2 ? "hex--player2" : 
+    owner === "B" ? "hex--player1" : 
+    owner === "R" ? "hex--player2" : 
     "hex--empty";
     
   return (

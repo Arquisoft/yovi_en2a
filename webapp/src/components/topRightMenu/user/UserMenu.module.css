@@ -1,0 +1,184 @@
+/* UserMenu.module.css */
+
+/* --- HEADER --- */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
+  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 1rem;
+}
+
+.header h2 {
+  color: var(--primary-color);
+  margin: 0;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+}
+
+/* --- CLOSE BUTTON (Reuse logic from Settings) --- */
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: #555;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  transition: all 0.2s;
+}
+
+.closeBtn:hover {
+  color: #ff4444;
+  transform: scale(1.1);
+}
+
+/* --- BODY & CONTENT --- */
+.body {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.infoGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-align: left;
+}
+
+/* First p (Label) */
+.infoGroup p:first-child {
+  color: #666;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* Second p (Value for Email) */
+.infoGroup p:last-child {
+  color: #eee;
+  font-size: 1rem;
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+/* --- EDITING LOGIC --- */
+.displayRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.75rem 1rem;
+  border-radius: 0.25rem;
+  border: 0.0625rem solid rgba(255, 255, 255, 0.05);
+}
+
+.displayRow span {
+  color: #fff;
+  font-size: 1.1rem;
+}
+
+.editRow {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* --- INPUTS --- */
+.input {
+  flex: 1;
+  background: #222;
+  border: 0.0625rem solid #444;
+  color: white;
+  padding: 0.6rem 0.8rem;
+  border-radius: 0.25rem;
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.input:focus {
+  border-color: var(--primary-color);
+}
+
+/* --- BUTTONS --- */
+.editBtn, .saveBtn, .cancelBtn {
+  padding: 0.4rem 0.8rem;
+  border-radius: 0.25rem;
+  font-weight: 600;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  transition: 0.2s;
+}
+
+.editBtn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ccc;
+}
+
+.editBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.saveBtn {
+  background: var(--primary-color);
+  color: #000; /* Contrast assuming primary is bright */
+}
+
+.saveBtn:hover {
+  filter: brightness(1.2);
+  transform: translateY(-0.0625rem);
+}
+
+.cancelBtn {
+  background: #333;
+  color: #999;
+}
+
+.cancelBtn:hover {
+  background: #444;
+  color: #fff;
+}
+
+/* --- LOGOUT --- */
+.logoutBtn {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: transparent;
+  border: 0.0625rem solid #ff4444;
+  color: #ff4444;
+  text-transform: uppercase;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  transition: 0.2s;
+}
+
+.logoutBtn:hover {
+  background: #ff4444;
+  color: #fff;
+  box-shadow: 0 0 1rem rgba(255, 68, 68, 0.3);
+}
+
+/* --- MOBILE ADAPTATION --- */
+@media (max-width: 48rem) {
+  .header h2 {
+    font-size: 1.2rem;
+  }
+
+  .editRow {
+    flex-wrap: wrap;
+  }
+
+  .input {
+    min-width: 100%; /* Input takes full width on small screens */
+  }
+}

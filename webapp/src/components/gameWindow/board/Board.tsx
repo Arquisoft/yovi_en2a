@@ -5,26 +5,26 @@ import type { Board as BoardModel } from "../../../model/Board";
 type Props = {
   board: BoardModel;
   blocked: boolean;
-  onPlace: (row: number, col: number) => void;
+  onPlace: (x: number, y: number, z: number) => void;
 };
 
-export default function Board({ board, blocked, onPlace }: Props) {
+export default function Board({ board, blocked, onPlace }: Readonly<Props>) {
 
   const rows = [];
 
   for (let row = 0; row < board.cells.length; row++) {
     const rowCells = [];
-    for (let col = 0; col < board.cells[row].length; col++) {
-      // Get the cell from the board model
-      const cell = board.cells[row][col];
+    
+    for (const cell of board.cells[row]) {
+      
       const disabled = cell.owner !== null || blocked;
 
       rowCells.push(
         <HexButton
-          key={`${cell.row}-${cell.col}`}
+          key={`${cell.x}-${cell.y}-${cell.z}`}
           owner={cell.owner}
           isDisabled={disabled}
-          onClick={() => onPlace(cell.row, cell.col)}
+          onClick={() => onPlace(cell.x, cell.y, cell.z)}
         />
       );
     }
@@ -38,4 +38,3 @@ export default function Board({ board, blocked, onPlace }: Props) {
 
   return <div className="board">{rows}</div>;
 }
-

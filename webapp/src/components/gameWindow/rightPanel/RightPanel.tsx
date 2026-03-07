@@ -1,7 +1,8 @@
 import "./RightPanel.css";
 
 type Props = {
-  turn: 1 | 2;
+  // 1. Cambiamos el tipo de 'turn' a string (ahora será "B" o "R")
+  turn: string; 
   time?: string;
   onUndo: () => void;
   onEndTurn: () => void;
@@ -18,11 +19,12 @@ export default function RightPanel({
   onReset,
   canUndo,
   canEndTurn,
-}: Props) {
-  const isP1 = turn === 1;
+}: Readonly<Props>) {
+  
+  const isP1 = turn === "B";
+  const isP2 = turn === "R";
 
   return (
-    
     <div className="rightpanel">
       {/* Card Timer */}
       <section className="rightpanel-card">
@@ -37,7 +39,7 @@ export default function RightPanel({
       <section className="rightpanel-card">
         <h4 className="rightpanel-title">Players</h4>
 
-        {/* Player 1 */}
+        {/* Player 1 (Blue - "B") */}
         <div className={`rightpanel-player ${isP1 ? "active" : ""}`}>
           <div className="rightpanel-left">
             <span className="dot blue" />
@@ -49,8 +51,8 @@ export default function RightPanel({
           <span className="rightpanel-chip">{isP1 ? "YOUR TURN" : "WAITING"}</span>
         </div>
 
-        {/* Player 2 */}
-        <div className={`rightpanel-player ${!isP1 ? "active" : ""}`}>
+        {/* Player 2 (Red - "R") */}
+        <div className={`rightpanel-player ${isP2 ? "active" : ""}`}>
           <div className="rightpanel-left">
             <span className="dot red" />
             <div>
@@ -58,7 +60,7 @@ export default function RightPanel({
               <div className="rightpanel-meta">Bot</div>
             </div>
           </div>
-          <span className="rightpanel-chip">{!isP1 ? "YOUR TURN" : "WAITING"}</span>
+          <span className="rightpanel-chip">{isP2 ? "YOUR TURN" : "WAITING"}</span>
         </div>
       </section>
 
@@ -71,20 +73,23 @@ export default function RightPanel({
             className="rightpanel-btn primary"
             onClick={onUndo}
             disabled={!canUndo}
-          >Undo
+          >
+            Undo
           </button>
 
           <button
             className="rightpanel-btn"
             onClick={onEndTurn}
             disabled={!canEndTurn}
-          > End Turn
+          >
+            End Turn
           </button>
 
           <button
             className="rightpanel-btn danger"
             onClick={onReset}
-          > Reset
+          >
+            Reset
           </button>
         </div>
       </section>
