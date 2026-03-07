@@ -1,225 +1,107 @@
 ifndef::imagesdir[:imagesdir: ../images]
 
+=== Level 1
+
 [[section-building-block-view]]
-
-
 == Building Block View
-
-ifdef::arc42help[]
-[role="arc42help"]
-****
-.Content
-The building block view shows the static decomposition of the system into building blocks (modules, components, subsystems, classes, interfaces, packages, libraries, frameworks, layers, partitions, tiers, functions, macros, operations, data structures, ...) as well as their dependencies (relationships, associations, ...)
-
-This view is mandatory for every architecture documentation.
-In analogy to a house this is the _floor plan_.
-
-.Motivation
-Maintain an overview of your source code by making its structure understandable through
-abstraction.
-
-This allows you to communicate with your stakeholder on an abstract level without disclosing implementation details.
-
-.Form
-The building block view is a hierarchical collection of black boxes and white boxes
-(see figure below) and their descriptions.
-
-image::05_building_blocks-EN.png["Hierarchy of building blocks"]
-
-*Level 1* is the white box description of the overall system together with black
-box descriptions of all contained building blocks.
-
-*Level 2* zooms into some building blocks of level 1.
-Thus it contains the white box description of selected building blocks of level 1, together with black box descriptions of their internal building blocks.
-
-*Level 3* zooms into selected building blocks of level 2, and so on.
-
-
-.Further Information
-
-See https://docs.arc42.org/section-5/[Building Block View] in the arc42 documentation.
-
-****
-endif::arc42help[]
 
 === Whitebox Overall System
 
-ifdef::arc42help[]
-[role="arc42help"]
-****
-Here you describe the decomposition of the overall system using the following white box template. It contains
+[plantuml, target=level1-overall, format=png]
+....
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
 
- * an overview diagram
- * a motivation for the decomposition
- * black box descriptions of the contained building blocks. For these we offer you alternatives:
+LAYOUT_WITH_LEGEND()
 
-   ** use _one_ table for a short and pragmatic overview of all contained building blocks and their interfaces
-   ** use a list of black box descriptions of the building blocks according to the black box template (see below).
-   Depending on your choice of tool this list could be sub-chapters (in text files), sub-pages (in a Wiki) or nested elements (in a modeling tool).
+title Building Block View (Level 1) - Gamey System with Firebase
+
+Person(player, "Player", "User interacting with the game and managing their profile.")
+System_Ext(firebase, "Firebase", "External platform providing Authentication, Firestore (NoSQL), and Hosting.")
+
+System_Boundary(c1, "Gamey Ecosystem") {
+    Container(webapp, "Webapp", "React, TS, Vite", "Main UI. Handles real-time game rendering and Firebase SDK integration.")
+    Container(users_svc, "Users Service", "Node.js, Express", "Internal management service. Validates tokens via Firebase Admin SDK.")
+    Container(gamey_engine, "Game Engine", "Rust", "High-performance core for game rules, notations, and bot orchestration.")
+}
+
+Rel(player, webapp, "Uses", "HTTPS")
+Rel(webapp, firebase, "Auth / Sync data", "Firebase SDK (Web)")
+Rel(webapp, users_svc, "Business requests", "JSON/HTTPS")
+Rel(webapp, gamey_engine, "Submits moves", "WebSockets/gRPC")
+Rel(users_svc, firebase, "Verify tokens / Admin DB access", "Firebase Admin SDK")
+@enduml
+....
 
 
- * (optional:) important interfaces, that are not explained in the black box templates of a building block, but are very important for understanding the white box.
-Since there are so many ways to specify interfaces why do not provide a specific template for them.
- In the worst case you have to specify and describe syntax, semantics, protocols, error handling,
- restrictions, versions, qualities, necessary compatibilities and many things more.
-In the best case you will get away with examples or simple signatures.
-
-****
-endif::arc42help[]
-
-_**<Overview Diagram>**_
 
 Motivation::
-
-_<text explanation>_
-
+The system uses a hybrid backend approach. **Firebase** is used as a Third-Party Building Block to offload identity management and real-time state persistence. This allows the **Users Service** to focus on custom business logic and the **Game Engine** (Rust) to handle CPU-intensive game mechanics without managing user sessions directly.
 
 Contained Building Blocks::
-_<Description of contained building block (black boxes)>_
-
-Important Interfaces::
-_<Description of important interfaces>_
-
-ifdef::arc42help[]
-[role="arc42help"]
-****
-Insert your explanations of black boxes from level 1:
-
-If you use tabular form you will only describe your black boxes with name and
-responsibility according to the following schema:
-
 [cols="1,2" options="header"]
 |===
 | **Name** | **Responsibility**
-| _<black box 1>_ | _<Text>_
-| _<black box 2>_ | _<Text>_
+| **Webapp** | Frontend SPA that coordinates User-Firebase-Engine interactions.
+| **Users Service** | Backend orchestration, monitoring, and providing an OpenAPI-compliant gateway for administrative tasks.
+| **Game Engine** | High-speed game processing, bot AI management, and move validation.
+| **Firebase** | External black box providing Authentication and cloud-based data storage.
 |===
 
+Important Interfaces::
+* **Firebase SDK Interface:** Client-side link for Auth and Realtime updates.
+* **Gamey WebSocket/gRPC:** Low-latency interface for game move submission to the Rust engine.
 
+==== Webapp
+Purpose/Responsibility::
+Coordinates the user experience. It uses Firebase for Authentication and the Game Engine for the actual gaming logic.
+Interface(s)::
+React Hooks for Firebase; REST client for Users Service.
+Directory/File Location::
+`/webapp`
 
-If you use a list of black box descriptions then you fill in a separate black box template for every important building block .
-Its headline is the name of the black box.
-****
-endif::arc42help[]
+==== Users Service
+Purpose/Responsibility::
+Provides a secure layer for user-related logic that shouldn't live on the client. It uses the Firebase Admin SDK to verify identities.
+Interface(s)::
+Exposes endpoints defined in `openapi.yaml`.
+Directory/File Location::
+`/users`
 
-==== <Name black box 1>
-
-ifdef::arc42help[]
-[role="arc42help"]
-****
-Here you describe <black box 1>
-according the the following black box template:
-
-* Purpose/Responsibility
-* Interface(s), when they are not extracted as separate paragraphs. This interfaces may include qualities and performance characteristics.
-* (Optional) Quality-/Performance characteristics of the black box, e.g.availability, run time behavior, ....
-* (Optional) directory/file location
-* (Optional) Fulfilled requirements (if you need traceability to requirements).
-* (Optional) Open issues/problems/risks
-
-****
-endif::arc42help[]
-
-_<Purpose/Responsibility>_
-
-_<Interface(s)>_
-
-_<(Optional) Quality/Performance Characteristics>_
-
-_<(Optional) Directory/File Location>_
-
-_<(Optional) Fulfilled Requirements>_
-
-_<(optional) Open Issues/Problems/Risks>_
-
-
-
-
-==== <Name black box 2>
-
-_<black box template>_
-
-==== <Name black box n>
-
-_<black box template>_
-
-
-==== <Name interface 1>
-
-...
-
-==== <Name interface m>
-
-
+==== Game Engine
+Purpose/Responsibility::
+The computational core. It is agnostic of user identity (delegated to other blocks) and focuses on the game rules.
+Directory/File Location::
+`/gamey`
 
 === Level 2
 
-ifdef::arc42help[]
-[role="arc42help"]
-****
-Here you can specify the inner structure of (some) building blocks from level 1 as white boxes.
+==== White Box _Game Engine (Rust)_
 
-You have to decide which building blocks of your system are important enough to justify such a detailed description.
-Please prefer relevance over completeness. Specify important, surprising, risky, complex or volatile building blocks.
-Leave out normal, simple, boring or standardized parts of your system
-****
-endif::arc42help[]
+[plantuml, target=level2-gamey, format=png]
+....
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
 
-==== White Box _<building block 1>_
+Container_Boundary(gamey_internal, "Game Engine (Rust)") {
+    Component(core, "Core Logic", "Rust Mod", "State machine and rules.")
+    Component(notation, "Notation Parser", "Rust Mod", "Processes game notations (FEN/PGN).")
+    Component(bot_server, "Bot Manager", "Rust Mod", "Handles AI agent lifecycle.")
+    Component(gamey_error, "Error Handler", "Rust Mod", "Domain-specific error types.")
+}
 
-ifdef::arc42help[]
-[role="arc42help"]
-****
-...describes the internal structure of _building block 1_.
-****
-endif::arc42help[]
+Rel(bot_server, core, "Queries rules")
+Rel(core, notation, "Serializes state")
+Rel(core, gamey_error, "Triggers")
+@enduml
+....
 
-_<white box template>_
+The **Game Engine** is organized as a modular Rust crate. The `core` module is strictly separated from the `bot_server` to allow for local CLI usage or networked server usage.
 
-==== White Box _<building block 2>_
-
-
-_<white box template>_
-
-...
-
-==== White Box _<building block m>_
-
-
-_<white box template>_
-
-
+==== White Box _Users Service (Node.js)_
+1. **users-service.js**: Main entry point using Express.
+2. **Firebase Admin Logic**: Middleware to intercept requests and validate Firebase JWT tokens.
+3. **monitoring/**: Dedicated module for service health and logging.
 
 === Level 3
-
-ifdef::arc42help[]
-[role="arc42help"]
-****
-Here you can specify the inner structure of (some) building blocks from level 2 as white boxes.
-
-When you need more detailed levels of your architecture please copy this
-part of arc42 for additional levels.
-****
-endif::arc42help[]
-
-==== White Box <_building block x.1_>
-
-ifdef::arc42help[]
-[role="arc42help"]
-****
-Specifies the internal structure of _building block x.1_.
-****
-endif::arc42help[]
-
-_<white box template>_
-
-
-==== White Box <_building block x.2_>
-
-_<white box template>_
-
-
-
-==== White Box <_building block y.1_>
-
-_<white box template>_
+(Not really sure if it is even detailed)

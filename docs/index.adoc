@@ -28,9 +28,6 @@ ifdef::backend-html5[]
 ++++
 endif::backend-html5[]
 
-
-include::src/about-arc42.adoc[]
-
 // horizontal line
 ***
 
@@ -97,4 +94,8 @@ include::src/11_technical_risks.adoc[]
 // 12. Glossary
 include::src/12_glossary.adoc[]
 
+:numbered:
 
+***
+
+include::src/about-arc42.adoc[]

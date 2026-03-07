@@ -1,100 +1,80 @@
 ifndef::imagesdir[:imagesdir: ../images]
 
 [[section-deployment-view]]
-
-
 == Deployment View
-
-ifdef::arc42help[]
-[role="arc42help"]
-****
-.Content
-The deployment view describes:
-
- 1. technical infrastructure used to execute your system, with infrastructure elements like geographical locations, environments, computers, processors, channels and net topologies as well as other infrastructure elements and
-
-2. mapping of (software) building blocks to that infrastructure elements.
-
-Often systems are executed in different environments, e.g. development environment, test environment, production environment. In such cases you should document all relevant environments.
-
-Especially document a deployment view if your software is executed as distributed system with more than one computer, processor, server or container or when you design and construct your own hardware processors and chips.
-
-From a software perspective it is sufficient to capture only those elements of an infrastructure that are needed to show a deployment of your building blocks. Hardware architects can go beyond that and describe an infrastructure to any level of detail they need to capture.
-
-.Motivation
-Software does not run without hardware.
-This underlying infrastructure can and will influence a system and/or some
-cross-cutting concepts. Therefore, there is a need to know the infrastructure.
-
-.Form
-
-Maybe a highest level deployment diagram is already contained in section 3.2. as
-technical context with your own infrastructure as ONE black box. In this section one can
-zoom into this black box using additional deployment diagrams:
-
-* UML offers deployment diagrams to express that view. Use it, probably with nested diagrams,
-when your infrastructure is more complex.
-* When your (hardware) stakeholders prefer other kinds of diagrams rather than a deployment diagram, let them use any kind that is able to show nodes and channels of the infrastructure.
-
-
-.Further Information
-
-See https://docs.arc42.org/section-7/[Deployment View] in the arc42 documentation.
-
-****
-endif::arc42help[]
 
 === Infrastructure Level 1
 
-ifdef::arc42help[]
-[role="arc42help"]
-****
-Describe (usually in a combination of diagrams, tables, and text):
+[plantuml, target=deployment-lvl1, format=png]
+....
+@startuml
+!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
 
-* distribution of a system to multiple locations, environments, computers, processors, .., as well as physical connections between them
-* important justifications or motivations for this deployment structure
-* quality and/or performance features of this infrastructure
-* mapping of software artifacts to elements of this infrastructure
+title Deployment View - Cloud Infrastructure (Production)
 
-For multiple environments or alternative deployments please copy and adapt this section of arc42 for all relevant environments.
-****
-endif::arc42help[]
+Deployment_Node(browser, "User's Device", "Web Browser"){
+    Container(ui, "Webapp (Static Assets)", "React/Vite", "Delivered via CDN")
+}
 
-_**<Overview Diagram>**_
+Deployment_Node(firebase_cloud, "Firebase Platform", "Managed Services"){
+    Deployment_Node(auth, "Firebase Auth", "Identity Provider")
+    Deployment_Node(db, "Firestore", "NoSQL Database")
+}
+
+Deployment_Node(cloud, "Cloud Provider", "Container Service"){
+    Deployment_Node(node_pod, "Users Service Node", "Docker Container"){
+        Container(users_app, "Users API", "Node.js", "Handles business logic")
+    }
+    Deployment_Node(rust_pod, "Game Engine Node", "Docker Container"){
+        Container(game_app, "Game Engine", "Rust Binary", "Handles game logic")
+    }
+}
+
+Rel(ui, auth, "Authenticates via", "HTTPS/SDK")
+Rel(ui, users_app, "API calls", "HTTPS/JSON")
+Rel(ui, game_app, "Game moves", "WebSockets")
+Rel(users_app, auth, "Verifies tokens", "Admin SDK")
+Rel(users_app, db, "Reads/Writes", "Admin SDK")
+@enduml
+....
+
+
 
 Motivation::
-
-_<explanation in text form>_
+The system is containerized to ensure environment parity between development and production. Since the **Gamey Engine** is built in Rust, it requires a high-performance runtime environment, while the **Users Service** and **Webapp** benefit from the managed scalability of Firebase and standard Node.js container hosting.
 
 Quality and/or Performance Features::
-
-_<explanation in text form>_
+* **Scalability:** The Rust Game Engine can be scaled vertically or horizontally depending on the number of active game sessions.
+* **Latency:** WebSockets are used for the Game Engine to minimize overhead during competitive play.
+* **Security:** Sensitive user data is offloaded to Firebase, reducing the attack surface of the self-hosted infrastructure.
 
 Mapping of Building Blocks to Infrastructure::
-_<description of the mapping>_
-
+[cols="1,2" options="header"]
+|===
+| Building Block | Infrastructure Element
+| **Webapp** | Distributed via Content Delivery Network (CDN) for low-latency frontend delivery.
+| **Users Service** | Deployed as a Docker container (referencing `/users/Dockerfile`).
+| **Gamey Engine** | Deployed as a high-performance Docker container (referencing `/gamey/Dockerfile`).
+| **Database/Auth** | Managed by Firebase (Google Cloud Infrastructure).
+|===
 
 === Infrastructure Level 2
 
-ifdef::arc42help[]
-[role="arc42help"]
-****
-Here you can include the internal structure of (some) infrastructure elements from level 1.
+==== Docker Environment (Internal Node)
+Each service (Users and Gamey) is encapsulated in a Docker image to isolate dependencies.
 
-Please copy the structure from level 1 for each selected element.
-****
-endif::arc42help[]
+**Users Service Node:**
 
-==== _<Infrastructure Element 1>_
+- **Runtime:** Node.js 20+.
 
-_<diagram + explanation>_
+- **Config:** Environment variables for Firebase Admin credentials.
 
-==== _<Infrastructure Element 2>_
+- **Port:** Exposes 3000 (REST API).
 
-_<diagram + explanation>_
+**Game Engine Node:**
 
-...
+- **Runtime:** Scratch or Debian-slim (for the compiled Rust binary).
 
-==== _<Infrastructure Element n>_
+- **Performance:** Optimized with LTO (Link Time Optimization) during the build stage.
 
-_<diagram + explanation>_
+- **Port:** Exposes 8080 (WebSockets/gRPC).

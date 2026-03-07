@@ -1,0 +1,83 @@
+/* Basic reset and document structure */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  width: 100%;
+  /* Make sure the path to assets is correct relative to this file */
+  background-image: url('../../assets/background_image_gameY.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-family: var(--font-main);
+  text-align: center;
+}
+
+#root {
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* --- GLOBAL RANGE INPUT STYLING --- */
+
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* Track styling */
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 0.4rem;
+  background: var(--track-bg);
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Thumb styling (Chrome, Safari, Edge) */
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 1.2rem;
+  width: 1.2rem;
+  background: var(--primary-color);
+  border-radius: 50%;
+  margin-top: -0.45rem; /* Centers thumb: (track_h/2 - thumb_h/2) */
+  box-shadow: var(--glow-primary);
+  transition: transform 0.1s ease, box-shadow 0.2s ease;
+}
+
+input[type="range"]:active::-webkit-slider-thumb {
+  transform: scale(1.2);
+  background: #ffffff;
+}
+
+/* Firefox Support */
+input[type="range"]::-moz-range-track {
+  width: 100%;
+  height: 0.4rem;
+  background: var(--track-bg);
+  border-radius: 1rem;
+}
+
+input[type="range"]::-moz-range-thumb {
+  height: 1.2rem;
+  width: 1.2rem;
+  background: var(--primary-color);
+  border: none;
+  border-radius: 50%;
+  box-shadow: var(--glow-primary);
+}

@@ -6,6 +6,8 @@ export default defineConfig({
     environment: 'jsdom',
     coverage: {
       reporter: ['text', 'lcov'],
+      include: ['src/**/*.tsx', 'src/**/*.ts'], 
+      exclude: ['src/main.tsx', 'src/**/*.d.ts', 'src/vite-env.d.ts'],
     },
   },
 })
