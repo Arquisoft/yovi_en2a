@@ -9,22 +9,25 @@ const RankingTable: React.FC<{ data: RankingElement[], title: string }> = ({ dat
       
       <div className={styles.rankingHeaderRow}>
         <span>POS</span>
-        <span>PLAYER</span>
+        <span>PLAYER 1</span>
+        <span className={styles.vsHeader}></span> {/* Empty or "VS" label */}
+        <span>PLAYER 2</span>
         <span>TIME</span>
       </div>
 
       <div className={styles.rankingList}>
         {data.map((item) => {
-          // Access the position highlight class (pos-1, pos-2, etc)
-          const positionClass = styles[`pos-${item.position}`] || '';
+          const positionHighlight = styles[`pos-${item.position}`] || '';
           
           return (
             <div 
               key={item.position} 
-              className={`${styles.rankingItem} ${positionClass}`}
+              className={`${styles.rankingItem} ${positionHighlight}`}
             >
               <span className={styles.rankPos}>#{item.position}</span>
-              <span className={styles.rankName}>{item.playerName}</span>
+              <span className={styles.rankName}>{item.player1Name}</span>
+              <span className={styles.rankVs}>VS</span>
+              <span className={styles.rankName}>{item.player2Name}</span>
               <span className={styles.rankTime}>{item.time}</span>
             </div>
           );

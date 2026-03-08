@@ -1,5 +1,6 @@
 export interface RankingElement {
   position: number;
-  playerName: string;
+  player1Name: string;
+  player2Name: string;
   time: string;
 }

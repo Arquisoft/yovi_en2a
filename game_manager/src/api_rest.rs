@@ -1,5 +1,5 @@
 use crate::redis_client;
-use crate::data::{NewMatchRequest, NewMatchResponse, MoveRequest, MoveResponse, ValidRequest, ValidResponse};
+use crate::data::{LocalRankingsRequest, LocalRankingsResponse, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, RankingTimeResponse, ValidRequest, ValidResponse};
 
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
@@ -57,6 +57,40 @@ async fn check_valid(
     })
 }
 
+async fn get_local_rankings(
+    Json(payload): Json<LocalRankingsRequest>
+) -> Json<LocalRankingsResponse> {
+    
+    // Usamos 'match' para evaluar el Result de forma explícita y segura
+    let matches = match crate::firebase::get_user_matches(&payload.user_id).await {
+        
+        // CASO 1: La base de datos responde correctamente y los tipos coinciden
+        Ok(partidas_encontradas) => {
+            partidas_encontradas
+        },
+        
+        // CASO 2: Falla la conexión, no existe el documento, o los tipos del struct no coinciden
+        Err(error) => {
+            // Imprimimos el error real en los logs de Docker para poder solucionarlo
+            eprintln!("🚨 ERROR LEYENDO FIRESTORE (Usuario: {}): {:?}", payload.user_id, error);
+            
+            // Devolvemos un vector vacío para que la app (el frontend) no crashee
+            vec![]
+        }
+    };
+
+    Json(LocalRankingsResponse { matches })
+}
+
+async fn get_best_times() -> Json<RankingTimeResponse> {
+
+    let scores = crate::firebase::get_ranking_time()
+        .await
+        .unwrap_or_else(|_| vec![]); 
+
+    Json(RankingTimeResponse { rankings: scores })
+}
+
 
 pub async fn run() {
     let redis_host = std::env::var("REDIS_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
@@ -70,9 +104,11 @@ pub async fn run() {
         .route("/new", post(create_match))
         .route("/reqMove", post(request_move))
         .route("/isValid", post(check_valid))
+        .route("/localRankings", post(get_local_rankings))
+        .route("/bestTimes", post(get_best_times))
         .with_state(state);
 
-    let addr = SocketAddr::from(([127, 0, 0, 1], 5000));
+    let addr = SocketAddr::from(([0, 0, 0, 0], 5000));
     println!("🚀 GameManager escuchando en http://{}", addr);
 
     let listener = TcpListener::bind(addr).await.unwrap();

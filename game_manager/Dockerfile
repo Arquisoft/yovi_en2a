@@ -21,6 +21,10 @@ FROM debian:bookworm-slim
 
 WORKDIR /app/game_manager
 
+RUN apt-get update && \
+    apt-get install -y ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/game_manager/target/release/game_manager .
 

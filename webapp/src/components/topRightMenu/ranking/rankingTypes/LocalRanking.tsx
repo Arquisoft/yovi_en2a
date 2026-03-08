@@ -7,9 +7,9 @@ export class LocalRanking implements RankingType {
   label = 'Local';
   // Mock data for local (offline/stored) records
   elements: RankingElement[] = [
-    { position: 1, playerName: 'You (Best)', time: '01:24:05' },
-    { position: 2, playerName: 'Guest_12', time: '01:30:12' },
-    { position: 3, playerName: 'Player_2', time: '01:45:55' },
+    { position: 1, player1Name: 'You (Best)', player2Name: 'Guest_12', time: '01:24:05' },
+    { position: 2, player1Name: 'Guest_12', player2Name: 'Guest_12', time: '01:30:12' },
+    { position: 3, player1Name: 'Player_2', player2Name: 'Guest_12', time: '01:45:55' },
   ];
 
   render() {

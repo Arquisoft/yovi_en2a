@@ -1,3 +1,5 @@
+use std::ffi::c_float;
+
 use serde::{Deserialize, Serialize};
 use gamey::notation::{YEN};
 
@@ -12,6 +14,19 @@ pub struct Match{
 }
 impl DBData for Match {}
 
+
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct Score{
+    pub playerid: String,
+    pub username: String,
+    pub total_matches: i32,
+    pub wins : i32,
+    pub losses: i32,
+    pub win_rate: c_float,
+    pub elo: i32,
+    pub best_time: i32
+}
+impl DBData for Score {}
 
 
 
@@ -48,4 +63,19 @@ pub struct ValidRequest {
 pub struct ValidResponse {
     pub valid: bool,
     pub is_end: bool,
+}
+
+#[derive(Deserialize)]
+pub struct LocalRankingsRequest {
+    pub user_id: String, 
+}
+
+#[derive(Serialize)]
+pub struct LocalRankingsResponse {
+    pub matches: Vec<Match>, 
+}
+
+#[derive(Serialize)]
+pub struct RankingTimeResponse {
+    pub rankings: Vec<Score>,
 }

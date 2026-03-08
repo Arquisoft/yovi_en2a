@@ -1,5 +1,6 @@
 /* RankingTable.module.css */
 
+/* --- MAIN CONTAINER --- */
 .rankingContainer {
   display: flex;
   flex-direction: column;
@@ -17,17 +18,32 @@
   flex-shrink: 0;
 }
 
-.rankingHeaderRow {
+/* --- GRID LAYOUT (5 COLUMNS) --- */
+/* POS (3.5rem) | P1 (1fr) | VS (2.5rem) | P2 (1fr) | TIME (5.5rem) */
+.rankingHeaderRow,
+.rankingItem {
   display: grid;
-  grid-template-columns: 4rem 1fr 6rem; 
+  grid-template-columns: 3.5rem 1fr 2.5rem 1fr 5.5rem;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* --- HEADER STYLES --- */
+.rankingHeaderRow {
   padding: 0 1rem;
   margin-bottom: 0.5rem;
   font-size: 0.7rem;
   font-weight: 800;
   color: #444;
   flex-shrink: 0;
+  text-transform: uppercase;
 }
 
+.vsHeader {
+  text-align: center;
+}
+
+/* --- LIST & SCROLLBAR --- */
 .rankingList {
   display: flex;
   flex-direction: column;
@@ -48,42 +64,62 @@
   border-radius: 1rem;
 }
 
+/* --- ITEM STYLES --- */
 .rankingItem {
-  display: grid;
-  grid-template-columns: 4rem 1fr 6rem;
   padding: 0.8rem 1rem;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 0.4rem;
-  align-items: center;
+  transition: background 0.2s;
 }
 
-.rankPos { font-weight: 800; color: #777; }
-.rankName { font-weight: 600; color: #eee; }
-.rankTime { font-family: monospace; color: var(--primary-color); text-align: right; }
+.rankPos { 
+  font-weight: 800; 
+  color: #777; 
+}
 
-/* Position Highlights */
+.rankName { 
+  font-weight: 600; 
+  color: #eee; 
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.rankVs {
+  font-size: 0.65rem;
+  font-weight: 900;
+  color: #555;
+  text-align: center;
+}
+
+.rankTime { 
+  font-family: monospace; 
+  color: var(--primary-color); 
+  text-align: right; 
+  font-weight: bold;
+}
+
+/* --- POSITION HIGHLIGHTS --- */
 .pos-1 { background: rgba(255, 215, 0, 0.1); border: 1px solid rgba(255, 215, 0, 0.2); }
 .pos-2 { background: rgba(192, 192, 192, 0.1); border: 1px solid rgba(192, 192, 192, 0.2); }
 .pos-3 { background: rgba(205, 127, 50, 0.1); border: 1px solid rgba(205, 127, 50, 0.2); }
 
-/* --- MOBILE FIX --- */
+/* --- MOBILE RESPONSIVENESS --- */
 @media (max-width: 48rem) {
   .rankingHeaderRow, 
   .rankingItem {
-    /* Reduced column widths and padding to prevent overflow */
-    grid-template-columns: 2.5rem 1fr 4.5rem;
+    /* Tighter columns for mobile devices */
+    grid-template-columns: 2.5rem 1fr 1.5rem 1fr 4.5rem;
     padding: 0.6rem 0.5rem;
+    gap: 0.25rem;
   }
 
-  .rankName {
-    font-size: 0.85rem;
-    /* Optional: Prevents long names from breaking the grid */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .rankName, .rankVs, .rankTime {
+    font-size: 0.75rem;
   }
 
-  .rankTime {
-    font-size: 0.85rem;
+  .rankVs {
+    font-size: 0.55rem;
   }
 }

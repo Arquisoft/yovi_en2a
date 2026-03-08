@@ -7,10 +7,10 @@ export class GlobalRanking implements RankingType {
   label = 'Global';
   // Mock data representing server-side records
   elements: RankingElement[] = [
-    { position: 1, playerName: 'SpeedRunner99', time: '00:58:12' },
-    { position: 2, playerName: 'ProGamer_X', time: '01:02:44' },
-    { position: 3, playerName: 'Shadow_Ninja', time: '01:05:00' },
-    { position: 4, playerName: 'Elite_Player', time: '01:10:22' },
+    { position: 1, player1Name: 'SpeedRunner99', player2Name: 'SpeedRunner99', time: '00:58:12' },
+    { position: 2, player1Name: 'ProGamer_X', player2Name: 'SpeedRunner99', time: '01:02:44' },
+    { position: 3, player1Name: 'Shadow_Ninja', player2Name: 'SpeedRunner99', time: '01:05:00' },
+    { position: 4, player1Name: 'Elite_Player', player2Name: 'SpeedRunner99', time: '01:10:22' },
   ];
 
   render() {

@@ -6,7 +6,7 @@ use dotenvy::dotenv;
 use std::sync::Once;
 
 // We import the data structures from data.rs where they match with the firebase definition
-use crate::data::{Match, DBData};
+use crate::data::{DBData, Match, Score};
 
 /// We use a `Once` static to make sure the crypto provider is only initialized once.
 /// If we don't do this, the app might panic if we call `get_connection` multiple times.
@@ -121,4 +121,53 @@ pub async fn get_match_by_id(id: &str) -> Result<Match, Box<dyn Error>> {
 pub async fn insert_match_by_id(id: &str, match_data: Match) -> Result<(), Box<dyn Error>> {
     insert_db("Match", id, &match_data).await?;
     Ok(())
+}
+
+/// Fetches all matches for a specific user.
+/// Since Firestore doesn't support complex OR queries easily via the basic fluent API,
+/// we query for matches where the user is player1, then where they are player2, and combine them.
+pub async fn get_user_matches(user_id: &str) -> Result<Vec<Match>, Box<dyn Error>> {
+    let db = get_connection().await?;
+
+    // 1. Get matches where user is player 1
+    let mut matches_p1: Vec<Match> = db.fluent()
+        .select()
+        .from("Match")
+        .filter(|q| q.for_all([q.field("player1id").eq(user_id)]))
+        .obj()
+        .query() 
+        .await?;
+
+    // 2. Get matches where user is player 2
+    let matches_p2: Vec<Match> = db.fluent()
+        .select()
+        .from("Match")
+        .filter(|q| q.for_all([q.field("player2id").eq(user_id)]))
+        .obj()
+        .query() 
+        .await?;
+
+    // 3. Combine both lists
+    matches_p1.extend(matches_p2);
+    Ok(matches_p1)
+}
+
+/// Fetches the Top 20 players based on their best time.
+/// Orders the 'Scores' collection in ascending order (lowest time is the best).
+pub async fn get_ranking_time() -> Result<Vec<Score>, Box<dyn Error>> {
+    let db = get_connection().await?;
+
+    let top_scores: Vec<Score> = db.fluent()
+        .select()
+        .from("Scores") 
+        .order_by([(
+            "best_time", 
+            FirestoreQueryDirection::Ascending
+        )])
+        .limit(20)
+        .obj()
+        .query() 
+        .await?;
+
+    Ok(top_scores)
 }
