@@ -13,6 +13,7 @@
   "dependencies": {
     "express": "^5.2.1",
     "express-prom-bundle": "^8.0.0",
+    "http-proxy-middleware": "^3.0.5",
     "js-yaml": "^4.1.0",
     "swagger-ui-express": "^5.0.1"
   },

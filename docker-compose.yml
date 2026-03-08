@@ -5,6 +5,9 @@ services:
     image: ghcr.io/arquisoft/yovi_en2a-users:latest
     ports:
       - "3000:3000"
+    environment:
+      - GAMEMANAGER_URL=http://game_manager:5000
+      - GAMEY_URL=http://gamey:4000
     networks:
       - monitor-net
 
@@ -12,13 +15,19 @@ services:
     build:
       context: ./webapp
       args:
+        # El navegador del usuario final buscará el gateway en localhost:3000
         - VITE_API_URL=http://localhost:3000
+        - VITE_GAMEMANAGER_URL=http://localhost:5000
     container_name: webapp
     image: ghcr.io/arquisoft/yovi_en2a-webapp:latest
     ports:
       - "80:80"
+    environment:
+      # URL interna para que el servidor de la webapp hable con el backend (si hace SSR)
+      - GAMEMANAGER_URL=http://game_manager:5000
     depends_on:
       - users
+      - game_manager
     networks:
       - monitor-net
 
@@ -26,8 +35,8 @@ services:
     build: ./gamey
     container_name: gamey
     image: ghcr.io/arquisoft/yovi_en2a-gamey:latest
-    ports:
-      - "4000:4000"
+    expose:
+      - "4000"
     networks:
       - monitor-net
 
@@ -51,6 +60,37 @@ services:
     networks:
       - monitor-net
 
+  game_manager:
+    build: ./game_manager
+    container_name: game_manager
+    image: ghcr.io/arquisoft/yovi_en2a-gamemanager:latest
+    expose:
+      - "5000"
+    environment:
+      - PORT=5000
+      - REDIS_HOST=redis_db
+      - REDIS_PORT=6379
+      - GAMEY=gamey
+    depends_on:
+      - redis_db
+      - gamey
+    networks:
+      - monitor-net
+
+  redis_db:
+      image: redis:alpine
+      container_name: redis_db
+      expose:
+        - "6379"
+      networks:
+        - monitor-net
+      # Opcional: Persistencia para que no se borren las partidas al reiniciar
+      volumes:
+        - redis_data:/data
+
 networks:
   monitor-net:
     driver: bridge
+
+volumes:
+  redis_data:
