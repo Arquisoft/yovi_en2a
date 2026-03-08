@@ -13,13 +13,14 @@ const port = 3000;
 // 1. Initialize cookie parser before anything else
 app.use(cookieParser());
 
+// 2. Metrics Middleware
 const metricsMiddleware = promBundle({includeMethod: true});
 app.use(metricsMiddleware);
 
 const GAME_MANAGER_URL = process.env.GAMEMANAGER_URL || 'http://localhost:5000';
 const AUTH_URL = process.env.AUTH_URL || 'http://localhost:4001';
 
-// 2. CORS Configuration Middleware
+// 3. CORS Configuration Middleware
 // This MUST be the first middleware to ensure all responses (including errors) carry CORS headers
 const allowedOrigins = new Set(['http://localhost', 'http://localhost:80', 'http://localhost:5173']);
 
@@ -45,7 +46,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Swagger documentation
+// 4. Swagger documentation
 try {
   const swaggerDocument = YAML.load(fs.readFileSync('./openapi.yaml', 'utf8'));
   app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
@@ -53,7 +54,13 @@ try {
   console.log("Swagger UI not loaded:", e.message);
 }
 
-// --- 1. CSRF TOKEN GENERATION ---
+// 5. JSON Parser
+// Must be declared BEFORE local POST routes so they can read req.body
+app.use(express.json());
+
+// --- 6. LOCAL ENDPOINTS ---
+
+// CSRF TOKEN GENERATION
 app.get('/api/csrf-token', (req, res) => {
   const csrfToken = crypto.randomUUID(); 
   
@@ -67,7 +74,21 @@ app.get('/api/csrf-token', (req, res) => {
   res.json({ csrfToken });
 });
 
-// --- 2. CSRF VERIFICATION MIDDLEWARE ---
+// CREATE USER (From file 2)
+app.post('/createuser', async (req, res) => {
+  const username = req.body && req.body.username;
+  try {
+    // Simulate a 1 second delay to mimic processing/network latency
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    const message = `Hello ${username}! welcome to the course!`;
+    res.json({ message });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+// --- 7. CSRF VERIFICATION MIDDLEWARE ---
 const verifyCsrf = (req, res, next) => {
   if (['GET', 'OPTIONS', 'HEAD'].includes(req.method)) return next();
 
@@ -82,7 +103,7 @@ const verifyCsrf = (req, res, next) => {
   next(); 
 };
 
-// --- 3. PROXY ROUTES ---
+// --- 8. PROXY ROUTES ---
 
 // Auth Service Proxy
 app.use('/api', verifyCsrf, createProxyMiddleware({
@@ -90,7 +111,8 @@ app.use('/api', verifyCsrf, createProxyMiddleware({
   changeOrigin: true,
   pathRewrite: { '^/api': '' },
   on: {
-    proxyReq: fixRequestBody, // Fixes body disappearing after express.json()
+    // fixRequestBody rebuilds the body stream consumed by express.json()
+    proxyReq: fixRequestBody, 
   },
 }));
 
@@ -100,12 +122,10 @@ app.use('/game', createProxyMiddleware({
   changeOrigin: true,
   pathRewrite: { '^/game': '' },
   on: {
+    // We use fixRequestBody here instead of manual buffer rewriting
     proxyReq: fixRequestBody,
   },
 }));
-
-// JSON Parser (Only needed for local routes, proxy handles its own bodies)
-app.use(express.json());
 
 if (require.main === module) {
   app.listen(port, () => {

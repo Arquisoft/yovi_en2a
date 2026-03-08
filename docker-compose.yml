@@ -8,8 +8,10 @@ services:
     environment:
       - GAMEMANAGER_URL=http://game_manager:5000
       - AUTH_URL=http://auth-engine:4001
+      - GAMEY_URL=http://gamey:4000 
     depends_on:
       - auth-engine
+      - gamey 
     networks:
       - monitor-net
 
@@ -17,7 +19,6 @@ services:
     build:
       context: ./webapp
       args:
-        # El navegador del usuario final buscará el gateway en localhost:3000
         - VITE_API_URL=http://localhost:3000
         - VITE_GAMEMANAGER_URL=http://localhost:5000
     container_name: webapp
@@ -25,7 +26,6 @@ services:
     ports:
       - "80:80"
     environment:
-      # URL interna para que el servidor de la webapp hable con el backend (si hace SSR)
       - GAMEMANAGER_URL=http://game_manager:5000
     depends_on:
       - users
@@ -37,8 +37,8 @@ services:
     build: ./gamey
     container_name: gamey
     image: ghcr.io/arquisoft/yovi_en2a-gamey:latest
-    ports:
-      - "4000:4000"
+    expose:
+      - "4000"
     networks:
       - monitor-net
 
@@ -63,9 +63,7 @@ services:
       - monitor-net
 
   game_manager:
-    build:
-      context: .
-      dockerfile: game_manager/Dockerfile
+    build: ./game_manager
     container_name: game_manager
     image: ghcr.io/arquisoft/yovi_en2a-gamemanager:latest
     expose:
@@ -78,13 +76,12 @@ services:
       - FIREBASE_PROJECT_ID=yovi-en2a
       - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json 
     volumes:
-      - ./game_manager/.secrets/yovi-en2a-firebase-adminsdk-fbsvc-4e0265d79c.json:/app/credentials.json:ro
+      - ./userAuthentification/.secrets/yovi-en2a-firebase-adminsdk-fbsvc-4e0265d79c.json:/app/credentials.json:ro
     depends_on:
       - redis_db
       - gamey
     networks:
       - monitor-net
-
 
   redis_db:
     image: redis:alpine
@@ -96,12 +93,11 @@ services:
     volumes:
       - redis_data:/data
 
-
   auth-engine:
     build: ./userAuthentification
     container_name: userAuthentification
-    ports:
-      - "4001:4001"
+    expose:
+      - "4001"
     networks:
       - monitor-net
     environment:
@@ -109,7 +105,6 @@ services:
       - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json 
     volumes:
       - ./userAuthentification/.secrets/yovi-en2a-firebase-adminsdk-fbsvc-4e0265d79c.json:/app/credentials.json:ro
-
 
 networks:
   monitor-net:

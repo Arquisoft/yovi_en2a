@@ -10,3 +10,5 @@ webapp/.env
 .vscode/
 .secrets
 .scannerwork
+*/target
+
