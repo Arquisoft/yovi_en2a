@@ -1,8 +1,13 @@
 import React from 'react';
-import styles from './RankingTable.module.css';
-import type { RankingElement } from "./RankingElement";
+import styles from './RankingTableGlobal.module.css';
+import type { RankingElementGlobal } from "./rankingElements/RankingElementGlobal";
 
-const RankingTable: React.FC<{ data: RankingElement[], title: string }> = ({ data, title }) => {
+const RankingTableGlobal: React.FC<{ data: RankingElementGlobal[], title: string }> = ({ data, title }) => {
+  
+  // Extraemos el nombre dinámico del primer elemento. 
+  // Si la tabla está vacía, ponemos 'RESULT' (o lo que prefieras) por defecto.
+  const dynamicMetricName = data.length > 0 ? data[0].metricName : 'RESULT';
+
   return (
     <div className={styles.rankingContainer}>
       <h3 className={styles.rankingSubtitle}>{title}</h3>
@@ -10,9 +15,8 @@ const RankingTable: React.FC<{ data: RankingElement[], title: string }> = ({ dat
       <div className={styles.rankingHeaderRow}>
         <span>POS</span>
         <span>PLAYER 1</span>
-        <span className={styles.vsHeader}></span> {/* Empty or "VS" label */}
-        <span>PLAYER 2</span>
-        <span>TIME</span>
+        {/* Usamos nuestra variable dinámica aquí */}
+        <span>{dynamicMetricName}</span>
       </div>
 
       <div className={styles.rankingList}>
@@ -26,9 +30,7 @@ const RankingTable: React.FC<{ data: RankingElement[], title: string }> = ({ dat
             >
               <span className={styles.rankPos}>#{item.position}</span>
               <span className={styles.rankName}>{item.player1Name}</span>
-              <span className={styles.rankVs}>VS</span>
-              <span className={styles.rankName}>{item.player2Name}</span>
-              <span className={styles.rankTime}>{item.time}</span>
+              <span className={styles.rankTime}>{item.metric}</span>
             </div>
           );
         })}
@@ -37,4 +39,4 @@ const RankingTable: React.FC<{ data: RankingElement[], title: string }> = ({ dat
   );
 };
 
-export default RankingTable;
+export default RankingTableGlobal;

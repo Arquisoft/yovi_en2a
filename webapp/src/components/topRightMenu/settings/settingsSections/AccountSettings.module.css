@@ -1,17 +1,31 @@
-.accountInfo {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  border: 0.0625rem solid rgba(255, 255, 255, 0.1);
-}
+/* AccountSettings.module.css */
 
 .dangerBtn {
   background: #da2626;
   color: rgb(255, 255, 255);
   border: none;
-  padding: 0.75rem 1.5rem;
+  padding: 0.6rem 1.5rem; /* Ajustado ligeramente para encajar en la fila */
   border-radius: 0.4rem;
   font-weight: 700;
   cursor: pointer;
-  width: fit-content;
+  transition: background-color 0.2s ease;
+}
+
+.dangerBtn:hover {
+  background: #b01e1e;
+}
+
+.primaryBtn {
+  background: #0015ff;
+  color: rgb(255, 255, 255);
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 0.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.primaryBtn:hover {
+  background: #0056b3;
 }

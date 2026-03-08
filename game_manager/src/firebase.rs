@@ -171,3 +171,110 @@ pub async fn get_ranking_time() -> Result<Vec<Score>, Box<dyn Error>> {
 
     Ok(top_scores)
 }
+
+/// Actualiza el Score de un jugador al finalizar una partida.
+/// Si el jugador no existe en la base de datos, lo crea automáticamente.
+pub async fn update_score(
+    playerid: &str,
+    username: &str, 
+    is_win: bool,
+    time: i32,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    
+    // 🔥 CAMBIO AQUÍ: Interceptamos el error inseguro de get_connection() y 
+    // lo convertimos a un String seguro para que Axum no se queje.
+    let db = get_connection()
+        .await
+        .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { e.to_string().into() })?;
+
+    // 1. Buscamos en la colección "Scores" donde el campo `playerid` coincida
+    let mut existing_scores: Vec<Score> = db.fluent()
+        .select()
+        .from("Scores")
+        .filter(|q| q.for_all([q.field("playerid").eq(playerid)]))
+        .obj()
+        .query()
+        .await?;
+
+    // Si la consulta nos devuelve algún resultado, lo extraemos y lo actualizamos
+    if let Some(mut score) = existing_scores.pop() {
+        // --- EL REGISTRO EXISTE: ACTUALIZAMOS ---
+        
+        score.total_matches += 1;
+        
+        if is_win {
+            score.wins += 1;
+            score.elo += 20;
+        } else {
+            score.losses += 1;
+            score.elo -= 15;
+            if score.elo < 0 {
+                score.elo = 0;
+            }
+        }
+
+        if score.best_time == 0 || time < score.best_time {
+            score.best_time = time;
+        }
+
+        score.win_rate = (score.wins as f32 / score.total_matches as f32) as std::ffi::c_float;
+
+        db.fluent()
+            .update()
+            .in_col("Scores")
+            .document_id(playerid) 
+            .object(&score)
+            .execute::<Score>()
+            .await?;
+
+    } else {
+        // --- EL REGISTRO NO EXISTE: CREAMOS UNO NUEVO ---
+        insert_score(playerid, username, is_win, time).await?;
+    }
+
+    Ok(())
+}
+
+
+/// Crea un nuevo registro de Score para un usuario que acaba de jugar su primera partida.
+pub async fn insert_score(
+    playerid: &str,
+    username: &str,
+    is_win: bool,
+    time: i32,
+) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    
+    let db = get_connection()
+        .await
+        .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { e.to_string().into() })?;
+
+    let wins = if is_win { 1 } else { 0 };
+    let losses = if is_win { 0 } else { 1 };
+    
+    let initial_elo = 0; 
+    let mut elo = if is_win { initial_elo + 20 } else { initial_elo - 15 };
+    if elo < 0 { elo = 0; }
+
+    let win_rate = if is_win { 1.0 } else { 0.0 };
+
+    let new_score = Score {
+        playerid: playerid.to_string(),
+        username: username.to_string(),
+        total_matches: 1,
+        wins,
+        losses,
+        win_rate: win_rate as std::ffi::c_float,
+        elo,
+        best_time: time, 
+    };
+
+    db.fluent()
+        .insert()
+        .into("Scores")
+        .document_id(playerid)
+        .object(&new_score)
+        .execute::<Score>()
+        .await?;
+
+    Ok(())
+}

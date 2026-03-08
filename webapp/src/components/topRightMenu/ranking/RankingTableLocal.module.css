@@ -1,0 +1,119 @@
+/* RankingTableLocal.module.css */
+
+.rankingContainer {
+  background: #181818;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  color: #ffffff;
+  width: 100%;
+  max-width: 45rem; /* Contenedor adaptable con un límite máximo */
+  margin: 0 auto;
+}
+
+.rankingSubtitle {
+  text-align: center;
+  color: var(--primary-color, #007bff);
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+}
+
+/* --- LÓGICA DE LA CUADRÍCULA (GRID) --- */
+/* 1fr = Player 1 ocupa toda la fracción izquierda
+  3rem = Espacio fijo en el medio para el "VS"
+  1fr = Player 2 ocupa toda la fracción derecha hasta llegar al resultado
+  5rem = Espacio fijo al final para asegurar que "WIN" o "LOSS" quepan bien
+*/
+.rankingHeaderRow,
+.rankingItem {
+  display: grid;
+  grid-template-columns: 1fr 3rem 1fr 5rem;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+/* --- CABECERA --- */
+.rankingHeaderRow {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #888888;
+  text-transform: uppercase;
+  border-bottom: 0.125rem solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+/* Alineaciones de la cabecera usando selectores estructurales */
+.rankingHeaderRow span:first-child { text-align: left; }
+.rankingHeaderRow span:nth-child(2) { text-align: center; } /* VS */
+.rankingHeaderRow span:nth-child(3) { text-align: left; } /* Player 2 */
+.rankingHeaderRow span:last-child { text-align: right; } /* Result */
+
+/* --- FILAS DE DATOS --- */
+.rankingItem {
+  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s ease;
+  border-radius: 0.25rem;
+}
+
+.rankingItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Estilos de los Jugadores */
+.rankName {
+  font-weight: 600;
+  color: #cccccc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; /* Corta los nombres largos con "..." */
+}
+
+/* Específicamente, aseguramos que Player 1 empiece a la izquierda y Player 2 en el medio */
+.rankingItem .rankName:first-child { text-align: left; }
+.rankingItem .rankName:nth-child(3) { text-align: left; color: #aaaaaa; } /* Distinción sutil para Player 2 */
+
+/* Estilo del "VS" */
+.vsLabel {
+  text-align: center;
+  color: #555555;
+  font-size: 0.8rem;
+  font-style: italic;
+  font-weight: 800;
+}
+
+/* Extremo Derecho (Resultado) */
+.rankTime {
+  text-align: right;
+  font-weight: bold;
+  font-size: 1.05rem;
+  color: var(--primary-color, #007bff);
+}
+
+/* --- ADAPTABILIDAD MÓVIL --- */
+@media (max-width: 35rem) {
+  .rankingContainer {
+    padding: 1rem;
+  }
+
+  /* Reducimos los espacios fijos y los huecos en móviles */
+  .rankingHeaderRow,
+  .rankingItem {
+    grid-template-columns: 1fr 2rem 1fr 3.5rem;
+    gap: 0.5rem;
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .rankName {
+    font-size: 0.9rem;
+  }
+  
+  .vsLabel {
+    font-size: 0.7rem;
+  }
+  
+  .rankTime {
+    font-size: 0.95rem;
+  }
+}

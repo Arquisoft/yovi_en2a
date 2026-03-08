@@ -62,7 +62,7 @@ const RegisterForm: React.FC = () => {
       if (res.ok) {
         setResponseMessage(data.message);
         setTimeout(() => {
-          navigate('/login');
+          navigate('/gameSelection');
         }, 1500);
       } else {
         setError(data.error || 'Registration failed.');

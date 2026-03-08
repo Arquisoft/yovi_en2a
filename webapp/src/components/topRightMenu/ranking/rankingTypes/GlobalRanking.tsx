@@ -1,19 +1,52 @@
-import type { RankingElement } from "../RankingElement";
-import RankingTable from "../RankingTable";
-import type { RankingType } from "./RankingType";
+import { useEffect, useState } from "react";
+import type { RankingElementGlobal } from "../rankingElements/RankingElementGlobal";
+// 1. AÑADIDO: Importamos tu nueva clase RankingElementTime
+import { RankingElementTime } from "../rankingElements/RankingElementTime"; 
+import RankingTable from "../RankingTableGlobal";
+import type { RankingTypeGlobal } from "./RankingTypeGlobal";
 
-export class GlobalRanking implements RankingType {
+// Creamos un Componente Funcional de React para manejar el fetch
+const GlobalRankingFetcher = () => {
+  const [data, setData] = useState<RankingElementGlobal[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Hacemos GET a nuestro API Gateway (puerto 3000)
+    fetch('http://localhost:3000/game/bestTimes')
+      .then(res => res.json())
+      .then(resData => {
+        // Mapeamos el Score de Rust (data.rs) al formato RankingElementGlobal
+        const mappedData: RankingElementGlobal[] = resData.rankings.map((score: any, index: number) => {
+          
+          // Formateamos los segundos a MM:SS
+          const m = Math.floor(score.best_time / 60).toString().padStart(2, '0');
+          const s = (score.best_time % 60).toString().padStart(2, '0');
+
+          // 2. AÑADIDO: Instanciamos tu clase pasando los 3 parámetros de su constructor
+          // (position, player1Name, metric)
+          return new RankingElementTime(
+            index + 1,
+            score.username || score.playerid,
+            `${m}:${s}`
+          );
+        });
+        setData(mappedData);
+      })
+      .catch(err => console.error("Error fetching global rankings:", err))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <div style={{ textAlign: 'center', padding: '20px' }}>Cargando Leaderboard...</div>;
+
+  return <RankingTable data={data} title="World Leaderboard (Top 20)" />;
+};
+
+export class GlobalRanking implements RankingTypeGlobal {
   id = 'global';
   label = 'Global';
-  // Mock data representing server-side records
-  elements: RankingElement[] = [
-    { position: 1, player1Name: 'SpeedRunner99', player2Name: 'SpeedRunner99', time: '00:58:12' },
-    { position: 2, player1Name: 'ProGamer_X', player2Name: 'SpeedRunner99', time: '01:02:44' },
-    { position: 3, player1Name: 'Shadow_Ninja', player2Name: 'SpeedRunner99', time: '01:05:00' },
-    { position: 4, player1Name: 'Elite_Player', player2Name: 'SpeedRunner99', time: '01:10:22' },
-  ];
+  elements: RankingElementGlobal[] = [];
 
   render() {
-    return <RankingTable data={this.elements} title="World Leaderboard" />;
+    return <GlobalRankingFetcher />;
   }
 }

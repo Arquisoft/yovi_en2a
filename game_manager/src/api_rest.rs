@@ -1,5 +1,5 @@
 use crate::redis_client;
-use crate::data::{BotMoveResponse, Coordinates, EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, ValidResponse, YEN};
+use crate::data::{BotMoveResponse, Coordinates, EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN};
 
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -206,6 +206,26 @@ async fn get_best_times() -> Json<RankingTimeResponse> {
     Json(RankingTimeResponse { rankings: scores })
 }
 
+async fn update_user_score(
+    State(_state): State<Arc<AppState>>,
+    Json(payload): Json<UpdateScoreRequest>
+) -> Result<Json<UpdateScoreResponse>, (StatusCode, String)> {
+    
+    crate::firebase::update_score(
+        &payload.playerid, 
+        &payload.username, 
+        payload.is_win, 
+        payload.time
+    ).await.map_err(|e| {
+        eprintln!("🚨 ERROR ACTUALIZANDO SCORE: {:?}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, "Error actualizando base de datos".to_string())
+    })?;
+
+    Ok(Json(UpdateScoreResponse { 
+        message: "Score actualizado correctamente".to_string() 
+    }))
+}
+
 
 impl FromRef<Arc<AppState>> for AppState {
     fn from_ref(state: &Arc<AppState>) -> Self {
@@ -235,7 +255,8 @@ pub async fn run() {
         .route("/reqBotMove", post(request_bot_move))
         .route("/debug/redis", get(dump_redis))
         .route("/localRankings", post(get_local_rankings))
-        .route("/bestTimes", post(get_best_times))
+        .route("/bestTimes", get(get_best_times))
+        .route("/updateScore", post(update_user_score))
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 5000));

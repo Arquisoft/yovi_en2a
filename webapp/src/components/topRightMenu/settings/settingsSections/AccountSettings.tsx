@@ -1,4 +1,4 @@
-import baseStyles from './SettingsSection.module.css';
+import styles from './SettingsSection.module.css';
 import accountStyles from './AccountSettings.module.css';
 import type { SettingsSection } from "./SettingsStrategy";
 
@@ -17,47 +17,59 @@ export class AccountSettings implements SettingsSection {
   }
 
   render() {
-    // STATE 1: User NOT logged in (Guest)
     if (!this.isLoggedIn) {
       return (
-        <div className={baseStyles.tabPanel}>
+        <div className={styles.tabPanel}>
           <h3>Profile Management</h3>
-          <div className={accountStyles.accountInfo}>
-            <p>You are not logged in yet</p>
+          
+          <div className={styles.controlGroup}>
+            <span className={styles.labelLike}>Account Status</span>
+            <span style={{ color: '#aaa' }}>Guest (Not logged in)</span>
           </div>
-          <button 
-            // Using primaryBtn (if defined) or dangerBtn as a fallback for the login button
-            className={accountStyles.primaryBtn || accountStyles.dangerBtn} 
-            onClick={() => {
-              // Navigate to the login route
-              this.navigate("/login"); 
-            }}
-          >
-            Log in
-          </button>
+
+          <div className={styles.controlGroup}>
+            <span className={styles.labelLike}>Cloud Saving</span>
+            <span style={{ fontSize: '0.85rem', color: '#888', textAlign: 'right', maxWidth: '60%' }}>
+              Log in to save your game records and appear in the leaderboards.
+            </span>
+          </div>
+          
+          <div className={styles.controlGroup}>
+            <label htmlFor="auth-button">Authentication</label>
+            <button 
+              id="auth-button"
+              className={accountStyles.primaryBtn}
+              onClick={() => this.navigate("/login")}
+            >
+              Log in
+            </button>
+          </div>
         </div>
       );
     }
 
-    // STATE 2: User is logged in
     return (
-      <div className={baseStyles.tabPanel}>
+      <div className={styles.tabPanel}>
         <h3>Profile Management</h3>
-        <div className={accountStyles.accountInfo}>
-          <p>Logged in as: <strong>{this.username}</strong></p>
+        
+        <div className={styles.controlGroup}>
+          <span className={styles.labelLike}>Logged in as</span>
+          <span style={{ color: 'white', fontWeight: 'bold' }}>{this.username}</span>
         </div>
-        <button 
-          className={accountStyles.dangerBtn}
-          onClick={() => {
-            // Delete the cookie by setting an expiration date in the past (max-age=0)
-            document.cookie = "user=; path=/; max-age=0; SameSite=Lax;";
-            
-            // Navigate back to the Home page
-            this.navigate("/"); 
-          }}
-        >
-          Log Out
-        </button>
+        
+        <div className={styles.controlGroup}>
+          <label htmlFor="logout-button">Session</label>
+          <button 
+            id="logout-button"
+            className={accountStyles.dangerBtn}
+            onClick={() => {
+              document.cookie = "user=; path=/; max-age=0; SameSite=Lax;";
+              this.navigate("/"); 
+            }}
+          >
+            Log Out
+          </button>
+        </div>
       </div>
     );
   }

@@ -1,37 +1,25 @@
-.labelRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* --- TU CSS EXISTENTE --- */
+
+.accountInfo {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.5rem; /* Añadido para separar el recuadro del botón */
 }
 
-.sliderContainer {
-  position: relative;
-  width: 100%;
-  padding: 1rem 0;
-}
-
-.volumeRange {
-  width: 100%;
-  height: 4px;
-  border-radius: 2px;
-  outline: none;
+.dangerBtn {
+  background: #da2626;
+  color: rgb(255, 255, 255);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.4rem;
+  font-weight: 700;
   cursor: pointer;
+  width: fit-content;
+  transition: background-color 0.2s ease; /* Transición suave */
 }
 
-.volumeTooltip {
-  position: absolute;
-  top: -1.5rem;
-  transform: translateX(-50%);
-  background: var(--primary-color);
-  color: white;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-size: 0.75rem;
-  opacity: 0;
-  transition: opacity 0.2s, top 0.2s;
-}
-
-.visible {
-  opacity: 1;
-  top: -2rem;
+.dangerBtn:hover {
+  background: #b01e1e; /* Efecto hover para el logout */
 }

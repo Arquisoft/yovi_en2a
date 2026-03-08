@@ -35,19 +35,40 @@ const UserMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     // Note: Here you would usually also call an API /api/updateUsername
   };
 
+  // --- ESTADO 1: NO LOGUEADO (INVITADO) ---
   if (!user) {
     return (
       <div className="top-right-menu-overlay">
         <div className="top-right-menu-container">
-          <button className={styles.closeBtn} onClick={onClose}>✕</button>
-          <h2>User Profile</h2>
-          <p>You are not logged in yet.</p>
-          <button onClick={() => navigate('/login')}>Go to Login</button>
+          {/* Reutilizamos el header exacto */}
+          <header className={styles.header}>
+            <h2>USER PROFILE</h2>
+            <button className={styles.closeBtn} onClick={onClose}>✕</button>
+          </header>
+
+          {/* Reutilizamos el body para mantener los paddings y alineación */}
+          <div className={styles.body}>
+            <div className={styles.guestMessageContainer}>
+              <p className={styles.guestText}>You are not logged in yet.</p>
+              <p className={styles.guestSubtext}>Log in to access your profile settings.</p>
+            </div>
+            
+            <button 
+              className={styles.loginBtn} 
+              onClick={() => {
+                onClose(); // Cerramos el menú antes de navegar
+                navigate('/login');
+              }}
+            >
+              Go to Login
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
+  // --- ESTADO 2: LOGUEADO ---
   return (
     <div className="top-right-menu-overlay">
       <div className="top-right-menu-container">
