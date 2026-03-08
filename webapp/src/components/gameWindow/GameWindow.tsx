@@ -4,36 +4,40 @@ import TopLeftHeader from "./topLeftHeader/TopLeftHeader";
 import TopRightMenu from "../topRightMenu/TopRightMenu";
 import Board from "./board/Board";
 import RightPanel from "./rightPanel/RightPanel";
-import { toXYZ, fromXYZ} from "../../model/Coordinates";
-import { createMatch, sendMove, requestBotMove } from "../../model/GameApi";
-import { Game } from "../../model/Game";
-import { useTimer } from "../../model/Timer";
+import { createMatch, sendMove, requestBotMove } from "../../api/GameApi";
+import { Game, toXYZ, fromXYZ } from "./Game";
+import { useTimer } from "./rightPanel/Timer";
 
 type Props = {
   size?: number;
   mode?: "bot" | "multi";
 };
 
+export type Move = {
+  row: number;
+  col: number;
+  player: 0 | 1;
+};
+
 const GameWindow = ({ size = 8, mode = "bot" }: Props) => {
-  const [matchId, setMatchId] = useState<string | null>(null);
-  const [game, setGame] = useState<Game>(new Game(size));
+  const player1 = "Player 1";
+  const player2 = mode === "bot" ? "Bot" : "Player 2";
+
+  const [game, setGame] = useState<Game>(new Game(size, player1, player2));
   const [loading, setLoading] = useState(false);
   const [paused, setPaused] = useState(false);
 
   const { formattedTime, resetTimer } = useTimer(!paused && !game.gameOver);
 
   useEffect(() => { createGame(); }, [size]);
+
   //create a new reference to the game
   function cloneGame(source: Game): Game {
-    const newGame = new Game(source.board.size);
+    const newGame = new Game(source.size, source.player1, source.player2);
 
-    for (let row = 0; row < source.board.cells.length; row++) {
-      for (let col = 0; col < source.board.cells[row].length; col++) {
-        newGame.board.cells[row][col].owner = source.board.cells[row][col].owner;
-      }
-    }
-
-    newGame.currentPlayer = source.currentPlayer;
+    newGame.setMatchId(source.matchId || "");
+    newGame.moves = [...source.moves];
+    newGame.turn = source.turn;
     newGame.gameOver = source.gameOver;
 
     return newGame;
@@ -45,49 +49,67 @@ const GameWindow = ({ size = 8, mode = "bot" }: Props) => {
     setLoading(true);
 
     // conection to backend and get game state
-    try {
-      const data = await createMatch(size);
-      setMatchId(data.match_id);
-      setGame(new Game(size));
-    } catch (error) {
-      console.error("Error creating game:", error);
-    } finally {
-      setLoading(false);
-    }
+    createMatch(player1, player2, size)
+      .then((data) => {
+        if (!data) return;
+
+        // set match id and game state
+        const newGame = new Game(size, player1, player2);
+        newGame.setMatchId(data.match_id);
+
+        setGame(newGame);
+        setPaused(false);
+        resetTimer();
+      })
+      .finally(() => setLoading(false)); // unblock board
   }
 
-  async function handlePlace(row: number, col: number) {
-    if (!matchId || game.gameOver) return;
-    if (game.board.cells[row][col].owner !== null) return;
 
-    const coords = toXYZ(row, col, game.board.size);
+  async function handlePlace(row: number, col: number) {
+    if (!game.matchId || game.gameOver) return;
+    if (game.isOccupied(row, col)) return;
+
+    const coords = toXYZ(row, col, game.size);
     // block board while waiting for response
     setLoading(true);
 
-    try{
-      const data = await sendMove({match_id: matchId, coord_x: coords.x, coord_y: coords.y, coord_z: coords.z});
+    // send move to backend and get updated game state
+    sendMove(game.matchId, coords.x, coords.y, coords.z)
+    .then((data) => {
+      if (!data) return;
 
       const updatedGame = cloneGame(game);
-      updatedGame.applyMove(row, col);
+      updatedGame.addMove(row, col);
       updatedGame.setGameOver(data.game_over);
       setGame(updatedGame);
-      
-      if (!data.game_over && mode === "bot") {
+
+      if (!data.game_over && mode === "bot" && updatedGame.matchId) {
         // Handle bot's turn
-        const botData = await requestBotMove({ match_id: matchId });
+        handleBotPlace(updatedGame);
+      } else {
+        setLoading(false);
+      }
+    });
+  }
 
-        const botGame = cloneGame(updatedGame);
-        const botCoords = fromXYZ(botData.coord_x, botData.coord_y, botData.coord_z, size);
+  function handleBotPlace(currentGame: Game){
+    requestBotMove(currentGame.matchId!)
+      .then((botData) => {
+      if (!botData) return;
 
-        botGame.applyMove(botCoords.row, botCoords.col);
+      const pos = fromXYZ(
+        botData.coordinates.x,
+        botData.coordinates.y,
+        botData.coordinates.z,
+        game.size
+      );
+
+      const botGame = cloneGame(game);
+        botGame.addMove(pos.row, pos.col);
         botGame.setGameOver(botData.game_over);
         setGame(botGame);
-      }
-    } catch (error) {
-      console.error("Error sending move:", error);
-    } finally {
-      setLoading(false);
-    }
+      })
+      .finally(() => setLoading(false));
   }
 
   function handleUndo() {
@@ -103,7 +125,6 @@ const GameWindow = ({ size = 8, mode = "bot" }: Props) => {
     createGame();
   }
 
-
   return (
     <div className="game-window">
       <TopRightMenu />
@@ -111,14 +132,15 @@ const GameWindow = ({ size = 8, mode = "bot" }: Props) => {
 
       <div className="center-area">
         <Board
-          board={game.board}
+          size={game.size}
+          moves={game.moves}
           blocked={loading || game.gameOver}
           onPlace={handlePlace}
         />
       </div>
 
       <RightPanel
-        turn={game.currentPlayer === 0 ? 1 : 2}
+        turn={game.turn === 0 ? 1 : 2}
         time={formattedTime}
         paused={paused}
         mode={mode}

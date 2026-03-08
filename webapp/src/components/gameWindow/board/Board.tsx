@@ -1,36 +1,46 @@
-import HexButton from "./HexButton";
 import "./Board.css";
-import { BoardModel} from "../../../model/BoardModel";
+import HexButton from "./HexButton";
+import type {Move} from "../GameWindow";
 
 type Props = {
-  board: BoardModel;
+  size: number;
+  moves: Move[];
   blocked: boolean;
   onPlace: (row: number, col: number) => void;
 };
 
-export default function Board({ board, blocked, onPlace }: Props) {
+export default function Board({ size, moves, blocked, onPlace }: Props) {
   const rows = [];
 
-  for (let row = 0; row < board.cells.length; row++) {
-    const rowCells = [];
-    for (let col = 0; col < board.cells[row].length; col++) {
-      // Get the cell from the board model
-      const cell = board.cells[row][col];
-      const disabled = cell.owner !== null || blocked;
+  for (let row = 0; row < size; row++) {   
+    const cells = []; 
 
-      rowCells.push(
+    for (let col = 0; col <= row; col++) {
+      let owner: 0 | 1 | null = null;
+
+      // Check if there's a move for this cell
+      for (const move of moves) {
+        if (move.row === row && move.col === col) {
+          owner = move.player;
+          break;
+        }
+      }
+      // Get the cell from the board model
+      const disabled = owner !== null || blocked;
+
+      cells.push(
         <HexButton
-          key={`${cell.row}-${cell.col}`}
-          owner={cell.owner}
+          key={`${row}-${col}`}
+          owner={owner}
           isDisabled={disabled}
-          onClick={() => onPlace(cell.row, cell.col)}
+          onClick={() => onPlace(row, col)}
         />
       );
     }
 
     rows.push(
       <div key={row} className="board-row">
-        {rowCells}
+        {cells}
       </div>
     );
   }

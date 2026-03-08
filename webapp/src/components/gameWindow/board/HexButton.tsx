@@ -1,11 +1,10 @@
 import "./HexButton.css";
-import type { CellOwner } from "../../../model/Cell";
 
 type Props = {
   onClick?: () => void;
   isDisabled?: boolean;
-  owner?: CellOwner;
-
+  // HexButton contains an owner to determine the color of the button
+  owner?: 0 | 1 | null;
 };
 
 export default function HexButton({ onClick, isDisabled, owner }: Props) {
