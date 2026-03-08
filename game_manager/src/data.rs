@@ -122,6 +122,7 @@ pub struct RankingTimeResponse {
     pub rankings: Vec<Score>,
 }
 
+#[derive(Deserialize)]
 pub struct MoveRequest {
     pub match_id: String,
     pub coord_x: u32,

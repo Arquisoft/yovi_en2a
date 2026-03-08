@@ -1,5 +1,4 @@
 use crate::redis_client;
-
 use crate::data::{BotMoveResponse, Coordinates, EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, ValidResponse, YEN};
 
 use std::net::SocketAddr;
