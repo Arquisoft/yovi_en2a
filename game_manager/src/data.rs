@@ -1,4 +1,4 @@
-    use std::ffi::c_float;
+    use std::ffi::{c_double, c_float};
     use jsonwebtoken::signature::digest::typenum::Integer;
     use serde::{Deserialize, Serialize};
     use crate::api_rest::get_gamey_url;
@@ -63,6 +63,7 @@
         pub player2id: String,
         pub result: String,
         pub board_status:YEN,
+        pub time: f32,
     }
     impl DBData for Match {}
 
@@ -76,7 +77,7 @@
         pub losses: i32,
         pub win_rate: c_float,
         pub elo: i32,
-        pub best_time: i32
+        pub best_time: f32
     }
     impl DBData for Score {}
 
@@ -169,7 +170,7 @@
         pub playerid: String,
         pub username: String,
         pub is_win: bool,
-        pub time: i32,
+        pub time: f32,
     }
 
     #[derive(Serialize)]
@@ -190,6 +191,7 @@ pub struct SaveMatchRequest {
     pub player1id: String,
     pub player2id: String,
     pub result: String,
+    pub time: f32,
 }
 
 #[derive(Serialize)]

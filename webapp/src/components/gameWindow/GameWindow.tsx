@@ -16,6 +16,8 @@ export type Move = {
   player: 0 | 1;
 };
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 // Función auxiliar para leer la cookie de usuario
 const getCookieUser = () => {
   const cookieMatch = document.cookie.match(/(?:^|; )user=([^;]*)/);
@@ -32,7 +34,7 @@ const GameWindow = () => {
   const { size: urlSize, mode: urlMode } = useParams();
   const navigate = useNavigate();
 
-  const size = urlSize ? parseInt(urlSize, 10) : 8;
+  const size = urlSize ? Number.parseInt(urlSize, 10) : 8;
   const mode = urlMode === "multi" ? "multi" : "bot";
 
   // Si el usuario está logueado, usamos su nombre, si no, "Player 1"
@@ -65,7 +67,7 @@ const GameWindow = () => {
     setModalMessage(null); // Ocultamos el modal al reiniciar
     try {
       const data = await createMatch(player1, player2, size);
-      if (data && data.match_id) {
+      if (data?.match_id) {
         const newGame = new Game(size, player1, player2);
         newGame.setMatchId(data.match_id);
         setGame(newGame);
@@ -80,7 +82,7 @@ const GameWindow = () => {
   // --- NUEVA FUNCIÓN PARA GESTIONAR EL FINAL DEL JUEGO ---
   const handleGameOver = (isPlayer1Winner: boolean) => {
     const winnerName = isPlayer1Winner ? player1 : player2;
-    setModalMessage(`¡Partida terminada! ${winnerName} ganó.`);
+    setModalMessage(`Game finished! ${winnerName} won.`);
 
     // Solo guardamos datos si hay un usuario logueado
     if (currentUser && game.matchId) {
@@ -91,7 +93,7 @@ const GameWindow = () => {
       updateScore(currentUser.email, currentUser.username, isPlayer1Winner, timeInSeconds);
 
       // 2. Guardar el historial de la partida (Requiere endpoint en Rust)
-      saveMatch(game.matchId, currentUser.email, player2, resultString);
+      saveMatch(game.matchId, currentUser.email, player2, resultString, timeInSeconds);
     }
   };
 
@@ -127,7 +129,10 @@ const GameWindow = () => {
 
   async function handleBotPlace(currentGame: Game) {
     try {
+      let t1 = Date.now();
       const botData = await requestBotMove(currentGame.matchId!);
+      let t2 = Date.now();
+      if(t2-t1 < 500) await sleep(Math.random()*500 + 500)
       if (!botData) return;
 
       const x = botData.coordinates?.x ?? botData.coord_x ?? botData.x;
@@ -151,10 +156,6 @@ const GameWindow = () => {
     }
   }
 
-  function handleUndo() {}
-  function handleEndTurn() {}
-  function handleReset() { resetTimer(); createGame(); }
-
   const isBotTurn = mode === "bot" && game.turn !== 0;
 
   return (
@@ -177,11 +178,6 @@ const GameWindow = () => {
         paused={paused}
         mode={mode}
         onPauseToggle={() => setPaused(!paused)}
-        onUndo={handleUndo}
-        onEndTurn={handleEndTurn}
-        onReset={handleReset}
-        canUndo={false}
-        canEndTurn={false}
       />
 
       {/* --- EL MODAL DE VICTORIA --- */}
@@ -189,7 +185,7 @@ const GameWindow = () => {
         <div className={modalStyles.modalOverlay}>
           <div className={modalStyles.modalContent}>
             <h2>{modalMessage}</h2>
-            <p>Time elapsed: {formattedTime}</p>
+            <p>Total time: {formattedTime}</p>
             <button 
               className={modalStyles.returnBtn} 
               onClick={() => navigate('/gameSelection')}

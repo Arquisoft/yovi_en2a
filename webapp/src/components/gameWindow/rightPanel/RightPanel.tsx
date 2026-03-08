@@ -1,4 +1,5 @@
 import "./RightPanel.css";
+import {GetUsernameFromCookie} from "../../../utils/CookieRetriever";
 
 type Props = {
   turn: 1 | 2;
@@ -6,14 +7,9 @@ type Props = {
   paused?: boolean;
   mode: "bot" | "multi";
   onPauseToggle?: () => void;
-  onUndo: () => void;
-  onEndTurn: () => void;
-  onReset: () => void;
-  canUndo: boolean;
-  canEndTurn: boolean;
 };
 
-export default function RightPanel({turn,time = "00:00",mode,onUndo,onEndTurn,onReset,canUndo,canEndTurn,}: Readonly<Props>) {
+export default function RightPanel({turn,time = "00:00",mode,}: Readonly<Props>) {
   const isP1 = turn === 1;
 
   return (
@@ -37,7 +33,7 @@ export default function RightPanel({turn,time = "00:00",mode,onUndo,onEndTurn,on
           <div className="rightpanel-left">
             <span className="dot blue" />
             <div>
-              <div className="rightpanel-name">Player 1</div>
+              <div className="rightpanel-name">{GetUsernameFromCookie()}</div>
               <div className="rightpanel-meta">Human</div>
             </div>
           </div>
@@ -59,7 +55,7 @@ export default function RightPanel({turn,time = "00:00",mode,onUndo,onEndTurn,on
       {/* Card Actions */}
       <section className="rightpanel-card">
         <h4 className="rightpanel-title">Actions</h4>
-
+      {/*
         <div className="rightpanel-actions">
           <button
             className="rightpanel-btn primary"
@@ -81,6 +77,7 @@ export default function RightPanel({turn,time = "00:00",mode,onUndo,onEndTurn,on
           > Reset
           </button>
         </div>
+        */}
       </section>
     </div>
   );

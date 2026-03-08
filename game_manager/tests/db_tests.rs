@@ -27,6 +27,7 @@ async fn test_full_match_cycle() {
         vec!['B', 'R'],
         "B/..R/.B.R/....".to_string(),
         ),
+        time: 1000.0,
     };
 
     let insert_result = insert_db("Match", test_id, &match_data).await;

@@ -69,28 +69,30 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
       <div className={styles.controlsWrapper}>
         
         {/* Difficulty Selector */}
-        <div className={styles.difficultySection}>
-          <span className={styles.difficultyLabel}>Difficulty</span>
-          <div className={styles.difficultySelector}>
-            <button
-              className={styles.arrow}
-              onClick={decreaseDifficulty}
-              style={{ visibility: currentDifficultyIndex > 0 ? "visible" : "hidden" }}
-            >
-              ←
-            </button>
-            <div className={styles.difficultyBox}>{currentDifficulty}</div>
-            <button
-              className={styles.arrow}
-              onClick={increaseDifficulty}
-              style={{
-                visibility: currentDifficultyIndex < difficulties.length - 1 ? "visible" : "hidden",
-              }}
-            >
-              →
-            </button>
+        {mode.showDifficulty && (
+          <div className={styles.difficultySection}>
+            <span className={styles.difficultyLabel}>Difficulty</span>
+            <div className={styles.difficultySelector}>
+              <button
+                className={styles.arrow}
+                onClick={decreaseDifficulty}
+                style={{ visibility: currentDifficultyIndex > 0 ? "visible" : "hidden" }}
+              >
+                ←
+              </button>
+              <div className={styles.difficultyBox}>{currentDifficulty}</div>
+              <button
+                className={styles.arrow}
+                onClick={increaseDifficulty}
+                style={{
+                  visibility: currentDifficultyIndex < difficulties.length - 1 ? "visible" : "hidden",
+                }}
+              >
+                →
+              </button>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Size Selector */}
         <div className={styles.sizeSection}>

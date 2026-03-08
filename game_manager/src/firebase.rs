@@ -178,7 +178,7 @@ pub async fn update_score(
     playerid: &str,
     username: &str, 
     is_win: bool,
-    time: i32,
+    time: f32,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     
     // 🔥 CAMBIO AQUÍ: Interceptamos el error inseguro de get_connection() y 
@@ -213,7 +213,7 @@ pub async fn update_score(
             }
         }
 
-        if score.best_time == 0 || time < score.best_time {
+        if score.best_time == 0.0 || time < score.best_time {
             score.best_time = time;
         }
 
@@ -241,7 +241,7 @@ pub async fn insert_score(
     playerid: &str,
     username: &str,
     is_win: bool,
-    time: i32,
+    time: f32,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     
     let db = get_connection()

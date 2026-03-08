@@ -245,7 +245,8 @@ async fn save_match(
         player1id: payload.player1id,
         player2id: payload.player2id,
         result: payload.result,
-        board_status, // Aquí pasamos el YEN que acabamos de leer
+        board_status,
+        time: payload.time,
     };
 
     // 4. Lo guardamos en Firebase

@@ -95,7 +95,7 @@ export function requestBotMove(matchId: string) {
     });
 }
 
-export function saveMatch(matchId: string, player1id: string, player2id: string, result: string) {
+export function saveMatch(matchId: string, player1id: string, player2id: string, result: string, time: number) {
   return fetch("http://localhost:3000/game/saveMatch", {
     method: "POST",
     headers: {
@@ -106,6 +106,7 @@ export function saveMatch(matchId: string, player1id: string, player2id: string,
       player1id,
       player2id,
       result,
+      time,
     }),
   })
     .then(async (res) => {
