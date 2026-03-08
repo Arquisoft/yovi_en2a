@@ -1,6 +1,11 @@
 import { Cell } from "./Cell";
 
-export class Board {
+export type Move = {
+  player: 0 | 1;
+  coords: [number, number, number];
+};
+
+export class BoardModel {
   size: number;
   cells: Cell[][];
 
@@ -11,15 +16,13 @@ export class Board {
   }
 
   private createBoard(): void {
-
     for (let row = 0; row < this.size; row++) {
       // create row
       this.cells[row] = [];
 
       for (let col = 0; col <= row; col++) {
         // create cell
-        const cell = new Cell(row, col);
-        this.cells[row][col] = cell;
+        this.cells[row][col] = new Cell(row, col);
       }
     }
   }

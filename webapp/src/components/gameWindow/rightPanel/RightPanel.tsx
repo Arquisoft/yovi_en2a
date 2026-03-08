@@ -3,6 +3,9 @@ import "./RightPanel.css";
 type Props = {
   turn: 1 | 2;
   time?: string;
+  paused?: boolean;
+  mode: "bot" | "multi";
+  onPauseToggle?: () => void;
   onUndo: () => void;
   onEndTurn: () => void;
   onReset: () => void;
@@ -10,15 +13,7 @@ type Props = {
   canEndTurn: boolean;
 };
 
-export default function RightPanel({
-  turn,
-  time = "00:00",
-  onUndo,
-  onEndTurn,
-  onReset,
-  canUndo,
-  canEndTurn,
-}: Props) {
+export default function RightPanel({turn,time = "00:00",paused,mode,onPauseToggle,onUndo,onEndTurn,onReset,canUndo,canEndTurn,}: Props) {
   const isP1 = turn === 1;
 
   return (
@@ -55,8 +50,7 @@ export default function RightPanel({
             <span className="dot red" />
             <div>
               <div className="rightpanel-name">Player 2</div>
-              <div className="rightpanel-meta">Bot</div>
-            </div>
+              <div className="rightpanel-meta">{mode === "bot" ? "Bot" : "Human"}</div>            </div>
           </div>
           <span className="rightpanel-chip">{!isP1 ? "YOUR TURN" : "WAITING"}</span>
         </div>

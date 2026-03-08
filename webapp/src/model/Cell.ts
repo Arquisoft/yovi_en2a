@@ -1,9 +1,9 @@
-export type Player = 1 | 2;
+export type CellOwner = 0 | 1 | null;
 
 export class Cell {
   row: number;
   col: number;
-  owner: Player | null;
+  owner: CellOwner;
 
   constructor(row: number, col: number) {
     this.row = row;

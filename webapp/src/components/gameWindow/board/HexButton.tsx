@@ -1,17 +1,17 @@
 import "./HexButton.css";
+import type { CellOwner } from "../../../model/Cell";
 
 type Props = {
   onClick?: () => void;
   isDisabled?: boolean;
-  owner?: 1 | 2 | null;
+  owner?: CellOwner;
 
 };
 
-
 export default function HexButton({ onClick, isDisabled, owner }: Props) {
   const ownerClass = 
-    owner === 1 ? "hex--player1" : 
-    owner === 2 ? "hex--player2" : 
+    owner === 0 ? "hex--player1" : 
+    owner === 1 ? "hex--player2" : 
     "hex--empty";
     
   return (

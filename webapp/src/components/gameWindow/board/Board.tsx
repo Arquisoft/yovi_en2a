@@ -1,6 +1,6 @@
 import HexButton from "./HexButton";
 import "./Board.css";
-import type { Board as BoardModel } from "../../../model/Board";
+import { BoardModel} from "../../../model/BoardModel";
 
 type Props = {
   board: BoardModel;
@@ -9,7 +9,6 @@ type Props = {
 };
 
 export default function Board({ board, blocked, onPlace }: Props) {
-
   const rows = [];
 
   for (let row = 0; row < board.cells.length; row++) {
