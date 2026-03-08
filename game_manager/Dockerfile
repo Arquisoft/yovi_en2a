@@ -1,18 +1,14 @@
 FROM rust:latest AS builder
 
 # Trabajamos en una carpeta genérica primero
-WORKDIR /app
-
-# Copiamos la dependencia local 'gamey' al contenedor
-COPY gamey ./gamey
-
-# Copiamos el código de 'game_manager'
-COPY game_manager ./game_manager
-
-# Nos movemos a la carpeta de game_manager para compilar
 WORKDIR /app/game_manager
 
-# Ahora Cargo podrá encontrar ../gamey porque lo acabamos de copiar
+
+# Copiamos el código de 'game_manager'
+COPY Cargo.toml Cargo.lock ./
+COPY .secrets/ ./.secrets/
+COPY src/ ./src/
+
 RUN cargo build --release
 
 # --- Stage final ---

@@ -1,5 +1,5 @@
 use crate::redis_client;
-use crate::data::{NewMatchRequest, NewMatchResponse, MoveRequest, MoveResponse, ValidRequest, ValidResponse, CheckMatchRequest, CheckMatchResponse};
+use crate::data::{NewMatchRequest, NewMatchResponse, MoveRequest, MoveResponse, EngineResponse, ValidResponse, YEN, EngineMoveRequest, EngineMoveResponse, BotMoveResponse, PlayResponse, Coordinates};
 
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -7,12 +7,14 @@ use tokio::net::TcpListener;
 use uuid::Uuid;
 use axum::extract::FromRef;
 use serde_json;
+use reqwest::Client;
 
 use axum::{
     extract::State,
     routing::{post, get},
     Json, Router,
 };
+use axum::http::StatusCode;
 
 pub fn get_gamey_url() -> String {
     let host = std::env::var("GAMEY").unwrap_or_else(|_| "localhost".to_string());
@@ -28,57 +30,120 @@ pub struct AppState {
 async fn create_match(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<NewMatchRequest>
-) -> Json<NewMatchResponse> {
+    ) -> Json<NewMatchResponse> {
     let new_id = Uuid::new_v4().to_string();
-    let _ = redis_client::save_match_state(&state.redis_pool, &new_id, 0).await;
-    let _ = redis_client::save_match_players(&state.redis_pool, &new_id, &payload.player1, &payload.player2).await;
+    let _ = redis_client::create_match(&state.redis_pool, &new_id,  &payload.size, &payload.player1, &payload.player2).await;
     Json(NewMatchResponse { match_id: new_id })
 }
 
-async fn check_match(
+async fn execute_move(
     State(state): State<Arc<AppState>>,
-    Json(payload): Json<CheckMatchRequest>
-) -> Json<CheckMatchResponse> {
-    let (player1, player2) = redis_client::get_match_players(&state.redis_pool, &payload.match_id)
+    Json(payload): Json<MoveRequest>,
+) -> Result<Json<MoveResponse>, (StatusCode, String)> {
+
+    // 1. Recoger el estado actual de Redis (el string JSON)
+    let current_yen_json = redis_client::get_match_state(&state.redis_pool, &payload.match_id)
         .await
-        .unwrap_or_else(|_| ("unknown".to_string(), "unknown".to_string()));
+        .map_err(|_| (StatusCode::NOT_FOUND, "Partida no encontrada".to_string()))?;
 
-    Json(CheckMatchResponse {
-        match_id: payload.match_id,
-        player1,
-        player2,
-    })
-}
+    // 2. Enviar al Engine (Contenedor en puerto 4000)
+    // Preparamos el cuerpo que el microservicio del Engine espera
+    let engine_url = format!("{}/engine/move", state.gamey_url);
+    let client = Client::new();
 
-async fn request_move(
-    State(state): State<Arc<AppState>>,
-    Json(payload): Json<MoveRequest>
-) -> Json<MoveResponse> {
-    let current_coord = redis_client::get_match_state(&state.redis_pool, &payload.match_id)
+    let current_yen: serde_json::Value = serde_json::from_str(&current_yen_json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let engine_payload = serde_json::json!({
+        "state": current_yen,
+        "x": payload.coord_x,
+        "y": payload.coord_y,
+        "z": payload.coord_z
+    });
+
+    let response = client.post(engine_url)
+        .json(&engine_payload)
+        .send()
         .await
-        .unwrap_or(0);
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Engine inalcanzable: {}, {}", e, current_yen)))?;
 
-    Json(MoveResponse {
-        yen_coordinate: current_coord,
-        is_end: false,
-    })
-}
+    let status = response.status();
+    let body = response.text().await
+        .unwrap_or_else(|_| "No response body".to_string());
 
-async fn check_valid(
-    State(state): State<Arc<AppState>>,
-    Json(payload): Json<ValidRequest>
-    ) -> Json<ValidResponse> {
+    if !status.is_success() {
+        return Err((StatusCode::BAD_REQUEST, format!("Movimiento ilegal según el Engine: {}", body)));
+    }
 
-    let _ = redis_client::save_match_state(
+    let engine_result: EngineResponse = serde_json::from_str(&body)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error al leer respuesta del Engine {}: {}", &body,e)))?;
+
+    // 3. Actualizar Redis con el nuevo estado devuelto por el Engine
+    redis_client::save_match_state(
         &state.redis_pool,
         &payload.match_id,
-        payload.yen_coordinate
-    ).await;
+        serde_json::to_string(&engine_result.new_yen_json)
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    ).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    Json(ValidResponse {
-        valid: true,
-        is_end: false,
-    })
+    // 4. Responder al Frontend
+    Ok(Json(MoveResponse {
+        match_id: payload.match_id,
+        game_over: engine_result.game_over,
+    }))
+}
+
+#[axum::debug_handler]
+async fn request_bot_move(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<EngineMoveRequest>
+    ) -> Result<Json<EngineMoveResponse>, (StatusCode, String)> {
+
+    let current_yen_json = redis_client::get_match_state(&state.redis_pool, &payload.match_id)
+        .await
+        .map_err(|_| (StatusCode::NOT_FOUND, "Partida no encontrada".to_string()))?;
+
+    let current_yen: serde_json::Value = serde_json::from_str(&current_yen_json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    let (player1, bot_id) = redis_client::get_match_players(&state.redis_pool, &payload.match_id).await.unwrap();
+
+    // 2. Enviar al Engine (Contenedor en puerto 4000)
+    // Preparamos el cuerpo que el microservicio del Engine espera
+    let engine_url = format!("{}/{}/ybot/play/{}", state.gamey_url, "v1", bot_id);
+    let client = Client::new();
+
+    let engine_payload = current_yen;
+
+    let response = client.post(engine_url)
+        .json(&engine_payload)
+        .send()
+        .await
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Engine inalcanzable: {}", e)))?;
+
+
+    let status = response.status();
+    let body = response.text().await
+        .unwrap_or_else(|_| "No response body".to_string());
+
+    if !status.is_success() {
+        return Err((StatusCode::BAD_REQUEST, format!("Error al generar un movimiento: {}", body)));
+    }
+
+    let engine_result: PlayResponse = serde_json::from_str(&body)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error al leer respuesta del Engine {}: {}", &body,e)))?;
+
+    redis_client::save_match_state(
+        &state.redis_pool,
+        &payload.match_id,
+        serde_json::to_string(&engine_result.position)
+            .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
+    ).await.map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+
+    Ok(Json(EngineMoveResponse {
+        coordinates: engine_result.coords,
+        game_over: engine_result.game_over,
+    }))
 }
 
 async fn dump_redis(
@@ -132,9 +197,8 @@ pub async fn run() {
 
     let app = Router::new()
         .route("/new", post(create_match))
-        .route("/checkMatch", post(check_match))
-        .route("/reqMove", post(request_move))
-        .route("/isValid", post(check_valid))
+        .route("/executeMove", post(execute_move))
+        .route("/reqBotMove", post(request_bot_move))
         .route("/debug/redis", get(dump_redis))
         .with_state(state);
 

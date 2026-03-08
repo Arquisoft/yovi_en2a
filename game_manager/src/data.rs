@@ -1,3 +1,4 @@
+use jsonwebtoken::signature::digest::typenum::Integer;
 use serde::{Deserialize, Serialize};
 use crate::api_rest::get_gamey_url;
 pub trait DBData: Serialize + for<'de> Deserialize<'de> + std::fmt::Debug  + Send + Sync {}
@@ -72,22 +73,12 @@ impl DBData for Match {}
 pub struct NewMatchRequest {
     pub player1: String,
     pub player2: String,
+    pub size: u32,
 }
 
 #[derive(Serialize)]
 pub struct NewMatchResponse {
     pub match_id: String,
-}
-
-#[derive(Deserialize)]
-pub struct MoveRequest {
-    pub match_id: String,
-}
-
-#[derive(Serialize)]
-pub struct MoveResponse {
-    pub yen_coordinate: i32,
-    pub is_end: bool,
 }
 
 #[derive(Deserialize)]
@@ -103,15 +94,66 @@ pub struct ValidResponse {
 }
 
 #[derive(Deserialize)]
-pub struct CheckMatchRequest {
+pub struct MoveRequest {
     pub match_id: String,
-    pub player1: String,
-    pub player2: String,
+    pub coord_x: u32,
+    pub coord_y: u32,
+    pub coord_z: u32,
 }
 
 #[derive(Serialize)]
-pub struct CheckMatchResponse {
+pub struct MoveResponse {
     pub match_id: String,
-    pub player1: String,
-    pub player2: String,
+    pub game_over: bool,
+}
+
+#[derive(serde::Deserialize)]
+pub struct EngineResponse {
+    pub new_yen_json: serde_json::Value,
+    pub game_over: bool,
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct EngineMoveRequest {
+    pub match_id: String,
+}
+
+#[derive(serde::Deserialize, serde::Serialize)]
+pub struct EngineMoveResponse {
+    pub coordinates: Coordinates,
+    pub game_over: bool,
+}
+
+
+#[derive(serde::Deserialize)]
+pub struct BotMoveResponse {
+    /// The API version used for this request.
+    pub api_version: String,
+    /// The bot that selected this move.
+    pub bot_id: String,
+    /// The coordinates where the bot chooses to place its piece.
+    pub coords: Coordinates,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct Coordinates {
+    pub x: u32,
+    pub y: u32,
+    pub z: u32,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PlayResponse {
+    /// The API version used for this request.
+    pub api_version: String,
+    /// The bot that selected this move.
+    pub bot_id: String,
+    /// The coordinates where the bot chose to place its piece.
+    pub coords: Coordinates,
+    /// The updated board state in YEN notation after the bot's move.
+    pub position: YEN,
+    /// Whether the game is finished after this move.
+    pub game_over: bool,
+    /// The winner's symbol ("B" or "R") if the game is over, otherwise null.
+    pub winner: Option<String>,
 }

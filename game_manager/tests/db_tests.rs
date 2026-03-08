@@ -1,7 +1,16 @@
 use game_manager::firebase::{insert_db, get_match_by_id};
 use game_manager::data::{Match};
 use serial_test::serial;
-use gamey::notation::{YEN};
+use game_manager::data::{YEN};
+use ctor::ctor;
+
+
+#[ctor]
+fn init_crypto() {
+    rustls::crypto::ring::default_provider()
+        .install_default()
+        .ok();
+}
 
 #[tokio::test]
 #[serial]
