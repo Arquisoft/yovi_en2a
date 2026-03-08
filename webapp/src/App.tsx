@@ -16,7 +16,7 @@ function App() {
         <Route path="/login" element={<LoginForm/>}/>
         <Route path="/register" element={<RegisterForm/>}/>
         <Route path="/gameSelection" element={<SelectionWindow/>}/>
-        <Route path="/play/:size" element={<GameWindow/>}/>
+        <Route path="/play/:size/:mode" element={<GameWindow/>}/>
       </Routes>
     </Router>
   );

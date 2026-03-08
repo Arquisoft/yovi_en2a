@@ -1,5 +1,5 @@
 use crate::redis_client;
-use crate::data::{BotMoveResponse, Coordinates, EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN};
+use crate::data::{BotMoveResponse, Coordinates, EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, Match, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, SaveMatchRequest, SaveMatchResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN};
 
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -226,6 +226,41 @@ async fn update_user_score(
     }))
 }
 
+async fn save_match(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<SaveMatchRequest>
+) -> Result<Json<SaveMatchResponse>, (StatusCode, String)> {
+    
+    // 1. Obtenemos el estado final del tablero desde Redis usando el match_id
+    let current_yen_json = redis_client::get_match_state(&state.redis_pool, &payload.match_id)
+        .await
+        .map_err(|_| (StatusCode::NOT_FOUND, "Partida no encontrada en Redis".to_string()))?;
+
+    // 2. Lo convertimos al struct YEN
+    let board_status: YEN = serde_json::from_str(&current_yen_json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error leyendo YEN: {}", e)))?;
+
+    // 3. Construimos tu struct Match exacto
+    let match_data = Match {
+        player1id: payload.player1id,
+        player2id: payload.player2id,
+        result: payload.result,
+        board_status, // Aquí pasamos el YEN que acabamos de leer
+    };
+
+    // 4. Lo guardamos en Firebase
+    crate::firebase::insert_match_by_id(&payload.match_id, match_data)
+        .await
+        .map_err(|e| {
+            eprintln!("🚨 ERROR GUARDANDO PARTIDA: {:?}", e);
+            (StatusCode::INTERNAL_SERVER_ERROR, "Error guardando la partida en Firebase".to_string())
+        })?;
+
+    // 5. Devolvemos éxito al frontend
+    Ok(Json(SaveMatchResponse { 
+        message: "Partida guardada en el historial correctamente".to_string() 
+    }))
+}
 
 impl FromRef<Arc<AppState>> for AppState {
     fn from_ref(state: &Arc<AppState>) -> Self {
@@ -257,6 +292,7 @@ pub async fn run() {
         .route("/localRankings", post(get_local_rankings))
         .route("/bestTimes", get(get_best_times))
         .route("/updateScore", post(update_user_score))
+        .route("/saveMatch", post(save_match))
         .with_state(state);
 
     let addr = SocketAddr::from(([0, 0, 0, 0], 5000));

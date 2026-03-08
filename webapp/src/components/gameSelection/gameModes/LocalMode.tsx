@@ -4,6 +4,8 @@ import type { GameMode } from "./GameMode";
 import { Difficulty } from "./GameMode";
 
 export class LocalMode implements GameMode {
+  mode = "multi";
+
   id = "local";
 
   label = "Local Mode";

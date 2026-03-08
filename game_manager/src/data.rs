@@ -184,6 +184,19 @@
         pub z: u32,
     }
 
+#[derive(Deserialize)]
+pub struct SaveMatchRequest {
+    pub match_id: String,
+    pub player1id: String,
+    pub player2id: String,
+    pub result: String,
+}
+
+#[derive(Serialize)]
+pub struct SaveMatchResponse {
+    pub message: String,
+}
+
     #[derive(Serialize, Deserialize, Debug, Clone)]
     pub struct PlayResponse {
         /// The API version used for this request.

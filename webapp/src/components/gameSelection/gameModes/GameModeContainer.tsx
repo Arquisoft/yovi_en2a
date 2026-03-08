@@ -125,7 +125,7 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
           mode.size = currentSize;
           
           // 3. Navegamos directamente a la URL de juego pasándole el tamaño
-          navigate(`/play/${currentSize}`);
+          navigate(`/play/${currentSize}/${mode.mode}`);
         }}
       >
         PLAY

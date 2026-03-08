@@ -4,6 +4,8 @@ import type { GameMode } from "./GameMode";
 import { Difficulty } from "./GameMode";
 
 export class NormalMode implements GameMode {
+  mode = "bot";
+
   id = "normal";
 
   label = "Normal Mode";
