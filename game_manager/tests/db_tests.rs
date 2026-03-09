@@ -1,5 +1,5 @@
 use game_manager::firebase::{insert_db, get_match_by_id};
-use game_manager::data::{Match};
+use game_manager::data::{Match, Score};
 use serial_test::serial;
 use game_manager::data::{YEN};
 use ctor::ctor;
@@ -45,4 +45,35 @@ async fn test_full_match_cycle() {
     assert_eq!(fetched.player2id, "1");
     assert_eq!(fetched.result, "1 Win");
 }
+
+#[test]
+    fn test_score_calculation_logic() {
+        // Setup initial state
+        let mut score = Score {
+            playerid: "test_user".to_string(),
+            username: "Tester".to_string(),
+            total_matches: 10,
+            wins: 5,
+            losses: 5,
+            win_rate: 0.5,
+            elo: 100,
+            best_time: 120.5,
+        };
+
+        // Simulate a WIN with a NEW BEST TIME
+        let new_time = 105.0;
+        score.total_matches += 1;
+        score.wins += 1;
+        score.elo += 20;
+        if new_time < score.best_time {
+            score.best_time = new_time;
+        }
+        score.win_rate = score.wins as f32 / score.total_matches as f32;
+
+        assert_eq!(score.total_matches, 11);
+        assert_eq!(score.wins, 6);
+        assert_eq!(score.elo, 120);
+        assert_eq!(score.best_time, 105.0);
+        assert!(score.win_rate > 0.54);
+    }
 

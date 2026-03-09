@@ -4,21 +4,23 @@ import type { RankingElementGlobal } from "./rankingElements/RankingElementGloba
 
 const RankingTableGlobal: React.FC<{ data: RankingElementGlobal[], title: string }> = ({ data, title }) => {
   
-  // Extraemos el nombre dinámico del primer elemento. 
-  // Si la tabla está vacía, ponemos 'RESULT' (o lo que prefieras) por defecto.
+  // Extract the dynamic metric name from the first item (e.g., "TIME", "ELO", "WINS").
+  // If the data is empty, we default to 'RESULT'.
   const dynamicMetricName = data.length > 0 ? data[0].metricName : 'RESULT';
 
   return (
     <div className={styles.rankingContainer}>
       <h3 className={styles.rankingSubtitle}>{title}</h3>
       
+      {/* Static Header: This stays fixed at the top */}
       <div className={styles.rankingHeaderRow}>
         <span>POS</span>
         <span>PLAYER 1</span>
-        {/* Usamos nuestra variable dinámica aquí */}
+        {/* Dynamic column name based on data */}
         <span>{dynamicMetricName}</span>
       </div>
 
+      {/* Scrollable Body: Handles the vertical overflow */}
       <div className={styles.rankingList}>
         {data.map((item) => {
           const positionHighlight = styles[`pos-${item.position}`] || '';
@@ -28,8 +30,13 @@ const RankingTableGlobal: React.FC<{ data: RankingElementGlobal[], title: string
               key={item.position} 
               className={`${styles.rankingItem} ${positionHighlight}`}
             >
+              {/* Left Column: Position (#1, #2, etc.) */}
               <span className={styles.rankPos}>#{item.position}</span>
+              
+              {/* Middle Column: Player Name with truncation support */}
               <span className={styles.rankName}>{item.player1Name}</span>
+              
+              {/* Right Column: The actual score or time metric */}
               <span className={styles.rankTime}>{item.metric}</span>
             </div>
           );

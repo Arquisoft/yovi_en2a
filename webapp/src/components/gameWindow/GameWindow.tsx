@@ -1,7 +1,7 @@
 import "./GameWindow.css";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom"; 
-import TopLeftHeader from "./topLeftHeader/TopLeftHeader";
+import TopLeftHeader from "../topLeftHeader/TopLeftHeader";
 import TopRightMenu from "../topRightMenu/TopRightMenu";
 import Board from "./board/Board";
 import RightPanel from "./rightPanel/RightPanel";
