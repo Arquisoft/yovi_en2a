@@ -1,5 +1,7 @@
-    use std::ffi::{ c_float};
+    use std::ffi::{c_double, c_float};
+    use jsonwebtoken::signature::digest::typenum::Integer;
     use serde::{Deserialize, Serialize};
+    use crate::api_rest::get_gamey_url;
     pub trait DBData: Serialize + for<'de> Deserialize<'de> + std::fmt::Debug  + Send + Sync {}
 
     #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -190,13 +192,6 @@ pub struct SaveMatchRequest {
     pub player2id: String,
     pub result: String,
     pub time: f32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct RankingTime {
-    pub playerid: String,
-    pub username: String,
-    pub time: f64,
 }
 
 #[derive(Serialize)]
