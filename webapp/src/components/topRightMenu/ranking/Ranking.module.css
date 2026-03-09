@@ -1,8 +1,11 @@
 /* Ranking.module.css */
 
 .rankingBody {
+  display: flex;
   flex-direction: column; 
   background: #181818;
+  /* Prevents the body from growing beyond the modal boundaries */
+  overflow: hidden;
 }
 
 .rankingPanel {
@@ -10,11 +13,14 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  /* CRITICAL: min-height 0 allows the container to shrink within 
+     a flexbox to trigger the child's scrollbar */
+  min-height: 0;
   height: 100%; 
 }
 
 .rankingNavHeader {
-  padding: 1rem 2rem 1rem 2rem;
+  padding: 1rem 2rem;
   display: flex;
   flex-direction: row;
   flex-wrap: nowrap;
@@ -32,7 +38,7 @@
 .rankingTabBtn {
   border: 0.0625rem solid rgba(255, 255, 255, 0.1);
   color: #bbb; 
-  background: rgba(255, 255, 255, 0);
+  background: transparent;
   padding: 0.6rem 1.8rem;
   border-radius: 0.4rem;
   cursor: pointer;
@@ -49,18 +55,14 @@
   border-color: var(--primary-color);
 }
 
-.rankingTabBtn:hover:not(.active) {
-  background: rgba(255, 255, 255, 0);
-  color: #ffffff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); 
-}
-
 .rankingContent {
   flex: 1;
   padding: 1.5rem 2rem;
   display: flex;
   flex-direction: column;
+  /* Required to allow the internal list to scroll properly */
   min-height: 0;
+  overflow: hidden; 
 }
 
 .closeButton {
@@ -69,43 +71,26 @@
   color: #555;
   font-size: 1.2rem;
   cursor: pointer;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   transition: color 0.2s;
-  flex-shrink: 0;
 }
 
 .closeButton:hover {
   color: #ff4444;
-  transform: scale(1.1);
 }
 
+/* Mobile Responsiveness */
 @media (max-width: 48rem) {
   .rankingNavHeader {
     padding: 0.5rem 1rem; 
-    gap: 0.5rem;
-  }
-
-  .rankingContent {
-    padding: 1rem 1rem;
   }
 
   .rankingTabs {
     gap: 0.5rem;
     overflow-x: auto; 
-    padding-bottom: 0.2rem;
   }
 
   .rankingTabBtn {
     padding: 0.5rem 1rem; 
     font-size: 0.7rem;      
-    white-space: nowrap;
-  }
-
-  .closeButton {
-    font-size: 1rem;
-    padding: 0.4rem;
   }
 }
