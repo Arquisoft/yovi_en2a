@@ -18,7 +18,8 @@
   align-items: center;
   justify-content: flex-start; 
   
-  padding: 6rem 2rem 2rem 2rem; 
+  /* Increased top padding to give the top headers space */
+  padding: 8rem 2rem 2rem 2rem; 
   
   background: radial-gradient(
     circle at center,
@@ -27,7 +28,17 @@
     #050505 100%
   );
 }
-/* 2. TOP UTILITY MENU (Absolute) */
+
+/* --- TOP CORNER LAYOUT --- */
+
+.topLeftCorner {
+  position: absolute;
+  top: 2rem;
+  left: 2rem;
+  z-index: 1000;
+  animation: fadeInDown 0.8s ease-out;
+}
+
 .topRightCorner {
   position: absolute;
   top: 2rem; 
@@ -35,9 +46,10 @@
   z-index: 1000; 
   display: flex;
   justify-content: flex-end;
+  animation: fadeInDown 0.8s ease-out;
 }
 
-/* 3. HEADING SECTION (Now sits below the menu level) */
+/* 3. HEADING SECTION */
 .mainTitle {
   flex-shrink: 0;
   margin-top: 0; 
@@ -45,38 +57,32 @@
   text-align: center;
   animation: fadeInDown 0.8s ease-out;
   
-  /* Since it's below the menu, we can use more width */
   max-width: 90%; 
   position: relative;
   z-index: 10;
 }
 
 .mainTitle h2 {
-  font-size: clamp(1.8rem, 5vw, 3.5rem); 
+  font-size: clamp(1.5rem, 4vw, 3rem); /* Adjusted size for better fit */
   color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.6rem;
   font-weight: 900;
   margin: 0;
-  /* Neon glow */
   text-shadow: 0 0 1.5rem rgba(255, 255, 255, 0.3),
                0 0 0.5rem var(--primary-color);
   opacity: 0.9;
   line-height: 1.2;
-  padding-top: 2rem;
 }
 
 /* 4. THE SELECTION STAGE */
 .selectionPanelWrapper {
   width: 100%; 
   max-width: 1400px;
-  
-  /* Flex 1 tells this box to take all the space left at the bottom */
   flex: 1; 
   min-height: 0; 
   margin-bottom: 1rem;
 
-  /* Glass-morphism design */
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 1.5rem;
@@ -106,23 +112,21 @@
 /* 6. MOBILE RESPONSIVENESS */
 @media (max-width: 48rem) {
   .selectionWindowContainer {
-    padding-top: 7rem; /* More space for finger-tapping the menu */
+    padding-top: 8rem; 
     padding-left: 1rem;
     padding-right: 1rem;
   }
 
+  .topLeftCorner,
   .topRightCorner {
     top: 1rem;
-    right: 1rem;
   }
+
+  .topLeftCorner { left: 1rem; }
+  .topRightCorner { right: 1rem; }
 
   .mainTitle h2 {
     letter-spacing: 0.2rem;
-    font-size: 1.5rem;
-  }
-
-  .selectionPanelWrapper {
-    border-radius: 1rem;
-    padding: 0.5rem;
+    font-size: 1.2rem;
   }
 }
