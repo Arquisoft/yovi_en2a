@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 // 1. Importamos useNavigate
 import { useNavigate } from "react-router-dom"; 
-import type { GameMode, Difficulty } from "./GameMode";
+import { type GameMode, Difficulty } from "./GameMode";
 import { Difficulty as DifficultyValues } from "./GameMode";
 import styles from "./GameModeContainer.module.css";
 import imagenGameY from "../../../assets/background_image_gameY.png";
@@ -80,7 +80,7 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
               >
                 ←
               </button>
-              <div className={styles.difficultyBox}>{currentDifficulty}</div>
+              <div className={styles.difficultyBox}>{currentDifficulty[0]}</div>
               <button
                 className={styles.arrow}
                 onClick={increaseDifficulty}
@@ -125,9 +125,11 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
           // Actualizamos el modelo por si lo necesitas en otro lado
           mode.currentLevel = currentDifficulty;
           mode.size = currentSize;
-          
+
           // 3. Navegamos directamente a la URL de juego pasándole el tamaño
-          navigate(`/play/${currentSize}/${mode.mode}`);
+          if (mode.showDifficulty){navigate(`/play/${currentSize}/${currentDifficulty[1]}`);}
+
+          else{navigate(`/play/${currentSize}/multi`);}
         }}
       >
         PLAY

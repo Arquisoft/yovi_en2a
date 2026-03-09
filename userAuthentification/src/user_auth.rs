@@ -1,5 +1,5 @@
 use std::error::Error;
-use crate::firebase::{read_db, insert_db};
+use crate::firebase::{read_db, insert_db, delete_db};
 use crate::user_data::User;
 use crate::auth_utils::{hash_password, verify_password};
 
@@ -68,4 +68,12 @@ pub async fn login_user(
     } else {
         Err("Invalid password".into())
     }
+}
+
+pub async fn delete_user(email: &str) -> Result<(), Box<dyn Error>> {
+    // We call the generic delete_db function we just created
+    delete_db("Users", email).await?;
+
+    println!("User [{}] successfully removed from the system.", email);
+    Ok(())
 }

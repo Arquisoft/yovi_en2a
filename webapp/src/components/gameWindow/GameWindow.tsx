@@ -1,7 +1,7 @@
 import "./GameWindow.css";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom"; 
-import TopLeftHeader from "./topLeftHeader/TopLeftHeader";
+import TopLeftHeader from "../topLeftHeader/TopLeftHeader";
 import TopRightMenu from "../topRightMenu/TopRightMenu";
 import Board from "./board/Board";
 import RightPanel from "./rightPanel/RightPanel";
@@ -35,12 +35,12 @@ const GameWindow = () => {
   const navigate = useNavigate();
 
   const size = urlSize ? Number.parseInt(urlSize, 10) : 8;
-  const mode = urlMode === "multi" ? "multi" : "bot";
+  const mode = urlMode;
 
   // Si el usuario está logueado, usamos su nombre, si no, "Player 1"
   const currentUser = getCookieUser();
   const player1 = currentUser ? currentUser.username : "Player 1";
-  const player2 = mode === "bot" ? "random_bot" : "Player 2";
+  const player2 = mode === "multi" ? "Player 2" : mode+"";
 
   const [game, setGame] = useState<Game>(new Game(size, player1, player2));
   const [loading, setLoading] = useState(false);
@@ -119,7 +119,7 @@ const GameWindow = () => {
         return;
       }
 
-      if (mode === "bot" && updatedGame.matchId) {
+      if (mode !== "multi" && updatedGame.matchId) {
         await handleBotPlace(updatedGame);
       }
     } finally {

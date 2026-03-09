@@ -5,7 +5,7 @@ type Props = {
   turn: 1 | 2;
   time?: string;
   paused?: boolean;
-  mode: "bot" | "multi";
+  mode: string | undefined;
   onPauseToggle?: () => void;
 };
 

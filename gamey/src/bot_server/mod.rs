@@ -33,7 +33,7 @@ pub use error::ErrorResponse;
 pub use version::*;
 use axum::{Json, http::StatusCode};
 
-use crate::{GameYError, RandomBot, YBotRegistry, state::AppState, YEN, Coordinates, Movement, PlayerId, GameY};
+use crate::{GameYError, RandomBot, GreedyBot, MinimaxBot, YBotRegistry, state::AppState, YEN, Coordinates, Movement, PlayerId, GameY};
 use crate::bot_server::req_res_formats::{ProcessMoveRequest, ProcessMoveResponse};
 
 /// Creates the Axum router with the given state.
@@ -58,7 +58,10 @@ pub fn create_router(state: AppState) -> axum::Router {
 ///
 /// The default state includes the `RandomBot` which selects moves randomly.
 pub fn create_default_state() -> AppState {
-    let bots = YBotRegistry::new().with_bot(Arc::new(RandomBot));
+    let bots = YBotRegistry::new()
+    .with_bot(Arc::new(RandomBot))
+    .with_bot(Arc::new(GreedyBot))
+    .with_bot(Arc::new(MinimaxBot::new(4)));
     AppState::new(bots)
 }
 
