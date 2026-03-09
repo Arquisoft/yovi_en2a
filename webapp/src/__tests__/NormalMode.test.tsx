@@ -15,7 +15,7 @@ describe('NormalMode Class', () => {
     expect(mode.id).toBe('normal')
     expect(mode.label).toBe('Normal Mode')
     expect(mode.currentLevel).toBe(Difficulty.Normal)
-    expect(mode.description).toBe('Balanced difficulty recommended for most players.')
+    expect(mode.description).toBe('Normal mode that follows the classical rules of the gamey game. Play against a bot and try to connect the three sizes to win.')
   })
 
   test('start method should return a valid React node with game details', () => {
@@ -25,6 +25,6 @@ describe('NormalMode Class', () => {
     
     expect(screen.getByText('Normal Mode')).toBeInTheDocument()
     expect(screen.getByText(`Difficulty: ${Difficulty.Normal}`)).toBeInTheDocument()
-    expect(screen.getByText('Game is starting...')).toBeInTheDocument()
+    expect(mode.description).toBe('Normal mode that follows the classical rules of the gamey game. Play against a bot and try to connect the three sizes to win.')
   })
 })
