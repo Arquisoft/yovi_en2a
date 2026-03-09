@@ -139,7 +139,7 @@
 
     #[derive(serde::Deserialize)]
     pub struct EngineResponse {
-        pub new_yen_json: serde_json::Value,
+        pub new_yen_json: YEN,
         pub game_over: bool,
     }
 

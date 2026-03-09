@@ -73,10 +73,6 @@ services:
       - REDIS_HOST=redis_db
       - REDIS_PORT=6379
       - GAMEY=gamey
-      - FIREBASE_PROJECT_ID=yovi-en2a
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json 
-    volumes:
-      - ./userAuthentification/.secrets/yovi-en2a-firebase-adminsdk-fbsvc-4e0265d79c.json:/app/credentials.json:ro
     depends_on:
       - redis_db
       - gamey
@@ -100,11 +96,6 @@ services:
       - "4001"
     networks:
       - monitor-net
-    environment:
-      - FIREBASE_PROJECT_ID=yovi-en2a
-      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json 
-    volumes:
-      - ./userAuthentification/.secrets/yovi-en2a-firebase-adminsdk-fbsvc-4e0265d79c.json:/app/credentials.json:ro
 
 networks:
   monitor-net:

@@ -1,4 +1,4 @@
-use crate::{GameY, GameStatus, Movement, YEN, check_api_version, error::ErrorResponse, state::AppState};
+use crate::{GameY, GameStatus, Movement, YEN, check_api_version, error::ErrorResponse, state::AppState, PlayerId};
 use axum::{
     Json,
     extract::{Path, State},
@@ -57,7 +57,7 @@ pub async fn play(
 ) -> Result<Json<PlayResponse>, Json<ErrorResponse>> {
     check_api_version(&params.api_version)?;
 
-    let mut game = match GameY::try_from(yen) {
+    let mut game = match GameY::try_from(yen.clone()) {
         Ok(g) => g,
         Err(err) => return Err(Json(ErrorResponse::error(
             &format!("Invalid YEN position: {}", err),
@@ -65,6 +65,8 @@ pub async fn play(
             Some(params.bot_id),
         ))),
     };
+
+    game.force_turn(PlayerId::new(yen.turn()));
 
     let bot = match state.bots().find(&params.bot_id) {
         Some(b) => b,

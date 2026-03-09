@@ -182,18 +182,24 @@ const GameWindow = () => {
 
       {/* --- EL MODAL DE VICTORIA --- */}
       {modalMessage && (
-        <div className={modalStyles.modalOverlay}>
-          <div className={modalStyles.modalContent}>
-            <h2>{modalMessage}</h2>
-            <p>Total time: {formattedTime}</p>
-            <button 
-              className={modalStyles.returnBtn} 
-              onClick={() => navigate('/gameSelection')}
-            >
-              Return to game Selection
-            </button>
+          <div className={modalStyles.modalOverlay}>
+            <div className={modalStyles.modalContent}>
+              <button
+                  className={modalStyles.closeBtn}
+                  onClick={() => setModalMessage(null)}
+              >
+                ✕
+              </button>
+              <h2>{modalMessage}</h2>
+              <p>Total time: {formattedTime}</p>
+              <button
+                  className={modalStyles.returnBtn}
+                  onClick={() => navigate('/gameSelection')}
+              >
+                Return to game Selection
+              </button>
+            </div>
           </div>
-        </div>
       )}
     </div>
   );

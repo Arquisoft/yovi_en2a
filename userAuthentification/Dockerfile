@@ -5,6 +5,8 @@ WORKDIR /app/userAuthentification
 
 # Copy Cargo.toml and Cargo.lock
 COPY Cargo.toml Cargo.lock ./
+COPY .secrets/ ./.secrets/
+COPY .env ./.env
 COPY src/ ./src/
 
 # Build the application
@@ -23,6 +25,8 @@ RUN apt-get update && \
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/userAuthentification/target/release/userAuthentification .
+COPY --from=builder /app/userAuthentification/.env ./.env
+COPY --from=builder /app/userAuthentification/.secrets/ ./.secrets/
 
 # Expose the port userAuthentification will listen on
 EXPOSE 4001

@@ -32,6 +32,14 @@ pub struct GameY {
     available_cells: Vec<u32>,
 }
 
+impl GameY {
+    pub fn force_turn(&mut self, player: PlayerId) {
+        if !self.check_game_over() {
+            self.status = GameStatus::Ongoing { next_player: player };
+        }
+    }
+}
+
 /// Represents the state of a single cell on the board.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Cell {

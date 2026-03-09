@@ -15,9 +15,39 @@ pub enum MatchError {
 
     #[error("Error del pool de conexiones")]
     Pool,
+
+    #[error("Error del Timeout de Lock de Redis")]
+    LockTimeout,
 }
 
+pub async fn acquire_lock(
+    pool: &RedisPool,
+    match_id: &str,
+    ttl_secs: u64,
+) -> Result<bool, MatchError> {
+    let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
+    let lock_key = format!("lock:match:{}", match_id);
 
+    // SET key value NX EX ttl → solo se setea si NO existe
+    let result: Option<String> = redis::cmd("SET")
+        .arg(&lock_key)
+        .arg("locked")
+        .arg("NX")
+        .arg("EX")
+        .arg(ttl_secs)
+        .query_async(&mut *conn)
+        .await
+        .map_err(MatchError::Redis)?;
+
+    Ok(result.is_some()) // true = adquirió el lock
+}
+
+pub async fn release_lock(pool: &RedisPool, match_id: &str) -> Result<(), MatchError> {
+    let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
+    let lock_key = format!("lock:match:{}", match_id);
+    let _: () = conn.del(lock_key).await.map_err(MatchError::Redis)?;
+    Ok(())
+}
 pub async fn create_pool(redis_url: &str) -> RedisPool {
     let manager = RedisConnectionManager::new(redis_url)
         .expect("Error al crear el manager de Redis");
@@ -32,15 +62,24 @@ pub async fn save_match_state(
     match_id: &str,
     state_json: String
 ) -> Result<(), MatchError> {
-    let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
+    // Intentar adquirir el lock (máx ~500ms, 10 intentos cada 50ms)
+    for _ in 0..10 {
+        if acquire_lock(pool, match_id, 5).await? {
+            let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
+            let key = format!("match:{}", match_id);
 
-    let key = format!("match:{}", match_id);
+            let result: Result<(), MatchError> = conn
+                .set_ex(key, state_json, 3600)
+                .await
+                .map_err(MatchError::Redis);
 
-    let _: () = conn.set_ex(key, state_json, 3600)
-        .await
-        .map_err(MatchError::Redis)?;
+            release_lock(pool, match_id).await?;
+            return result;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
 
-    Ok(())
+    Err(MatchError::LockTimeout)
 }
 
 pub async fn get_match_state(pool: &RedisPool, match_id: &str) -> Result<String, MatchError> {

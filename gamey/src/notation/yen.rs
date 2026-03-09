@@ -72,6 +72,10 @@ impl YEN {
     pub fn players(&self) -> &[char] {
         &self.players
     }
+
+    pub fn change_turn(&mut self) {
+        self.turn = 1 - self.turn;
+    }
 }
 
 #[cfg(test)]

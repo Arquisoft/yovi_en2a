@@ -1,5 +1,5 @@
 use crate::redis_client;
-use crate::data::{BotMoveResponse, Coordinates, EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, Match, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, SaveMatchRequest, SaveMatchResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN};
+use crate::data::{EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, Match, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, SaveMatchRequest, SaveMatchResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN};
 
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -39,7 +39,7 @@ async fn create_match(
 async fn execute_move(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<MoveRequest>,
-) -> Result<Json<MoveResponse>, (StatusCode, String)> {
+    ) -> Result<Json<MoveResponse>, (StatusCode, String)> {
 
     // 1. Recoger el estado actual de Redis (el string JSON)
     let current_yen_json = redis_client::get_match_state(&state.redis_pool, &payload.match_id)
@@ -78,7 +78,6 @@ async fn execute_move(
     let engine_result: EngineResponse = serde_json::from_str(&body)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error al leer respuesta del Engine {}: {}", &body,e)))?;
 
-    // 3. Actualizar Redis con el nuevo estado devuelto por el Engine
     redis_client::save_match_state(
         &state.redis_pool,
         &payload.match_id,
@@ -98,6 +97,23 @@ async fn request_bot_move(
     State(state): State<Arc<AppState>>,
     Json(payload): Json<EngineMoveRequest>
     ) -> Result<Json<EngineMoveResponse>, (StatusCode, String)> {
+
+    for _ in 0..20 {
+        let lock_key = format!("lock:match:{}", payload.match_id);
+        let mut conn = state.redis_pool.get().await
+            .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Error de pool".to_string()))?;
+
+        let exists: bool = redis::cmd("EXISTS")
+            .arg(&lock_key)
+            .query_async(&mut *conn)
+            .await
+            .unwrap_or(false);
+
+        if !exists {
+            break;
+        }
+        tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    }
 
     let current_yen_json = redis_client::get_match_state(&state.redis_pool, &payload.match_id)
         .await

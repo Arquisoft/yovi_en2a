@@ -107,8 +107,10 @@ pub async fn process_move(
 ) -> Result<Json<ProcessMoveResponse>, (StatusCode, String)> {
 
     // 1. Rehidratar el motor desde el YEN recibido
-    let mut game = GameY::try_from(payload.state)
+    let mut game = GameY::try_from(payload.state.clone())
         .map_err(|e| (StatusCode::BAD_REQUEST, format!("Estado inválido: {:?}", e)))?;
+
+    game.force_turn(PlayerId::new(payload.state.turn()));
 
     // 2. Construir el movimiento
     let coords = Coordinates::new(payload.x, payload.y, payload.z);
