@@ -65,6 +65,12 @@ impl GameY {
         }
     }
 
+
+    /// Returns the [`PlayerId`] of the player whose piece occupies `coords`,
+    /// or `None` if the cell is empty.
+    pub fn cell_owner(&self, coords: &Coordinates) -> Option<PlayerId> {
+    self.board_map.get(coords).map(|(_, player)| *player)
+}
     /// Returns the current game status.
     pub fn status(&self) -> &GameStatus {
         &self.status
