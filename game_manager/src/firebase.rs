@@ -1,5 +1,4 @@
 use firestore::*;
-use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::env;
 use dotenvy::dotenv;
@@ -24,10 +23,9 @@ async fn get_connection() -> Result<FirestoreDb, Box<dyn Error>> {
     INIT_CRYPTO.call_once(|| {
         let _ = rustls::crypto::ring::default_provider().install_default();
 
-        #[cfg(feature = "rust_crypto")]
-        {
-            let _ = jsonwebtoken::crypto::CryptoProvider::install_default();
-        }
+        INIT_CRYPTO.call_once(|| {
+            let _ = rustls::crypto::ring::default_provider().install_default();
+        });
     });
 
     // Check if the project ID is in our environment variables
@@ -103,7 +101,7 @@ where
         .await?;
 
     // Post-insertion check.
-    // I'm calling read_db here just to be 100% sure the write worked.
+    // I'm calling read_db here just to be 100% sure the write method worked.
     // If read_db returns an error, the '?' will propagate it.
     read_db::<T>(table_name, id).await?;
 
@@ -172,22 +170,19 @@ pub async fn get_ranking_time() -> Result<Vec<Score>, Box<dyn Error>> {
     Ok(top_scores)
 }
 
-/// Actualiza el Score de un jugador al finalizar una partida.
-/// Si el jugador no existe en la base de datos, lo crea automáticamente.
+
 pub async fn update_score(
     playerid: &str,
     username: &str, 
     is_win: bool,
     time: f32,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     
-    // 🔥 CAMBIO AQUÍ: Interceptamos el error inseguro de get_connection() y 
-    // lo convertimos a un String seguro para que Axum no se queje.
+
     let db = get_connection()
         .await
-        .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { e.to_string().into() })?;
+        .map_err(|e| -> Box<dyn Error + Send + Sync> { e.to_string().into() })?;
 
-    // 1. Buscamos en la colección "Scores" donde el campo `playerid` coincida
     let mut existing_scores: Vec<Score> = db.fluent()
         .select()
         .from("Scores")
@@ -196,9 +191,7 @@ pub async fn update_score(
         .query()
         .await?;
 
-    // Si la consulta nos devuelve algún resultado, lo extraemos y lo actualizamos
     if let Some(mut score) = existing_scores.pop() {
-        // --- EL REGISTRO EXISTE: ACTUALIZAMOS ---
         
         score.total_matches += 1;
         
@@ -228,7 +221,6 @@ pub async fn update_score(
             .await?;
 
     } else {
-        // --- EL REGISTRO NO EXISTE: CREAMOS UNO NUEVO ---
         insert_score(playerid, username, is_win, time).await?;
     }
 
@@ -236,17 +228,16 @@ pub async fn update_score(
 }
 
 
-/// Crea un nuevo registro de Score para un usuario que acaba de jugar su primera partida.
 pub async fn insert_score(
     playerid: &str,
     username: &str,
     is_win: bool,
     time: f32,
-) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+) -> Result<(), Box<dyn Error + Send + Sync>> {
     
     let db = get_connection()
         .await
-        .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { e.to_string().into() })?;
+        .map_err(|e| -> Box<dyn Error + Send + Sync> { e.to_string().into() })?;
 
     let wins = if is_win { 1 } else { 0 };
     let losses = if is_win { 0 } else { 1 };
