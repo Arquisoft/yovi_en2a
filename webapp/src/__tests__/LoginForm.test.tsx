@@ -1,7 +1,7 @@
 import { render, screen, cleanup, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
-import LoginForm from '../components/auth/LoginForm' // Ajusta la ruta si es necesario
+import LoginForm from '../components/auth/LoginForm'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest' 
 import '@testing-library/jest-dom'
 
@@ -27,72 +27,81 @@ describe('LoginForm Full Coverage', () => {
     vi.restoreAllMocks()
   })
 
-  // Helper function to fill out the form
+  // Helper para rellenar el formulario
   const fillOutForm = async (user: any, suffix: string = '') => {
     await user.type(screen.getByLabelText(/Email address/i), `test${suffix}@example.com`)
     await user.type(screen.getByLabelText(/Password/i), 'securepassword123')
   }
 
+  // NUEVO: Helper para interceptar múltiples peticiones fetch (CSRF + Login)
+  const setupFetchMock = (loginResponse: any, isOk: boolean = true, isError: boolean = false) => {
+    globalThis.fetch = vi.fn().mockImplementation((url: string | URL | Request) => {
+      const urlString = url.toString()
+      
+      // 1. Interceptar siempre el CSRF Token al cargar la página
+      if (urlString.includes('csrf-token')) {
+        return Promise.resolve({
+          json: async () => ({ csrfToken: 'fake-token' })
+        })
+      }
+      
+      // 2. Interceptar el Login (Simular caída de red o catch)
+      if (isError) {
+        return Promise.reject(loginResponse)
+      }
+
+      // 3. Interceptar el Login (Simular éxito o error de validación)
+      return Promise.resolve({
+        ok: isOk,
+        json: async () => loginResponse
+      })
+    })
+  }
+
   test('handles local validation if fields are empty', async () => {
     const user = userEvent.setup()
+    setupFetchMock({}) // Mock por defecto
     render(<MemoryRouter><LoginForm /></MemoryRouter>)
     
     const button = screen.getByRole('button', { name: /Login/i })
-
-    // Act: Click without filling out the form
     await user.click(button)
-    
-    // Assert: Validation error should appear
     expect(await screen.findByText(/Please fill in all required fields/i)).toBeInTheDocument()
   })
 
   test('handles successful login and delayed navigation', async () => {
     const user = userEvent.setup()
-    render(<MemoryRouter><LoginForm /></MemoryRouter>)
     
+    // Preparamos el mock de éxito para el login
+    setupFetchMock({ message: 'Login successful!', username: 'testuser', email: 'test@example.com' }, true)
+    
+    render(<MemoryRouter><LoginForm /></MemoryRouter>)
     const button = screen.getByRole('button', { name: /Login/i })
 
-    // Mock successful server response
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ message: 'Login successful!' }),
-    } as Response)
-
-    // Act: Fill and submit the form
     await fillOutForm(user)
     await user.click(button)
 
-    // Assert 1: Success message should appear in the DOM
     expect(await screen.findByText(/Login successful!/i)).toBeInTheDocument()
     
-    // Assert 2: Wait for the setTimeout (1000ms) to trigger the navigation
-    // We extend the timeout slightly to 1500ms to ensure the test runner doesn't fail prematurely
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/gameSelection')
-    }, { timeout: 1500 })
+    }, { timeout: 1600 })
   })
 
   test('handles server errors with and without specific messages', async () => {
     const user = userEvent.setup()
 
-    // Scenario A: Server provides a specific error message
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({ error: 'Invalid credentials' }),
-    } as Response)
+    // Scenario A: Server proporciona un mensaje específico
+    setupFetchMock({ error: 'Invalid credentials' }, false)
 
     render(<MemoryRouter><LoginForm /></MemoryRouter>)
     await fillOutForm(user, '1')
     await user.click(screen.getByRole('button', { name: /Login/i }))
     expect(await screen.findByText(/Invalid credentials/i)).toBeInTheDocument()
 
-    cleanup() // Clean the DOM for the next scenario
+    cleanup() 
 
-    // Scenario B: Server returns an error without a specific message
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({}), 
-    } as Response)
+    // Scenario B: Server devuelve un error genérico (vacío)
+    setupFetchMock({}, false)
 
     render(<MemoryRouter><LoginForm /></MemoryRouter>)
     await fillOutForm(user, '2')
@@ -103,8 +112,8 @@ describe('LoginForm Full Coverage', () => {
   test('handles network failures and generic exceptions', async () => {
     const user = userEvent.setup()
 
-    // Scenario A: Standard Error object thrown by fetch (e.g., DNS issue)
-    globalThis.fetch = vi.fn().mockRejectedValueOnce(new Error('Failed to fetch'))
+    // Scenario A: Error de red con objeto estándar
+    setupFetchMock(new Error('Failed to fetch'), false, true)
 
     render(<MemoryRouter><LoginForm /></MemoryRouter>)
     await fillOutForm(user, '3')
@@ -113,8 +122,8 @@ describe('LoginForm Full Coverage', () => {
 
     cleanup()
 
-    // Scenario B: Non-standard rejection (fallback error message)
-    globalThis.fetch = vi.fn().mockRejectedValueOnce('Network disconnected')
+    // Scenario B: String de error genérico en el catch
+    setupFetchMock('Network disconnected', false, true)
 
     render(<MemoryRouter><LoginForm /></MemoryRouter>)
     await fillOutForm(user, '4')

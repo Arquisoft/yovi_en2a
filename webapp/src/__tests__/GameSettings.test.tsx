@@ -1,51 +1,46 @@
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { describe, test, expect } from 'vitest'
 import { GameSettings } from '../components/topRightMenu/settings/settingsSections/GameSettings'
-import '@testing-library/jest-dom'
+import '@testing-library/jest-dom' // <-- librery that gives us the toBeChecked()
 
 describe('GameSettings Strategy', () => {
   const gameSettings = new GameSettings()
 
+  test('should initialize with correct id and label properties', () => {
+    expect(gameSettings.id).toBe('game')
+    expect(gameSettings.label).toBe('Game')
+  })
+
   test('should render game preferences title and checkboxes', () => {
     render(gameSettings.render())
     
-    // 1. Check if the section heading is present
     expect(screen.getByText(/Game Preferences/i)).toBeInTheDocument()
-    
-    // 2. Verify both checkboxes are rendered via their labels
     expect(screen.getByLabelText(/Show move hints/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Confirm moves/i)).toBeInTheDocument()
   })
 
-  test('should have correct initial checkbox states', () => {
+  test('should have correct initial checkbox states based on defaultChecked', () => {
     render(gameSettings.render())
     
     const hintsCheckbox = screen.getByLabelText(/Show move hints/i)
     const confirmCheckbox = screen.getByLabelText(/Confirm moves/i)
 
-    // Type narrowing to satisfy TypeScript/Linter
-    if (!(hintsCheckbox instanceof HTMLInputElement) || !(confirmCheckbox instanceof HTMLInputElement)) {
-      throw new TypeError('Elements are not HTMLInputElements')
-    }
-
-    // 3. Verify defaultChecked logic (one is true, one is false)
-    expect(hintsCheckbox.checked).toBe(true)
-    expect(confirmCheckbox.checked).toBe(false)
+    expect(hintsCheckbox).toBeChecked()
+    expect(confirmCheckbox).not.toBeChecked()
   })
 
-  test('should toggle checkbox values when clicked', () => {
+  test('should toggle checkbox values when clicked', async () => {
+    const user = userEvent.setup() 
     render(gameSettings.render())
     
     const confirmCheckbox = screen.getByLabelText(/Confirm moves/i)
-    
-    if (!(confirmCheckbox instanceof HTMLInputElement)) {
-      throw new TypeError('Confirm moves element is not an HTMLInputElement')
-    }
+    const hintsCheckbox = screen.getByLabelText(/Show move hints/i)
 
-    // 4. Act: Simulate user clicking the checkbox
-    fireEvent.click(confirmCheckbox)
+    await user.click(confirmCheckbox)
+    await user.click(hintsCheckbox)
     
-    // 5. Assert: State should now be true
-    expect(confirmCheckbox.checked).toBe(true)
+    expect(confirmCheckbox).toBeChecked()
+    expect(hintsCheckbox).not.toBeChecked()
   })
 })

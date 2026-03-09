@@ -112,7 +112,7 @@ exports[`SelectionWindow Component > should match the snapshot 1`] = `
                     <div
                       class="_tooltip_ae4b91"
                     >
-                      Balanced difficulty recommended for most players.
+                      Normal mode that follows the classical rules of the gamey game. Play against a bot and try to connect the three sizes to win.
                     </div>
                   </div>
                 </div>
@@ -125,33 +125,145 @@ exports[`SelectionWindow Component > should match the snapshot 1`] = `
                   />
                 </div>
                 <div
-                  class="_difficultySection_ae4b91"
+                  class="_controlsWrapper_ae4b91"
                 >
-                  <span
-                    class="_difficultyLabel_ae4b91"
-                  >
-                    Difficulty
-                  </span>
                   <div
-                    class="_difficultySelector_ae4b91"
+                    class="_difficultySection_ae4b91"
+                  >
+                    <span
+                      class="_difficultyLabel_ae4b91"
+                    >
+                      Difficulty
+                    </span>
+                    <div
+                      class="_difficultySelector_ae4b91"
+                    >
+                      <button
+                        class="_arrow_ae4b91"
+                        style="visibility: visible;"
+                      >
+                        ←
+                      </button>
+                      <div
+                        class="_difficultyBox_ae4b91"
+                      >
+                        Normal
+                      </div>
+                      <button
+                        class="_arrow_ae4b91"
+                        style="visibility: visible;"
+                      >
+                        →
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    class="_sizeSection_ae4b91"
+                  >
+                    <span
+                      class="_difficultyLabel_ae4b91"
+                    >
+                      Size
+                    </span>
+                    <div
+                      class="_difficultySelector_ae4b91"
+                    >
+                      <button
+                        class="_arrow_ae4b91"
+                        style="visibility: visible;"
+                      >
+                        ←
+                      </button>
+                      <div
+                        class="_difficultyBox_ae4b91"
+                      >
+                        8
+                      </div>
+                      <button
+                        class="_arrow_ae4b91"
+                        style="visibility: visible;"
+                      >
+                        →
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  class="_playButton_ae4b91"
+                >
+                  PLAY
+                </button>
+              </div>
+            </div>
+            <div
+              class="_modeItem_dcd588"
+            >
+              <div
+                class="_gameModeContainer_ae4b91"
+              >
+                <div
+                  class="_header_ae4b91"
+                >
+                  <h2
+                    class="_title_ae4b91"
+                  >
+                    Local Mode
+                  </h2>
+                  <div
+                    class="_tooltipContainer_ae4b91"
                   >
                     <button
-                      class="_arrow_ae4b91"
-                      style="visibility: visible;"
+                      class="_infoButton_ae4b91"
                     >
-                      ←
+                      ?
                     </button>
                     <div
-                      class="_difficultyBox_ae4b91"
+                      class="_tooltip_ae4b91"
                     >
-                      Normal
+                      Normal mode that follows the classical rules of the gamey game. Play locally against a friend and try to connect the three sizes to win.
                     </div>
-                    <button
-                      class="_arrow_ae4b91"
-                      style="visibility: visible;"
+                  </div>
+                </div>
+                <div
+                  class="_imageContainer_ae4b91"
+                >
+                  <img
+                    alt="Local Mode"
+                    src="/src/assets/background_image_gameY.png"
+                  />
+                </div>
+                <div
+                  class="_controlsWrapper_ae4b91"
+                >
+                  <div
+                    class="_sizeSection_ae4b91"
+                  >
+                    <span
+                      class="_difficultyLabel_ae4b91"
                     >
-                      →
-                    </button>
+                      Size
+                    </span>
+                    <div
+                      class="_difficultySelector_ae4b91"
+                    >
+                      <button
+                        class="_arrow_ae4b91"
+                        style="visibility: visible;"
+                      >
+                        ←
+                      </button>
+                      <div
+                        class="_difficultyBox_ae4b91"
+                      >
+                        8
+                      </div>
+                      <button
+                        class="_arrow_ae4b91"
+                        style="visibility: visible;"
+                      >
+                        →
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <button

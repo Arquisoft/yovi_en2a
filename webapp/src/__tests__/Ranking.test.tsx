@@ -1,15 +1,33 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, test, expect, vi } from 'vitest'
+import { describe, test, expect, vi, afterEach } from 'vitest'
+import { MemoryRouter } from 'react-router-dom' // <-- 1. Importar el Router
 import Ranking from '../components/topRightMenu/ranking/Ranking'
 import '@testing-library/jest-dom'
+
+// 2. Mockear react-router-dom para que los componentes hijos no exploten
+const mockNavigate = vi.fn()
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...actual as any,
+    useNavigate: () => mockNavigate,
+  }
+})
 
 describe('Ranking Component', () => {
 
   const mockOnClose = vi.fn()
 
+  afterEach(() => {
+    cleanup()
+    vi.clearAllMocks()
+    mockNavigate.mockClear()
+  })
+
   test('should render the global header and navigation tabs', () => {
-    render(<Ranking onClose={mockOnClose} />)
+    // 3. Envolver en MemoryRouter
+    render(<MemoryRouter><Ranking onClose={mockOnClose} /></MemoryRouter>)
     
     expect(screen.getByText('RANKINGS')).toBeInTheDocument()
 
@@ -19,7 +37,8 @@ describe('Ranking Component', () => {
 
   test('should switch between Local and Global rankings when tabs are clicked', async () => {
     const user = userEvent.setup()
-    render(<Ranking onClose={mockOnClose} />)
+    // 3. Envolver en MemoryRouter
+    render(<MemoryRouter><Ranking onClose={mockOnClose} /></MemoryRouter>)
 
     const globalTab = screen.getByRole('button', { name: /global/i })
     await user.click(globalTab)
@@ -29,6 +48,8 @@ describe('Ranking Component', () => {
     
     const localTab = screen.getByRole('button', { name: /local/i })
     expect(localTab.className).not.toMatch(/active/i)
-    expect(mockOnClose).toHaveBeenCalledTimes(1)
+    
+    // (Nota: Se ha eliminado el expect del mockOnClose porque cambiar
+    // de pestaña no debe disparar la función de cerrar el menú).
   })
 })
