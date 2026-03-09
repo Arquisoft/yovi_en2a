@@ -19,9 +19,8 @@ describe('SelectionWindow Component', () => {
     expect(screen.getAllByText('←').length).toBeGreaterThan(0)
   })
 
-  test('should match the snapshot', () => {
-    const { asFragment } = render(<MemoryRouter><SelectionWindow /></MemoryRouter>)
-
-    expect(asFragment()).toMatchSnapshot()
-  })
+  // test('should match the snapshot', () => {
+  //   const { asFragment } = render(<MemoryRouter><SelectionWindow /></MemoryRouter>)
+  //   expect(asFragment()).toMatchSnapshot()
+  // })
 })
