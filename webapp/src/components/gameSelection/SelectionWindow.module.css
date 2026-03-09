@@ -117,13 +117,14 @@
     padding-right: 1rem;
   }
 
-  .topLeftCorner,
-  .topRightCorner {
-    top: 1rem;
+  .topLeftCorner {
+    display: none; 
   }
 
-  .topLeftCorner { left: 1rem; }
-  .topRightCorner { right: 1rem; }
+  .topRightCorner {
+    top: 1rem;
+    right: 1rem;
+  }
 
   .mainTitle h2 {
     letter-spacing: 0.2rem;
