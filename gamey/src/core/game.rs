@@ -78,6 +78,12 @@ impl GameY {
         }
     }
 
+    /// Returns the [`PlayerId`] of the player whose piece occupies `coords`,
+    /// or `None` if the cell is empty.
+    pub fn cell_owner(&self, coords: &Coordinates) -> Option<PlayerId> {
+    self.board_map.get(coords).map(|(_, player)| *player)
+}
+
     /// Returns the list of available cell indices where pieces can be placed.
     pub fn available_cells(&self) -> &Vec<u32> {
         &self.available_cells

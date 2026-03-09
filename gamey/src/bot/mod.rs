@@ -8,8 +8,10 @@
 //! - [`RandomBot`] - A simple bot that makes random valid moves
 
 pub mod random;
+pub mod greedy;
 pub mod ybot;
 pub mod ybot_registry;
 pub use random::*;
+pub use greedy::*;
 pub use ybot::*;
 pub use ybot_registry::*;
