@@ -1,0 +1,35 @@
+/* LocalRanking.module.css */
+
+.loadingContainer {
+  text-align: center;
+  padding: 20px;
+}
+
+.notLoggedContainer {
+  text-align: center;
+  padding: 40px;
+  background-color: #1a1a1a;
+  border-radius: 10px;
+}
+
+.notLoggedText {
+  font-size: 18px;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.loginButton {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  background-color: #2f00ff;
+  color: rgb(255, 255, 255);
+  border: none;
+  border-radius: 5px;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
+}
+
+.loginButton:hover {
+  background-color: #0056b3;
+}

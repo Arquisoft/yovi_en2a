@@ -23,13 +23,18 @@ pub mod choose;
 pub mod error;
 pub mod state;
 pub mod version;
+mod req_res_formats;
+mod play;
+
 use axum::response::IntoResponse;
 use std::sync::Arc;
 pub use choose::MoveResponse;
 pub use error::ErrorResponse;
 pub use version::*;
+use axum::{Json, http::StatusCode};
 
-use crate::{GameYError, GreedyBot, RandomBot, YBotRegistry, state::AppState};
+use crate::{GameYError, RandomBot, GreedyBot, YBotRegistry, state::AppState, YEN, Coordinates, Movement, PlayerId, GameY};
+use crate::bot_server::req_res_formats::{ProcessMoveRequest, ProcessMoveResponse};
 
 /// Creates the Axum router with the given state.
 ///
@@ -41,6 +46,11 @@ pub fn create_router(state: AppState) -> axum::Router {
             "/{api_version}/ybot/choose/{bot_id}",
             axum::routing::post(choose::choose),
         )
+        .route(
+            "/{api_version}/ybot/play/{bot_id}",
+            axum::routing::post(play::play),
+        )
+        .route("/engine/move", axum::routing::post(process_move))
         .with_state(state)
 }
 
@@ -91,3 +101,40 @@ pub async fn run_bot_server(port: u16) -> Result<(), GameYError> {
 pub async fn status() -> impl IntoResponse {
     "OK"
 }
+
+
+pub async fn process_move(
+    Json(payload): Json<ProcessMoveRequest>,
+) -> Result<Json<ProcessMoveResponse>, (StatusCode, String)> {
+
+    // 1. Rehidratar el motor desde el YEN recibido
+    let mut game = GameY::try_from(payload.state.clone())
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Estado inválido: {:?}", e)))?;
+
+    game.force_turn(PlayerId::new(payload.state.turn()));
+
+    // 2. Construir el movimiento
+    let coords = Coordinates::new(payload.x, payload.y, payload.z);
+    let mv = Movement::Placement {
+        player: game.next_player().unwrap(),
+        coords,
+    };
+
+    // 3. Validar turno y añadir movimiento
+    game.check_player_turn(&mv)
+        .map_err(|e| (StatusCode::FORBIDDEN, format!("{}", e)))?;
+
+    game.add_move(mv)
+        .map_err(|e| (StatusCode::BAD_REQUEST, format!("Movimiento ilegal: {:?}", e)))?;
+
+    // 4. Comprobar si terminó y preparar respuesta
+    let game_over = game.check_game_over();
+    let new_yen: YEN = (&game).into();
+
+    Ok(Json(ProcessMoveResponse {
+        new_yen_json: new_yen,
+        game_over
+    }))
+}
+
+

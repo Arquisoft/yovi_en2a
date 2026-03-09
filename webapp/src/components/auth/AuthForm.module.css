@@ -1,0 +1,182 @@
+/* AuthForm.module.css */
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(15px, 3vw, 25px); /* Adaptive gap */
+
+  width: min(90%, 500px);      /* Concise and robust responsive width */
+  margin: clamp(16px, 5vh, 40px) auto; /* Adaptive vertical margin */
+
+  padding: clamp(20px, 6vw, 50px); /* Adaptive padding */
+
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+  background-color: #1a1a1a;
+  color: #f3f4f6;
+
+  /* Prevents the form from being cut off on small screens */
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.formGroup {
+  width: 100%;
+}
+
+.formGroup label {
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #9ca3af;
+  display: block;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.formInput {
+  padding: clamp(10px, 3vw, 14px);
+  border: 1px solid #374151;
+  border-radius: 6px;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #27272a;
+  color: #ffffff;
+  transition: border-color 0.2s;
+
+  /* Prevents automatic zoom on iOS when focusing an input */
+  -webkit-text-size-adjust: 100%;
+}
+
+.formInput:focus {
+  outline: none;
+  border-color: #6b7280;
+}
+
+.submitButton {
+  padding: clamp(10px, 3vw, 14px) 15px;
+  background-color: #3f3f46;
+  color: white;
+  border: 1px solid #52525b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: clamp(0.95rem, 3vw, 1.1rem);
+  font-weight: bold;
+  margin-top: clamp(8px, 2vw, 15px);
+  width: 100%;
+  box-sizing: border-box;
+
+  /* Improves touch area on mobile */
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+.submitButton:hover:not(:disabled) {
+  background-color: #52525b;
+  border-color: #71717a;
+}
+
+.submitButton:disabled {
+  background-color: #18181b;
+  color: #a7a7b8;
+  border-color: #27272a;
+  cursor: not-allowed;
+}
+
+.linkText {
+  margin-top: clamp(8px, 2vw, 15px);
+  cursor: pointer;
+  color: #9ca3af;
+  text-decoration: underline;
+  text-align: center;
+  font-size: clamp(0.875rem, 2.5vw, 0.95rem);
+  transition: color 0.2s;
+
+  /* Improves touch area on mobile */
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  touch-action: manipulation;
+}
+
+.linkText:hover {
+  color: #ffffff;
+}
+
+.successMessage {
+  margin-top: 12px;
+  color: #4ade80;
+  text-align: center;
+  font-weight: bold;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.errorMessage {
+  margin-top: 12px;
+  color: #f87171;
+  text-align: center;
+  font-weight: bold;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+/* ── Supporting Media Queries ── */
+
+/* ── Mobile (< 600px) ── */
+@media (max-width: 599px) {
+  .authForm {
+    width: 95%;
+    height: auto;
+    max-height: 90vh;      /* Relative to screen height */
+    overflow-y: auto;
+
+    gap: 2.5vh;            /* Proportional spacing to height */
+  }
+
+  .formInput {
+    min-height: 6vh;       /* Proportional touch area */
+  }
+
+  .submitButton {
+    min-height: 7vh;
+  }
+
+  .linkText {
+    min-height: 6vh;
+  }
+}
+
+/* ── Tablets (600px – 1024px) ── */
+@media (min-width: 600px) and (max-width: 1024px) {
+  .authForm {
+    width: 75%;
+    height: auto;
+    max-height: 85vh;
+    overflow-y: auto;
+
+    gap: 2vh;
+  }
+
+  .formGroup label {
+    font-size: 1.8vh;
+  }
+
+  .formInput {
+    padding: 1.5vh;
+  }
+
+  .submitButton {
+    padding: 1.5vh 2vh;
+    font-size: 2vh;
+  }
+
+  .linkText {
+    font-size: 1.8vh;
+  }
+
+  .successMessage,
+  .errorMessage {
+    font-size: 1.8vh;
+  }
+}

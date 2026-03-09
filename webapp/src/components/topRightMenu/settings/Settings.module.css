@@ -1,0 +1,157 @@
+/* Settings.module.css */
+
+/* --- MAIN LAYOUT --- */
+.settingsBody {
+  display: flex;
+  flex: 1;
+  flex-direction: row; /* Desktop: side-by-side */
+  min-height: 0;
+}
+
+/* --- SIDEBAR NAVIGATION --- */
+.settingsSidebar {
+  /* Using flex-basis (25%) instead of width for better distribution */
+  flex: 0 0 25%;
+  min-width: 12rem;
+  background: rgba(0, 0, 0, 0.15);
+  border-right: 0.0625rem solid rgba(255, 255, 255, 0.05);
+  overflow-y: auto;
+}
+
+.sidebarButtons button {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: #666;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  transition: 0.2s;
+}
+
+.sidebarButtons button.active {
+  color: var(--primary-color);
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 0.25rem solid var(--primary-color);
+}
+
+/* --- MAIN CONTENT PANEL --- */
+.settingsPanel {
+  flex: 1; /* Occupies the remaining 75% */
+  display: flex;
+  flex-direction: column;
+  background: #181818;
+  min-width: 0;
+  min-height: 0; 
+}
+
+/* PANEL HEADER: Alignment logic for Label and X Button */
+.settingsPanelHeader {
+  display: flex;
+  justify-content: space-between; 
+  align-items: center;
+  padding: 1.5rem 1.5rem 0 1.5rem;
+}
+
+.sectionLabel {
+  color: var(--primary-color);
+  margin: 0;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+}
+
+/* CLOSE BUTTON: Hover and color logic */
+.closeButton {
+  background: transparent;
+  border: none;
+  color: #555;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  flex-shrink: 0;
+}
+
+.closeButton:hover {
+  color: #ff4444;
+  transform: scale(1.1);
+}
+
+/* --- SCROLLABLE CONTENT AREA --- */
+.tabContent {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+/* Custom Scrollbars */
+.tabContent::-webkit-scrollbar,
+.settingsSidebar::-webkit-scrollbar {
+  width: 0.4rem;
+}
+
+.tabContent::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 1rem;
+}
+
+/* --- MOBILE RESPONSIVENESS (Fixes Disappearing Text) --- */
+@media (max-width: 48rem) {
+  .settingsBody {
+    /* Stack components vertically so panel isn't pushed horizontally */
+    flex-direction: column;
+  }
+
+  .settingsSidebar {
+    /* Occupy top area relative to screen width */
+    flex: 0 0 auto;
+    width: 100%;
+    min-width: 100%;
+    border-right: none;
+    border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
+  }
+
+  .sidebarButtons {
+    display: flex;
+    flex-direction: row; /* Buttons sit horizontally on mobile */
+    overflow-x: auto; /* Allow swiping categories */
+    overflow-y: hidden;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .sidebarButtons button {
+    width: auto; /* Let text determine width */
+    flex: 0 0 auto;
+    padding: 0 1.25rem;
+    height: 3.5rem;
+    line-height: 3.5rem;
+    white-space: nowrap;
+    border-left: none;
+    border-bottom: 0.2rem solid transparent;
+  }
+
+  .sidebarButtons button.active {
+    border-bottom: 0.2rem solid var(--primary-color);
+  }
+
+  .settingsPanel {
+    /* Ensure the panel fills the rest of the vertical space */
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .settingsPanelHeader {
+    padding: 1rem;
+  }
+  
+  .sectionLabel {
+    font-size: 1.2rem;
+  }
+}

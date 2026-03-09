@@ -1,110 +1,145 @@
 import { render, screen, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import RegisterForm from '../RegisterForm'
-import { afterEach, describe, expect, test, vi } from 'vitest' 
+import { MemoryRouter } from 'react-router-dom'
+import RegisterForm from '../components/auth/RegisterForm'
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest' 
 import '@testing-library/jest-dom'
+
+// Mock react-router-dom para evitar problemas con useNavigate
+const mockNavigate = vi.fn()
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom')
+  return {
+    ...actual as any,
+    useNavigate: () => mockNavigate,
+  }
+})
 
 describe('RegisterForm Full Coverage', () => {
   
+  beforeEach(() => {
+    mockNavigate.mockClear()
+  })
+
   afterEach(() => {
     cleanup()
     vi.restoreAllMocks()
   })
 
-  // 1. Covers Lines 16-34: Validation & Success Path
+  // Helper para rellenar el formulario completo
+  const fillOutForm = async (user: any, suffix: string = '') => {
+    await user.type(screen.getByLabelText(/Email address/i), `test${suffix}@test.com`)
+    await user.type(screen.getByLabelText(/Username/i), `User${suffix}`)
+    await user.type(screen.getByLabelText(/Password/i), 'password123')
+  }
+
+  // Helper para interceptar múltiples peticiones fetch (CSRF + Registro)
+  const setupFetchMock = (registerResponse: any, isOk: boolean = true, isError: boolean = false) => {
+    globalThis.fetch = vi.fn().mockImplementation((url: string | URL | Request) => {
+      const urlString = url.toString()
+      
+      // 1. Interceptar siempre el CSRF Token al cargar la página
+      if (urlString.includes('csrf-token')) {
+        return Promise.resolve({
+          json: async () => ({ csrfToken: 'fake-token' })
+        })
+      }
+      
+      // 2. Interceptar el Registro (Simular caída de red o catch)
+      if (isError) {
+        return Promise.reject(registerResponse)
+      }
+
+      // 3. Interceptar el Registro (Simular éxito o error)
+      return Promise.resolve({
+        ok: isOk,
+        json: async () => registerResponse
+      })
+    })
+  }
+
   test('handles validation and successful submission', async () => {
     const user = userEvent.setup()
-    render(<RegisterForm />)
+    setupFetchMock({ message: 'Welcome Pablo!' }, true)
     
-    const input = screen.getByLabelText(/whats your name\?/i)
-    const button = screen.getByRole('button', { name: /lets go!/i })
+    render(<MemoryRouter><RegisterForm /></MemoryRouter>)
+    
+    const button = screen.getByRole('button', { name: /Sign Up/i })
 
-    // Validation (Line 17-18)
+    // 1. Test empty submission (Local validation)
     await user.click(button)
-    expect(await screen.findByText(/please enter a username/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Please fill in all required fields/i)).toBeInTheDocument()
 
-    // Success (Line 23-34)
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ message: 'Welcome Pablo!' }),
-    } as Response)
-
-    await user.type(input, 'Pablo')
+    // 2. Test successful submission
+    await fillOutForm(user, 'Pablo')
     await user.click(button)
 
+    // Verify the success message appears
     expect(await screen.findByText(/welcome pablo!/i)).toBeInTheDocument()
-    expect(input).toHaveValue('') // Verify setUsername('') on line 34
   })
 
-  // 2. Covers Lines 35-36: Server Error (The "else" branch)
   test('handles server errors with and without messages', async () => {
     const user = userEvent.setup()
 
-    // Scenario A: Server provides an error message (Line 36 left side)
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({ error: 'Database Error' }),
-    } as Response)
+    // Escenario A: Error con mensaje específico desde el servidor
+    setupFetchMock({ error: 'Database Error' }, false)
 
-    render(<RegisterForm />)
-    await user.type(screen.getByLabelText(/whats your name\?/i), 'User1')
-    await user.click(screen.getByRole('button', { name: /lets go!/i }))
+    render(<MemoryRouter><RegisterForm /></MemoryRouter>)
+    await fillOutForm(user, '1')
+    await user.click(screen.getByRole('button', { name: /Sign Up/i }))
     expect(await screen.findByText(/database error/i)).toBeInTheDocument()
 
     cleanup()
 
-    // Scenario B: Server is silent, triggers fallback (Line 36 right side: || 'Server error')
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: false,
-      json: async () => ({}), 
-    } as Response)
+    // Escenario B: Error silencioso del servidor (Usa el fallback de tu código)
+    setupFetchMock({}, false)
 
-    render(<RegisterForm />)
-    await user.type(screen.getByLabelText(/whats your name\?/i), 'User2')
-    await user.click(screen.getByRole('button', { name: /lets go!/i }))
-    expect(await screen.findByText(/server error/i)).toBeInTheDocument()
+    render(<MemoryRouter><RegisterForm /></MemoryRouter>)
+    await fillOutForm(user, '2')
+    await user.click(screen.getByRole('button', { name: /Sign Up/i }))
+    // Corregido: Tu componente dice "Registration failed."
+    expect(await screen.findByText(/Registration failed/i)).toBeInTheDocument()
   })
 
-  // 3. Covers Lines 37-38: Network Failure (The "catch" block)
   test('handles network failure with and without error objects', async () => {
     const user = userEvent.setup()
 
-    // Scenario A: Standard Error object (Line 38 left side: err.message)
-    globalThis.fetch = vi.fn().mockRejectedValueOnce(new Error('DNS Failure'))
+    // Escenario A: Error de objeto (e.g., DNS Failure)
+    setupFetchMock(new Error('DNS Failure'), false, true)
 
-    render(<RegisterForm />)
-    await user.type(screen.getByLabelText(/whats your name\?/i), 'User3')
-    await user.click(screen.getByRole('button', { name: /lets go!/i }))
+    render(<MemoryRouter><RegisterForm /></MemoryRouter>)
+    await fillOutForm(user, '3')
+    await user.click(screen.getByRole('button', { name: /Sign Up/i }))
     expect(await screen.findByText(/dns failure/i)).toBeInTheDocument()
 
     cleanup()
 
-    // Scenario B: Thrown string/null (Line 38 right side: || 'Network error')
-    globalThis.fetch = vi.fn().mockRejectedValueOnce('Something went wrong')
+    // Escenario B: Falla con un mensaje genérico (catch puro)
+    setupFetchMock('Something went wrong', false, true)
 
-    render(<RegisterForm />)
-    await user.type(screen.getByLabelText(/whats your name\?/i), 'User4')
-    await user.click(screen.getByRole('button', { name: /lets go!/i }))
-    expect(await screen.findByText(/network error/i)).toBeInTheDocument()
+    render(<MemoryRouter><RegisterForm /></MemoryRouter>)
+    await fillOutForm(user, '4')
+    await user.click(screen.getByRole('button', { name: /Sign Up/i }))
+    // Corregido: Tu componente dice "A network error occurred."
+    expect(await screen.findByText(/A network error occurred/i)).toBeInTheDocument()
   })
 
-  // 4. Covers Line 41: The "finally" block
   test('ensures loading state is reset in finally block', async () => {
     const user = userEvent.setup()
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ message: 'Done' }),
-    } as Response)
+    setupFetchMock({ message: 'Done' }, true)
 
-    render(<RegisterForm />)
-    const button = screen.getByRole('button', { name: /lets go!/i })
+    render(<MemoryRouter><RegisterForm /></MemoryRouter>)
+    const button = screen.getByRole('button', { name: /Sign Up/i })
     
-    await user.type(screen.getByLabelText(/whats your name\?/i), 'User5')
+    await fillOutForm(user, '5')
     await user.click(button)
     
-    // Once the message appears, the finally block MUST have executed
+    // Esperamos a que aparezca el mensaje de éxito
     await screen.findByText(/done/i)
+    
+    // Verificamos que el botón vuelve a la normalidad
     expect(button).not.toBeDisabled()
-    expect(button).toHaveTextContent(/lets go!/i)
+    expect(button).toHaveTextContent(/Sign Up/i)
   })
 })

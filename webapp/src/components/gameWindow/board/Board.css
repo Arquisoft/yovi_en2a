@@ -1,0 +1,17 @@
+.board {
+  /* The distance between the centers of two adjacent hexagons in the vertical direction */
+  --hex-step-x: 64px;
+
+  display: flex;
+  flex-direction: column;
+
+  row-gap: 0;
+}
+
+.board-row {
+  display: flex;
+  justify-content: center;
+  /* Delete the gap between rows */
+  margin-top: -15px;
+}
+

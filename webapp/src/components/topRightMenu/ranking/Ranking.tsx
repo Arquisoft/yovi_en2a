@@ -1,19 +1,16 @@
-import './Ranking.css';
 import React, { useState, useMemo } from 'react';
+import styles from './Ranking.module.css';
 import { LocalRanking } from './rankingTypes/LocalRanking';
 import { GlobalRanking } from './rankingTypes/GlobalRanking';
 
 const Ranking: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  // Memoize ranking strategies
+  // Memoize strategies
   const rankingTypes = useMemo(() => [
     new LocalRanking(),
     new GlobalRanking()
   ], []);
 
-  // Default to the first ranking type (Local)
   const [activeTabId, setActiveTabId] = useState(rankingTypes[0].id);
-
-  // Find current active strategy
   const currentRanking = rankingTypes.find(r => r.id === activeTabId);
 
   return (
@@ -25,28 +22,28 @@ const Ranking: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <h2 className="top-right-menu-title">RANKINGS</h2>
         </header>
 
-        <div className="top-right-menu-body">
+        <div className={`top-right-menu-body ${styles.rankingBody}`}>
           {/* MAIN PANEL */}
-          <main className="ranking-panel">
+          <main className={styles.rankingPanel}>
             
-            {/* SUB-HEADER: Selection Buttons (Local vs Global) */}
-            <header className="ranking-nav-header">
-              <div className="ranking-tabs">
+            {/* SUB-HEADER: Selection Buttons */}
+            <header className={styles.rankingNavHeader}>
+              <div className={styles.rankingTabs}>
                 {rankingTypes.map(type => (
                   <button 
                     key={type.id}
-                    className={`ranking-tab-btn ${activeTabId === type.id ? 'active' : ''}`} 
+                    className={`${styles.rankingTabBtn} ${activeTabId === type.id ? styles.active : ''}`} 
                     onClick={() => setActiveTabId(type.id)}
                   >
                     {type.label}
                   </button>
                 ))}
               </div>
-              <button className="close-button" onClick={onClose} aria-label="Close">✕</button>
+              <button className={styles.closeButton} onClick={onClose} aria-label="Close">✕</button>
             </header>
             
-            {/* SCROLLABLE CONTENT: Here goes the ranking list */}
-            <div className="tab-content ranking-content">
+            {/* SCROLLABLE CONTENT */}
+            <div className={`tab-content ${styles.rankingContent}`}>
               {currentRanking?.render()}
             </div>
 

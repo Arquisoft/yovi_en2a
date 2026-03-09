@@ -1,0 +1,121 @@
+/* RankingTableGlobal.module.css */
+
+.rankingContainer {
+  background: #181818;
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  color: #ffffff;
+  width: 100%;
+  max-width: 40rem; /* Ancho máximo adaptable */
+  margin: 0 auto;
+}
+
+.rankingSubtitle {
+  text-align: center;
+  color: var(--primary-color, #007bff);
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+}
+
+/* --- LÓGICA DE LA CUADRÍCULA (GRID) --- */
+/* 1. Izquierda: 3.5rem (Espacio fijo adaptable para #999)
+  2. Medio: 1fr (Ocupa toda la fracción de espacio restante)
+  3. Derecha: 4.5rem (Espacio fijo para la métrica ej: 00:00)
+*/
+.rankingHeaderRow,
+.rankingItem {
+  display: grid;
+  grid-template-columns: 3.5rem 1fr 4.5rem;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0.5rem;
+}
+
+/* --- CABECERA --- */
+.rankingHeaderRow {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #888888;
+  text-transform: uppercase;
+  border-bottom: 0.125rem solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 0.5rem;
+}
+
+/* Alineación de los textos de la cabecera */
+.rankingHeaderRow span:first-child {
+  text-align: left;
+}
+
+.rankingHeaderRow span:nth-child(2) {
+  text-align: center; /* En el medio */
+}
+
+.rankingHeaderRow span:last-child {
+  text-align: right;
+}
+
+/* --- FILAS DE DATOS --- */
+.rankingItem {
+  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
+  transition: background-color 0.2s ease;
+  border-radius: 0.25rem;
+}
+
+.rankingItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Extremo Izquierdo (Posición) */
+.rankPos {
+  text-align: left;
+  font-weight: bold;
+  color: #cccccc;
+}
+
+/* Medio (Nombre del Jugador) */
+.rankName {
+  text-align: center;
+  font-weight: 600;
+  /* Estas 3 propiedades evitan que un nombre muy largo rompa la tabla */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis; 
+}
+
+/* Extremo Derecho (Métrica) */
+.rankTime {
+  text-align: right;
+  font-family: monospace; /* Fuente ideal para números alineados */
+  font-size: 1.05rem;
+  color: var(--primary-color, #007bff);
+}
+
+/* --- COLORES TOP 3 (Opcional, coincide con tu variable positionHighlight) --- */
+.pos-1 .rankPos { color: #ffd700; } /* Oro */
+.pos-2 .rankPos { color: #c0c0c0; } /* Plata */
+.pos-3 .rankPos { color: #cd7f32; } /* Bronce */
+
+/* --- ADAPTABILIDAD MÓVIL --- */
+@media (max-width: 30rem) {
+  .rankingContainer {
+    padding: 1rem;
+  }
+
+  .rankingHeaderRow,
+  .rankingItem {
+    /* Reducimos ligeramente los márgenes en pantallas muy pequeñas */
+    grid-template-columns: 2.5rem 1fr 3.5rem;
+    gap: 0.5rem;
+    padding: 0.5rem 0.25rem;
+  }
+  
+  .rankName {
+    font-size: 0.9rem;
+  }
+  
+  .rankTime {
+    font-size: 0.95rem;
+  }
+}

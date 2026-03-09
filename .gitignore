@@ -1,8 +1,13 @@
 node_modules
 coverage
 gamey/target
+**/target
+userAuthentification/target
 lcov.info
 docs/build
 .env
 webapp/.env
 .vscode/
+.secrets
+.scannerwork
+*/target

@@ -1,0 +1,112 @@
+.mainMenu {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* Added to center everything nicely in the viewport and prevent clipping */
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2vh 1rem;
+  box-sizing: border-box;
+}
+
+.mainTitle {
+  /* clamp(minimum, preferred, maximum). vmin ensures it shrinks if height is small */
+  font-size: clamp(3rem, 12vmin, 10rem);
+  margin: 0;
+  line-height: 0.8;
+  text-shadow: 0.125rem 0.125rem 0.625rem rgba(0, 0, 0, 0.5);
+}
+
+.subtitle {
+  font-size: clamp(0.8rem, 2.5vmin, 2.5rem);
+  /* Adjusted slightly from -0.4em so the new background box sits nicely under the title */
+  margin-top: -0.2em; 
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: clamp(0.2rem, 1vmin, 0.8rem);
+  font-weight: 500;
+  text-shadow: 0.125rem 0.125rem 0.4rem rgba(0, 0, 0, 0.3);
+  opacity: 1; /* Changed from 0.9 to 1 to keep text crisp against the dark background */
+  
+  /* --- NEW STYLES FOR CONTRAST --- */
+  background-color: rgba(0, 0, 0, 0.65); /* Dark semi-transparent background */
+  padding: 0.4em 1.2em; /* Adds breathing room inside the box */
+  border-radius: 0.5rem; /* Rounded corners to match your buttons */
+  backdrop-filter: blur(0.25rem); /* Blurs the background behind it */
+  border: 0.0625rem solid rgba(255, 255, 255, 0.15); /* Very subtle white border */
+  
+}
+
+.mainMenuButtons {
+  display: flex;
+  flex-direction: column;
+  /* Use vh for vertical spacing so gaps compress on short screens */
+  gap: clamp(0.5rem, 2vh, 1rem);
+  align-items: center;
+  margin-top: clamp(1.5rem, 5vh, 4rem);
+}
+
+/* --- TARGETING THE BUTTONS FROM THE PARENT --- */
+
+.mainMenuButtons :global(.mainMenuOption) {
+  /* Fluid vertical padding */
+  padding: clamp(0.5rem, 1.5vh, 0.8rem) 2rem;
+  min-width: clamp(12rem, 30vw, 15rem);
+  border-radius: 0.5rem;
+}
+
+.mainMenuButtons :global(.mainMenuOption)[name="Log In"] {
+  background-color: rgba(0, 0, 0, 0.88);
+  color: #ffffff;
+  font-weight: 800;
+  border: 0.0625rem solid rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0.25rem 0.875rem rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(0.1875rem);
+}
+
+.mainMenuButtons :global(.mainMenuOption)[name="Log In"]:hover {
+  background-color: rgba(0, 0, 0, 0.96);
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-0.0625rem);
+}
+
+.mainMenuButtons :global(.mainMenuOption)[name="Play as Guest"] {
+  background-color: rgba(63, 62, 62, 0.2);
+  color: #ffffff;
+  border: 0.0625rem solid rgba(160, 160, 160, 0.4);
+  backdrop-filter: blur(0.25rem);
+}
+
+.mainMenuButtons :global(.mainMenuOption)[name="Play as Guest"]:hover {
+  background-color: rgba(0, 0, 0, 0.78);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* Width query for standard mobile devices */
+@media (max-width: 48rem) {
+  .mainTitle { font-size: clamp(4rem, 15vmin, 8rem); }
+  .subtitle { font-size: clamp(1rem, 4vmin, 2rem); margin-top: -0.3em; letter-spacing: 0.3rem; }
+  .mainMenuButtons { margin-top: clamp(2rem, 8vh, 4rem); width: 80%; }
+  
+  .mainMenuButtons :global(.mainMenuOption) {
+    padding: clamp(0.5rem, 1.5vh, 0.8rem) 1.2rem;
+    font-size: 0.9rem;
+    width: 100%;
+  }
+}
+
+/* NEW: Height query explicitly for very short screens (e.g. landscape mode on phones) */
+@media (max-height: 35rem) {
+  .mainTitle {
+    font-size: clamp(2rem, 12vh, 4rem);
+  }
+  .subtitle {
+    margin-top: 0;
+  }
+  .mainMenuButtons {
+    /* Puts buttons side-by-side to save vertical space */
+    flex-direction: row; 
+    margin-top: 1rem;
+    width: auto;
+  }
+}

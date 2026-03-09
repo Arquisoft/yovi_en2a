@@ -1,0 +1,159 @@
+.gameModeContainer {
+  width: 100%;
+  height: 100%;
+  padding: clamp(0.8rem, 4vw, 1.5rem) clamp(1rem, 5vw, 2rem);
+  border: 0.1rem solid #444;
+  border-radius: 1.25rem;
+  background-color: #1a1a1a;
+  color: #eeeeee;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: clamp(0.3rem, 1.5vw, 1rem); 
+
+  box-sizing: border-box;
+  overflow: hidden; 
+}
+
+/* Header and tooltip */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: clamp(1.1rem, 5vw, 1.4rem);
+  margin: 0;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tooltipContainer { position: relative; z-index: 20; }
+.infoButton {
+  width: 2rem; height: 2rem; border-radius: 50%;
+  border: none; background-color: #333; color: #aaa;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.tooltip {
+  display: none; position: absolute; top: 115%; right: 0;
+  width: 13rem; padding: 1rem; background-color: #ffffff;
+  color: #1a1a1a; border-radius: 0.75rem; font-size: 0.85rem;
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.5); z-index: 9999;
+}
+.tooltipContainer:hover .tooltip { display: block; }
+
+/* Image container */
+.imageContainer {
+  width: 100%;
+  flex: 1 1 auto;           
+  flex-basis: clamp(80px, 35%, 200px);
+  min-height: 0; /* CRUCIAL: Prevents flexbox from collapsing the image */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.imageContainer img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.8rem;
+  border: 0.05rem solid #333;
+}
+
+/* Wrapper to hold Difficulty and Size side-by-side */
+.controlsWrapper {
+  display: flex;
+  flex-direction: row;
+  gap: clamp(0.3rem, 1.5vw, 1rem);
+  width: 100%;
+  flex-shrink: 0;
+  box-sizing: border-box; /* Ensures gap and width behave strictly */
+}
+
+/* Difficulty & Size Sections */
+.difficultySection,
+.sizeSection {
+  flex: 1; /* Both sections take up exactly half the width */
+  min-width: 0; /* CRUCIAL: Allows the flex items to shrink below their content size */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  background-color: #252525;
+  padding: 0.6rem clamp(0.2rem, 1vw, 0.5rem);
+  border-radius: 1rem;
+}
+
+.difficultyLabel {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+}
+
+.difficultySelector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.2rem; /* Adds a safety margin so the text doesn't touch the arrows */
+}
+
+.arrow {
+  background-color: #333;
+  color: white;
+  border: none;
+  width: clamp(1.5rem, 4vw, 2.2rem); /* Fluid width so it doesn't break the container */
+  height: clamp(1.5rem, 4vw, 2.2rem); /* Fluid height */
+  border-radius: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  line-height: 1;
+  flex-shrink: 0; /* Prevents arrows from becoming oval shaped */
+}
+
+.difficultyBox {
+  font-size: clamp(0.6rem, 1.5vw, 0.7rem);
+  font-weight: bold;
+  color: #4caf50;
+  
+  flex: 1; /* Occupies exactly the remaining space between the arrows */
+  min-width: 0; /* Allows the box to shrink properly */
+  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  
+  /* Text Wrapping Rules */
+  white-space: normal; /* Allows text to wrap to the next line if space is tight */
+  word-break: normal; /* Ensures wrapping happens by whole words (e.g., "Very" and "Hard") */
+  line-height: 1.1; /* Keeps wrapped lines close together for a centered look */
+  padding: 0 0.1rem; /* Small inner padding for safety */
+}
+
+/* PLAY Button */
+.playButton {
+  width: 100%;
+  flex-shrink: 0;         
+  min-height: 3rem;      
+  padding: clamp(0.8rem, 4vw, 1.2rem);
+  font-size: clamp(1rem, 4vw, 1.2rem);
+  font-weight: bold;
+  border: none;
+  border-radius: 1rem;
+  background-color: #07780b;
+  color: white;
+  cursor: pointer;
+  box-sizing: border-box; /* Added to guarantee strict width alignment */
+}

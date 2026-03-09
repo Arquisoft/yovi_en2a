@@ -1,0 +1,25 @@
+/* --- TU CSS EXISTENTE --- */
+
+.accountInfo {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  border: 0.0625rem solid rgba(255, 255, 255, 0.1);
+  margin-bottom: 1.5rem; /* Añadido para separar el recuadro del botón */
+}
+
+.dangerBtn {
+  background: #da2626;
+  color: rgb(255, 255, 255);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.4rem;
+  font-weight: 700;
+  cursor: pointer;
+  width: fit-content;
+  transition: background-color 0.2s ease; /* Transición suave */
+}
+
+.dangerBtn:hover {
+  background: #b01e1e; /* Efecto hover para el logout */
+}
