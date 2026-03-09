@@ -24,3 +24,12 @@ fn test_password_hashing_and_verification() {
     assert!(wrong_verification.is_ok(), "Verification process encountered an error");
     assert!(!wrong_verification.unwrap(), "Incorrect password should return false");
 }
+
+#[test]
+fn test_unique_salts() {
+    let password = "same_password";
+    // Argon2 should produce different hashes for the same password due to random salts
+    let hash1 = hash_password(password).unwrap();
+    let hash2 = hash_password(password).unwrap();
+    assert_ne!(hash1, hash2, "Hashes of the same password should be different due to unique salts");
+}

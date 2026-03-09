@@ -123,3 +123,35 @@
         insert_db("Users", id, user_data).await
     }
 
+    /// Deletes a document from a specific Firestore collection.
+    ///
+    /// # Arguments
+    /// * `table_name` - The name of the collection (e.g., "Users").
+    /// * `id` - The unique ID of the document to remove.
+    ///
+    /// # Returns
+    /// * `Ok(())` - If the deletion was successful (even if the document didn't exist, Firestore usually returns success).
+    /// * `Err` - If there's a connection or permissions issue.
+    pub async fn delete_db(table_name: &str, id: &str) -> Result<(), Box<dyn Error>> {
+        // Get the Firestore connection
+        let db = get_connection().await?;
+
+        // Use the Fluent API to delete the document.
+        // Similar to insert, we use .execute() to trigger the operation.
+        db.fluent()
+            .delete()
+            .from(table_name)
+            .document_id(id)
+            .execute()
+            .await?;
+
+        println!("Document [{}] deleted successfully from {}.", id, table_name);
+
+        Ok(())
+    }
+
+    /// Shorthand to delete a User directly from the "Users" collection.
+    pub async fn delete_user_by_id(id: &str) -> Result<(), Box<dyn Error>> {
+        delete_db("Users", id).await
+    }
+
