@@ -22,7 +22,7 @@ const AUTH_URL = process.env.AUTH_URL || 'http://localhost:4001';
 
 // 3. CORS Configuration Middleware
 // This MUST be the first middleware to ensure all responses (including errors) carry CORS headers
-const allowedOrigins = new Set(['http://localhost', 'http://localhost:80', 'http://localhost:5173']);
+const allowedOrigins = new Set(['http://20.250.145.156', 'http://localhost', 'http://localhost:80', 'http://localhost:5173']);
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;

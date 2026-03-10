@@ -19,8 +19,8 @@ services:
     build:
       context: ./webapp
       args:
-        - VITE_API_URL=http://localhost:3000
-        - VITE_GAMEMANAGER_URL=http://localhost:5000
+        - VITE_API_URL=http://${DEPLOY_HOST}:3000
+        - VITE_GAMEMANAGER_URL=http://${DEPLOY_HOST}:5000
     container_name: webapp
     image: ghcr.io/arquisoft/yovi_en2a-webapp:latest
     ports:
