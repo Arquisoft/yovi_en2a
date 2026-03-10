@@ -1,6 +1,8 @@
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 // Response: match_id:string
 export function createMatch(player1: string, player2: string, size: number) {
-  return fetch("http://localhost:3000/game/new", {
+  return fetch(`${API_URL}/game/new`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -19,7 +21,7 @@ export function createMatch(player1: string, player2: string, size: number) {
 
 // Response: match_id:string game_over:boolean
 export function sendMove(matchId: string, x: number, y: number, z: number) {
-  return fetch("http://localhost:3000/game/executeMove", {
+  return fetch(`${API_URL}/game/executeMove`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -40,7 +42,7 @@ export function sendMove(matchId: string, x: number, y: number, z: number) {
 
 // response: match_id:string, coordinates, game_over:boolean
 export function requestBotMove(matchId: string) {
-  return fetch("http://localhost:3000/game/reqBotMove", {
+  return fetch(`${API_URL}/game/reqBotMove`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -72,7 +74,7 @@ export function requestBotMove(matchId: string) {
   }
 
     export function updateScore(playerid: string, username: string, is_win: boolean, time: number) {
-  return fetch("http://localhost:3000/game/updateScore", {
+  return fetch(`${API_URL}/game/updateScore`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -96,7 +98,7 @@ export function requestBotMove(matchId: string) {
 }
 
 export function saveMatch(matchId: string, player1id: string, player2id: string, result: string, time: number) {
-  return fetch("http://localhost:3000/game/saveMatch", {
+  return fetch(`${API_URL}/game/saveMatch`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

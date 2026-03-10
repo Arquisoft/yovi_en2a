@@ -16,29 +16,29 @@ static INIT_CRYPTO: Once = Once::new();
 /// It also handles the 'Ring' crypto provider setup which was a bit of a headache
 /// because of how modern Rust crates handle TLS.
 async fn get_connection() -> Result<FirestoreDb, Box<dyn Error>> {
-    // Try to load the .env file if it exists
-    let _ = dotenv();
-
-    // This block only runs the very first time the function is called.
-    // Rust is very strict about crypto providers now!
-    INIT_CRYPTO.call_once(|| {
-        let _ = rustls::crypto::ring::default_provider().install_default();
-
-        #[cfg(feature = "rust_crypto")]
-        {
-            let _ = jsonwebtoken::crypto::CryptoProvider::install_default();
+        // Try to load the .env file if it exists
+        match dotenvy::dotenv() {
+            Ok(_) => println!("INFO: Archivo .env cargado correctamente."),
+            Err(e) => println!("ADVERTENCIA: No se pudo cargar el .env. Detalle: {}", e),
         }
-    });
 
-    // Check if the project ID is in our environment variables
-    let project_id = env::var("FIREBASE_PROJECT_ID")
-        .map_err(|_| "Environment variable FIREBASE_PROJECT_ID is not set")?;
+        // This block only runs the very first time the function is called.
+        // Rust is very strict about crypto providers now!
+        INIT_CRYPTO.call_once(|| {
+            let provider = rustls::crypto::ring::default_provider();
+            let _ = provider.install_default();
+            println!("INFO: Global CryptoProvider (Ring) installed.");
+        });
 
-    // Create the actual client
-    let db = FirestoreDb::new(&project_id).await?;
+        // Check if the project ID is in our environment variables
+        let project_id = env::var("FIREBASE_PROJECT_ID")
+            .map_err(|_| "Environment variable FIREBASE_PROJECT_ID is not set")?;
 
-    Ok(db)
-}
+        // Create the actual client
+        let db = FirestoreDb::new(&project_id).await?;
+
+        Ok(db)
+    }
 
 
 /// Fetches a single document from a Firestore collection and maps it to a type `T`.
