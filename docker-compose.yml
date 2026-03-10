@@ -91,6 +91,7 @@ services:
 
   auth-engine:
     build: ./userAuthentification
+    image: ghcr.io/arquisoft/yovi_en2a-auth-engine:latest
     container_name: userAuthentification
     expose:
       - "4001"
