@@ -93,19 +93,19 @@ GameMgr -down-> Redis : Cache State
 @enduml
 ....
 Motivation::
-The **Gamey System** divided so that it has an only entry point and (not counting the Redis cache) there is no direct connection among the internal elements and only. As so there is only 1 frontend element (**WebApp**) whilst there exists 3 backend elements, one service (**Gamey**) and two microservices (**Auth** and **Game Manager**).
+The Gamey System is decomposed into specialized services to ensure a clear separation of concerns. By utilizing a central Gateway (Users), the system provides a single entry point for the Webapp and API requests. This architecture isolates the Gamey Engine from session management, while Auth and Game Manager handle microservice-specific tasks, using Redis for high-speed state caching and Firebase for long-term persistence.
 
 Contained Building Blocks::
 [cols="1,2" options="header"]
 |===
-| **Name** | **Responsibility**
-| **Users** | Main gateway of the system, all the requests.
-| **WebApp** | Frontend of the application.
-| **Auth Engine** | Microservice with the purpose of communicating with the database to ensure.
-| **Game Manager** | Custom and developed layers of the application with orchestrated services.
-| **Gamey** | Custom and developed layers of the application with orchestrated services.
-| **Redis** | Custom and developed layers of the application with orchestrated services.
-| **Firebase** | External black box providing Authentication and cloud-based data storage.
+| Name | Responsibility
+| Users | The central API Gateway that orchestrates and routes all incoming traffic to the appropriate internal services.
+| Webapp | The frontend user interface providing the visual representation of the game and user dashboard.
+| Auth Engine | Dedicated microservice that interacts with Firebase to manage user identity, tokens, and authentication flows.
+| Game Manager | Orchestration service responsible for handling match state, player matchmaking, and synchronizing data with Firebase.
+| Gamey | The core game engine service that executes game rules and handles CPU-intensive mechanics.
+| Redis | In-memory data store used for low-latency caching of active game states and temporary session data.
+| Firebase | Third-party platform providing robust authentication and cloud-hosted NoSQL data storage.
 |===
 
 
@@ -154,3 +154,31 @@ Gateway -down-> G_BotSrv : Session Start
 Gateway -down-> G_CLI : Direct Commands
 @enduml
 ....
+== Whitebox Game Manager (Rust)
+Purpose/Responsibility::
+The Game Manager acts as the bridge between the high-level game requests and the data persistence layers. It translates business logic into actionable data operations across NoSQL and cache environments.
+
+Contained Building Blocks (Components)::
+[cols="1,2" options="header"]
+|===
+| Name | Responsibility
+| REST API (api_rest.rs) | Exposes endpoints for match management and receives commands from the Gateway.
+| Data Layer (data.rs) | Contains the core business logic and decides whether to fetch data from cache or primary storage.
+| Firebase Client (firebase.rs) | Handles the low-level communication and serialization for Firebase Firestore and Auth.
+| Redis Client (redis_client.rs) | Manages the connection pool and CRUD operations for the volatile Redis cache.
+|===
+
+== Whitebox Gamey Engine (Rust)
+Purpose/Responsibility::
+This is the computational heart of the ecosystem. It is designed to be highly modular, allowing for different interfaces (CLI or Bot Server) to interact with the same deterministic game logic.
+
+Contained Building Blocks (Components)::
+[cols="1,2" options="header"]
+|===
+| Name | Responsibility
+| Core Engine (core/) | Implements the fundamental rules, state machine, and move validation of the game.
+| Bot Server (bot_server/) | A wrapper that allows the engine to be played against or by automated agents over a network.
+| Bot Logic (bot/) | Contains the algorithms and decision-making heuristics for AI players.
+| Notation (notation/) | Handles the parsing and generation of game-specific notation (e.g., FEN or PGN equivalents).
+| CLI (cli.rs) | Provides a command-line interface for direct interaction with the engine for debugging or standalone play.
+|===
