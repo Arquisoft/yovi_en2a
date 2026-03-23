@@ -7,101 +7,150 @@ ifndef::imagesdir[:imagesdir: ../images]
 
 === Whitebox Overall System
 
-[plantuml, target=level1-overall, format=png]
+[plantuml, target=level1, format=png]
 ....
 @startuml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!define RECTANGLE_STYLE
+skinparam linetype ortho
+skinparam shadowing false
+skinparam roundcorner 5
 
-LAYOUT_WITH_LEGEND()
+title Gamey Ecosystem - Context (Level 1)
 
-title Building Block View (Level 1) - Gamey System with Firebase
+actor "Client / Player" as Client
+rectangle "Gamey System" as System #D3D3D3
+rectangle "Firebase" as Firebase #F2F2F2
 
-Person(player, "Player", "User interacting with the game and managing their profile.")
-System_Ext(firebase, "Firebase", "External platform providing Authentication, Firestore (NoSQL), and Hosting.")
-
-System_Boundary(c1, "Gamey Ecosystem") {
-    Container(webapp, "Webapp", "React, TS, Vite", "Main UI. Handles real-time game rendering and Firebase SDK integration.")
-    Container(users_svc, "Users Service", "Node.js, Express", "Internal management service. Validates tokens via Firebase Admin SDK.")
-    Container(gamey_engine, "Game Engine", "Rust", "High-performance core for game rules, notations, and bot orchestration.")
-}
-
-Rel(player, webapp, "Uses", "HTTPS")
-Rel(webapp, firebase, "Auth / Sync data", "Firebase SDK (Web)")
-Rel(webapp, users_svc, "Business requests", "JSON/HTTPS")
-Rel(webapp, gamey_engine, "Submits moves", "WebSockets/gRPC")
-Rel(users_svc, firebase, "Verify tokens / Admin DB access", "Firebase Admin SDK")
+Client -right-> System : Uses / Plays
+System -right-> Firebase : Auth & Persistence
 @enduml
 ....
 
-
-
 Motivation::
-The system uses a hybrid backend approach. **Firebase** is used as a Third-Party Building Block to offload identity management and real-time state persistence. This allows the **Users Service** to focus on custom business logic and the **Game Engine** (Rust) to handle CPU-intensive game mechanics without managing user sessions directly.
+The system uses a hybrid backend approach. **Firebase** is used as a Third-Party Building Block to offload identity management and persistence. This allows the **Gamey system** to focus on custom business logic and the handle CPU-intensive game mechanics without managing user sessions directly.
 
 Contained Building Blocks::
 [cols="1,2" options="header"]
 |===
 | **Name** | **Responsibility**
-| **Webapp** | Frontend SPA that coordinates User-Firebase-Engine interactions.
-| **Users Service** | Backend orchestration, monitoring, and providing an OpenAPI-compliant gateway for administrative tasks.
-| **Game Engine** | High-speed game processing, bot AI management, and move validation.
+| **Gamey System** | Custom and developed layers of the application with orchestrated services.
 | **Firebase** | External black box providing Authentication and cloud-based data storage.
 |===
 
-Important Interfaces::
-* **Firebase SDK Interface:** Client-side link for Auth and Realtime updates.
-* **Gamey WebSocket/gRPC:** Low-latency interface for game move submission to the Rust engine.
-
-==== Webapp
+==== Gamey System
 Purpose/Responsibility::
-Coordinates the user experience. It uses Firebase for Authentication and the Game Engine for the actual gaming logic.
-Interface(s)::
-React Hooks for Firebase; REST client for Users Service.
-Directory/File Location::
-`/webapp`
+Coordinates the user experience and provides a single gateway that communicates the backend and frontend interfaces.
 
-==== Users Service
+==== Firebase
 Purpose/Responsibility::
-Provides a secure layer for user-related logic that shouldn't live on the client. It uses the Firebase Admin SDK to verify identities.
-Interface(s)::
-Exposes endpoints defined in `openapi.yaml`.
-Directory/File Location::
-`/users`
+Provides a secure and external layer for handling the Data Base.
 
 ==== Game Engine
 Purpose/Responsibility::
 The computational core. It is agnostic of user identity (delegated to other blocks) and focuses on the game rules.
-Directory/File Location::
-`/gamey`
+
 
 === Level 2
 
 ==== White Box _Game Engine (Rust)_
 
-[plantuml, target=level2-gamey, format=png]
+[plantuml, target=level2, format=png]
 ....
 @startuml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
-
-Container_Boundary(gamey_internal, "Game Engine (Rust)") {
-    Component(core, "Core Logic", "Rust Mod", "State machine and rules.")
-    Component(notation, "Notation Parser", "Rust Mod", "Processes game notations (FEN/PGN).")
-    Component(bot_server, "Bot Manager", "Rust Mod", "Handles AI agent lifecycle.")
-    Component(gamey_error, "Error Handler", "Rust Mod", "Domain-specific error types.")
+skinparam linetype ortho
+skinparam shadowing false
+skinparam rectangle {
+    BackgroundColor<<Internal>> #F9F9F9
+    BorderColor #333333
 }
 
-Rel(bot_server, core, "Queries rules")
-Rel(core, notation, "Serializes state")
-Rel(core, gamey_error, "Triggers")
+title Building Block View - Services (Level 2)
+
+rectangle "Whitebox Gamey Ecosystem" <<Internal>> {
+    ' Central Gateway
+    component [**Users**\n(API Gateway)] as Users #BDBDBD
+
+    ' Internal Services "Behind" the Gateway
+    component [**Webapp**\n(Frontend)] as Webapp #FFFFFF
+    component [**Auth Engine**] as Auth #FFFFFF
+    component [**Game Manager**] as GameMgr #FFFFFF
+    component [**Gamey**\n(Engine)] as Gamey #FFFFFF
+    database "Redis" as Redis #FFFFFF
+}
+database "Firebase" as Firebase #FFFFFF
+
+
+' Internal Routing (Behind Gateway)
+Users -up-> Webapp : Routes UI
+Users -left-> Auth : /api (Proxy)
+Users -right-> Gamey : Engine Tasks
+Users -down-> GameMgr : /game (Proxy)
+
+' Backend dependencies
+Auth -left-> Firebase : User
+GameMgr -right-> Firebase : Sync
+GameMgr -down-> Redis : Cache State
 @enduml
 ....
+Motivation::
+The **Gamey System** divided so that it has an only entry point and (not counting the Redis cache) there is no direct connection among the internal elements and only. As so there is only 1 frontend element (**WebApp**) whilst there exists 3 backend elements, one service (**Gamey**) and two microservices (**Auth** and **Game Manager**).
 
-The **Game Engine** is organized as a modular Rust crate. The `core` module is strictly separated from the `bot_server` to allow for local CLI usage or networked server usage.
+Contained Building Blocks::
+[cols="1,2" options="header"]
+|===
+| **Name** | **Responsibility**
+| **Users** | Main gateway of the system, all the requests.
+| **WebApp** | Frontend of the application.
+| **Auth Engine** | Microservice with the purpose of communicating with the database to ensure.
+| **Game Manager** | Custom and developed layers of the application with orchestrated services.
+| **Gamey** | Custom and developed layers of the application with orchestrated services.
+| **Redis** | Custom and developed layers of the application with orchestrated services.
+| **Firebase** | External black box providing Authentication and cloud-based data storage.
+|===
 
-==== White Box _Users Service (Node.js)_
-1. **users-service.js**: Main entry point using Express.
-2. **Firebase Admin Logic**: Middleware to intercept requests and validate Firebase JWT tokens.
-3. **monitoring/**: Dedicated module for service health and logging.
 
 === Level 3
-(Not really sure if it is even detailed)
+[plantuml, target=level3, format=png]
+....
+@startuml
+skinparam linetype ortho
+skinparam shadowing false
+skinparam component {
+    BackgroundColor #FFFFFF
+    BorderColor #666666
+}
+
+title Whitebox Detail - Components (Level 3)
+
+rectangle "Users (Gateway)" as Gateway #BDBDBD
+
+rectangle "Whitebox Game Manager" #E0E0E0 {
+    component [REST API\n(api_rest.rs)] as GM_API
+    component [Data Layer\n(data.rs)] as GM_Data
+    component [Firebase Client\n(firebase.rs)] as GM_Fire
+    component [Redis Client\n(redis_client.rs)] as GM_Redis
+
+    GM_API -down-> GM_Data
+    GM_Data -right-> GM_Fire
+    GM_Data -left-> GM_Redis
+}
+
+rectangle "Whitebox Gamey (Engine)" #E0E0E0 {
+    component [Core Engine\n(core/)] as G_Core
+    component [Bot Server\n(bot_server/)] as G_BotSrv
+    component [Bot Logic\n(bot/)] as G_Bot
+    component [Notation\n(notation/)] as G_Notation
+    component [CLI\n(cli.rs)] as G_CLI
+
+    G_BotSrv -down-> G_Core
+    G_BotSrv -right-> G_Bot
+    G_Core -down-> G_Notation
+    G_CLI -up-> G_Core
+}
+
+' Connections from Gateway
+Gateway -down-> GM_API : Match Management
+Gateway -down-> G_BotSrv : Session Start
+Gateway -down-> G_CLI : Direct Commands
+@enduml
+....
