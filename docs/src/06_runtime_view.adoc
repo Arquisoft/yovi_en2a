@@ -3,65 +3,155 @@ ifndef::imagesdir[:imagesdir: ../images]
 [[section-runtime-view]]
 == Runtime View
 
-
 ifdef::arc42help[]
 [role="arc42help"]
-****
+
 .Contents
-The runtime view describes concrete behavior and interactions of the system’s building blocks in form of scenarios from the following areas:
-
-* important use cases or features: how do building blocks execute them?
-* interactions at critical external interfaces: how do building blocks cooperate with users and neighboring systems?
-* operation and administration: launch, start-up, stop
-* error and exception scenarios
-
-Remark: The main criterion for the choice of possible scenarios (sequences, workflows) is their *architectural relevance*. It is *not* important to describe a large number of scenarios. You should rather document a representative selection.
+The runtime view describes concrete behavior and interactions of the system’s building blocks in form of scenarios.
 
 .Motivation
-You should understand how (instances of) building blocks of your system perform their job and communicate at runtime.
-You will mainly capture scenarios in your documentation to communicate your architecture to stakeholders that are less willing or able to read and understand the static models (building block view, deployment view).
+You should understand how building blocks of your system perform their job and communicate at runtime.
 
-.Form
-There are many notations for describing scenarios, e.g.
-
-* numbered list of steps (in natural language)
-* activity diagrams or flow charts
-* sequence diagrams
-* BPMN or EPCs (event process chains)
-* state machines
-* ...
-
-
-.Further Information
-
-See https://docs.arc42.org/section-6/[Runtime View] in the arc42 documentation.
-
-****
 endif::arc42help[]
 
-=== <Runtime Scenario 1>
+=== User Creation
+This scenario describes the registration of a new player. The Users Gateway receives the initial request and delegates the registration logic to the Auth Engine, which ensures the user is correctly persisted in the Firebase database.
 
+[plantuml, target=runtime_create_user, format=png]
+....
+@startuml
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
 
-* _<insert runtime diagram or textual description of the scenario>_
-* _<insert description of the notable aspects of the interactions between the
-building block instances depicted in this diagram.>_
+actor "Player" as Client
+participant "Users\n(Gateway)" as Gateway
+participant "Auth Engine" as Auth
+database "Firebase" as Firebase
 
-It is possible to use a sequence diagram:
+Client -> Gateway : POST /createuser
+note right of Gateway: Local processing\n& proxy preparation
+Gateway -> Auth : Proxy: /register (fixRequestBody)
+Auth -> Firebase : Store User Credentials
+Firebase --> Auth : Success
+Auth --> Gateway : 201 Created
+Gateway --> Client : 200 OK (Welcome Message)
+@enduml
+....
 
-[plantuml,"Sequence diagram",png]
-----
-actor Pelape
-actor Bob
-database Pod as "Bob's Pod"
-Pelape -> Bob: Authentication Request
-Bob --> Pelape: Authentication Response
-Pelape  --> Pod: Store route
-Pelape -> Bob: Another authentication Request
-Pelape <-- Bob: another authentication Response
-----
+=== User Login
+The login process emphasizes security by requiring a CSRF token validation at the Gateway level before any authentication logic is processed by the Auth Engine.
 
-=== <Runtime Scenario 2>
+CSRF Check: The Gateway compares the X-CSRF-Token header against the secure csrf_token cookie.
 
-=== ...
+Proxying: Upon validation, the request is proxied to the Auth service using fixRequestBody to maintain data integrity.
 
-=== <Runtime Scenario n>
+External Auth: The Auth Engine verifies the credentials against Firebase to grant access.
+
+[plantuml, target=runtime_login, format=png]
+....
+@startuml
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+
+actor "Player" as Client
+participant "Users\n(Gateway)" as Gateway
+participant "Auth Engine" as Auth
+database "Firebase" as Firebase
+
+Client -> Gateway : POST /api/login\nHeader: X-CSRF-Token
+Gateway -> Gateway : verifyCsrf()
+Gateway -> Auth : Proxy: /login (fixRequestBody)
+Auth -> Firebase : Verify Credentials
+Firebase --> Auth : User Profile / Token
+Auth --> Gateway : 200 OK (Session)
+Gateway --> Client : 200 OK
+@enduml
+....
+
+=== Match Creation
+This view illustrates how the system initializes a game session. The Users Gateway routes the request to the Game Manager, which prepares the environment for a new match.
+
+Resource Allocation: The Game Manager creates a unique match ID.
+
+Fast Persistence: The initial state is stored in Redis to allow for high-frequency updates during gameplay.
+
+[plantuml, target=runtime_create_game, format=png]
+....
+@startuml
+autonumber
+skinparam shadowing false
+
+actor "Player" as Client
+participant "Users\n(Gateway)" as Gateway
+participant "Game Manager" as GM
+database "Redis" as Redis
+
+Client -> Gateway : POST /game/create
+Gateway -> GM : Proxy: /create
+GM -> Redis : Initialize Match State (Cache)
+GM --> Gateway : 201 Created
+Gateway --> Client : Match ID
+@enduml
+....
+
+=== Player Move
+The player move scenario represents the core interactive loop of the application. It involves real-time validation and state synchronization across the engine and the cache.
+
+State Retrieval: The Game Manager pulls the current board status from Redis.
+
+Engine Validation: The Gamey Engine processes the move logic to ensure it follows game rules.
+
+Cache Update: The new state is pushed back to Redis for immediate availability.
+
+[plantuml, target=runtime_player_move, format=png]
+....
+@startuml
+autonumber
+skinparam shadowing false
+
+actor "Player" as Client
+participant "Users\n(Gateway)" as Gateway
+participant "Game Manager" as GM
+participant "Gamey\n(Engine)" as Engine
+database "Redis" as Redis
+
+Client -> Gateway : POST /game/move
+Gateway -> GM : Proxy: /move
+GM -> Redis : Get Current State
+GM -> Engine : Validate & Execute (Core Engine)
+Engine --> GM : New State / Validated
+GM -> Redis : Update State (Cache)
+GM --> Gateway : 200 OK
+Gateway --> Client : New Board State
+@enduml
+....
+
+=== Bot Move
+This scenario covers automated gameplay. It is typically triggered internally by the Game Manager once a player's turn is completed.
+
+Decision Making: The Bot Logic within the Engine calculates the optimal response.
+
+Asynchronous Sync: The resulting state is synchronized with the Redis cache so the player sees the bot's reaction upon their next refresh or through a socket.
+
+[plantuml, target=runtime_bot_move, format=png]
+....
+@startuml
+autonumber
+skinparam shadowing false
+
+participant "Game Manager" as GM
+participant "Gamey\n(Engine)" as Engine
+participant "Bot Logic" as Bot
+database "Redis" as Redis
+
+note over GM, Engine: Post-player move
+GM -> Engine : Request Bot Move (Bot Server)
+Engine -> Bot : Calculate Best Move
+Bot -> Engine : Return Move
+Engine -> Engine : Update Core State
+Engine --> GM : Bot Move Result
+GM -> Redis : Sync Bot State
+@enduml
+....
