@@ -1,40 +1,45 @@
-const getCookie = (name: string) => {
+const COOKIE_NAME = 'user';
+const COOKIE_MAX_AGE = 1800; // 30 minutes in seconds
+
+export interface UserCookieData {
+  username: string;
+  email: string;
+}
+
+const getCookie = (name: string): string | null => {
   const value = `; ${document.cookie}`;
   const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift();
+  if (parts.length === 2) return parts.pop()?.split(';').shift() ?? null;
   return null;
 };
 
-export function GetEmailFromCookie(): string {
-  const cookieValue = getCookie("user"); 
-
-  if (!cookieValue) {
-    return "";
-  }
-
+export function GetUserFromCookie(): UserCookieData | null {
+  const cookieValue = getCookie(COOKIE_NAME);
+  if (!cookieValue) return null;
   try {
-    const decodedCookie = decodeURIComponent(cookieValue);
-    const userObj = JSON.parse(decodedCookie);
-    
-    return userObj.email; 
-  } catch (e) {
-    console.warn("Error parseando la cookie para la base de datos:", e);
-    return decodeURIComponent(cookieValue);
+    return JSON.parse(decodeURIComponent(cookieValue));
+  } catch {
+    return null;
   }
 }
 
+export function GetEmailFromCookie(): string {
+  return GetUserFromCookie()?.email ?? '';
+}
+
 export function GetUsernameFromCookie(): string {
-    const cookieValue = getCookie("user"); 
+  return GetUserFromCookie()?.username ?? 'User';
+}
 
-    if (!cookieValue) {
-        return "User";
-    }
+export function IsLoggedIn(): boolean {
+  return GetUserFromCookie() !== null;
+}
 
-    try {
-        const userObj = JSON.parse(decodeURIComponent(cookieValue));
-        return userObj.username || "User";
-    } catch (error) {
-        console.error("Error al parsear el nombre de usuario:", error);
-        return "User"; 
-    }
+export function SetUserCookie(username: string, email: string): void {
+  const userData = JSON.stringify({ username, email });
+  document.cookie = `${COOKIE_NAME}=${encodeURIComponent(userData)}; path=/; max-age=${COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
+export function ClearUserCookie(): void {
+  document.cookie = `${COOKIE_NAME}=; path=/; max-age=0; SameSite=Lax`;
 }

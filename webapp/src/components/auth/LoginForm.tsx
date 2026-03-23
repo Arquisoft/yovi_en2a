@@ -1,14 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import styles from './AuthForm.module.css';
-
-// Función auxiliar para leer la cookie
-const getCookie = (name: string) => {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift();
-  return null;
-};
+import { IsLoggedIn, SetUserCookie } from '../../utils/CookieRetriever';
 
 const LoginForm: React.FC = () => {
   const navigate = useNavigate();
@@ -24,9 +17,7 @@ const LoginForm: React.FC = () => {
 
   // NUEVO: Comprobar si ya hay una sesión activa al cargar la página
   useEffect(() => {
-    const userCookie = getCookie("user");
-    if (userCookie) {
-      // Si la cookie existe, redirigimos inmediatamente
+    if (IsLoggedIn()) {
       navigate('/gameSelection');
     }
   }, [navigate]);
@@ -73,11 +64,7 @@ const LoginForm: React.FC = () => {
       const data = await res.json();
       
       if (res.ok) {
-        const userData = JSON.stringify({
-          username: data.username,
-          email: data.email
-        });
-        document.cookie = `user=${encodeURIComponent(userData)}; path=/; max-age=86400; SameSite=Lax`;
+        SetUserCookie(data.username, data.email);
 
         setResponseMessage(data.message);
         setTimeout(() => {

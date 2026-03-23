@@ -1,18 +1,15 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate hook
+import { useNavigate } from 'react-router-dom';
 import styles from './Settings.module.css';
 import { AudioSettings } from './settingsSections/AudioSettings';
 import { GameSettings } from './settingsSections/GameSettings';
 import { AccountSettings } from './settingsSections/AccountSettings';
+import { GetUserFromCookie } from '../../../utils/CookieRetriever';
 
 const SettingsMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
-  // Initialize the navigation hook
   const navigate = useNavigate();
 
-  // Read the user state from the browser's cookies instead of localStorage
-  const cookieMatch = document.cookie.match(/(?:^|; )user=([^;]*)/);
-  const savedUser = cookieMatch ? JSON.parse(decodeURIComponent(cookieMatch[1])) : null;
-  
+  const savedUser = GetUserFromCookie();
   const isLoggedIn = savedUser !== null;
   const username = isLoggedIn ? savedUser.username : "";
 

@@ -1,6 +1,7 @@
 import styles from './SettingsSection.module.css';
 import accountStyles from './AccountSettings.module.css';
 import type { SettingsSection } from "./SettingsStrategy";
+import { ClearUserCookie } from '../../../../utils/CookieRetriever';
 
 export class AccountSettings implements SettingsSection {
   id = 'account';
@@ -63,8 +64,8 @@ export class AccountSettings implements SettingsSection {
             id="logout-button"
             className={accountStyles.dangerBtn}
             onClick={() => {
-              document.cookie = "user=; path=/; max-age=0; SameSite=Lax;";
-              this.navigate("/"); 
+              ClearUserCookie();
+              this.navigate("/");
             }}
           >
             Log Out

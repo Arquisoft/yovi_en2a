@@ -26,18 +26,20 @@ const allowedOrigins = new Set(['http://20.250.145.156', 'http://localhost', 'ht
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  
+
   // If the origin is in our allowed list, we echo it back instead of using '*'
   if (allowedOrigins.has(origin)) {
     res.setHeader('Access-Control-Allow-Origin', origin);
+    // Credentials (cookies) require a specific origin, never a wildcard
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
   } else if (!origin && process.env.NODE_ENV !== 'production') {
-    // Allows server-to-server or Postman requests in dev
+    // Allows server-to-server or Postman requests in dev.
+    // No credentials header here: '*' and credentials:true is forbidden by the CORS spec.
     res.setHeader('Access-Control-Allow-Origin', '*');
   }
-  
+
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS,PUT,DELETE');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-CSRF-Token');
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
   
   // Handle Preflight: Browsers send OPTIONS before POST/PUT with custom headers
   if (req.method === 'OPTIONS') {

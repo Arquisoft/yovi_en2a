@@ -1,22 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styles from './UserMenu.module.css'; 
+import styles from './UserMenu.module.css';
+import { GetUserFromCookie, SetUserCookie, ClearUserCookie } from '../../../utils/CookieRetriever';
 
 const UserMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const navigate = useNavigate();
-  
-  // 1. Read user from cookies
-  const getCookieUser = () => {
-    const cookieMatch = document.cookie.match(/(?:^|; )user=([^;]*)/);
-    return cookieMatch ? JSON.parse(decodeURIComponent(cookieMatch[1])) : null;
-  };
 
-  const [user, setUser] = useState(getCookieUser());
+  const [user, setUser] = useState(GetUserFromCookie());
   const [newUsername, setNewUsername] = useState(user?.username || "");
   const [isEditing, setIsEditing] = useState(false);
 
   const handleLogout = () => {
-    document.cookie = "user=; path=/; max-age=0; SameSite=Lax;";
+    ClearUserCookie();
     navigate("/");
     onClose();
   };
@@ -24,11 +19,8 @@ const UserMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const handleSaveUsername = () => {
     if (!user) return;
     
-    // 2. Update local state and cookie
     const updatedUser = { ...user, username: newUsername };
-    const userDataString = JSON.stringify(updatedUser);
-    
-    document.cookie = `user=${encodeURIComponent(userDataString)}; path=/; max-age=86400; SameSite=Lax`;
+    SetUserCookie(updatedUser.username, updatedUser.email);
     
     setUser(updatedUser);
     setIsEditing(false);
