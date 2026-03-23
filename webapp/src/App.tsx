@@ -7,19 +7,22 @@ import LoginForm from './components/auth/LoginForm';
 import RegisterForm from './components/auth/RegisterForm';
 import GameWindow from './components/gameWindow/GameWindow';
 import ProtectedRoute from './components/ProtectedRoute';
+import { UserProvider } from './contexts/UserContext';
 
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<MainMenu />} />
-        <Route path="/login" element={<LoginForm/>}/>
-        <Route path="/register" element={<RegisterForm/>}/>
-        <Route path="/gameSelection" element={<ProtectedRoute><SelectionWindow/></ProtectedRoute>}/>
-        <Route path="/play/:size/:mode" element={<ProtectedRoute><GameWindow/></ProtectedRoute>}/>
-      </Routes>
-    </Router>
+    <UserProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<MainMenu />} />
+          <Route path="/login" element={<LoginForm/>}/>
+          <Route path="/register" element={<RegisterForm/>}/>
+          <Route path="/gameSelection" element={<ProtectedRoute><SelectionWindow/></ProtectedRoute>}/>
+          <Route path="/play/:size/:mode" element={<ProtectedRoute><GameWindow/></ProtectedRoute>}/>
+        </Routes>
+      </Router>
+    </UserProvider>
   );
 }
 

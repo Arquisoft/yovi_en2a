@@ -1,56 +1,47 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './UserMenu.module.css';
-import { GetUserFromCookie, SetUserCookie, ClearUserCookie } from '../../../utils/CookieRetriever';
+import { useUser } from '../../../contexts/UserContext';
 
 const UserMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   const navigate = useNavigate();
+  const { user, logout, updateUsername } = useUser();
 
-  const [user, setUser] = useState(GetUserFromCookie());
-  const [newUsername, setNewUsername] = useState(user?.username || "");
+  const [newUsername, setNewUsername] = useState(user?.username || '');
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleLogout = () => {
-    ClearUserCookie();
-    navigate("/");
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
     onClose();
   };
 
-  const handleSaveUsername = () => {
+  const handleSaveUsername = async () => {
     if (!user) return;
-    
-    const updatedUser = { ...user, username: newUsername };
-    SetUserCookie(updatedUser.username, updatedUser.email);
-    
-    setUser(updatedUser);
-    setIsEditing(false);
-    // Note: Here you would usually also call an API /api/updateUsername
+    try {
+      await updateUsername(newUsername);
+      setIsEditing(false);
+    } catch {
+      console.error('Failed to update username');
+    }
   };
 
-  // --- ESTADO 1: NO LOGUEADO (INVITADO) ---
   if (!user) {
     return (
       <div className="top-right-menu-overlay">
         <div className="top-right-menu-container">
-          {/* Reutilizamos el header exacto */}
           <header className={styles.header}>
             <h2>USER PROFILE</h2>
             <button className={styles.closeBtn} onClick={onClose}>✕</button>
           </header>
-
-          {/* Reutilizamos el body para mantener los paddings y alineación */}
           <div className={styles.body}>
             <div className={styles.guestMessageContainer}>
               <p className={styles.guestText}>You are not logged in yet.</p>
               <p className={styles.guestSubtext}>Log in to access your profile settings.</p>
             </div>
-            
-            <button 
-              className={styles.loginBtn} 
-              onClick={() => {
-                onClose(); // Cerramos el menú antes de navegar
-                navigate('/login');
-              }}
+            <button
+              className={styles.loginBtn}
+              onClick={() => { onClose(); navigate('/login'); }}
             >
               Go to Login
             </button>
@@ -60,7 +51,6 @@ const UserMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     );
   }
 
-  // --- ESTADO 2: LOGUEADO ---
   return (
     <div className="top-right-menu-overlay">
       <div className="top-right-menu-container">
@@ -68,20 +58,18 @@ const UserMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <h2>USER PROFILE</h2>
           <button className={styles.closeBtn} onClick={onClose}>✕</button>
         </header>
-
         <div className={styles.body}>
           <div className={styles.infoGroup}>
             <p>Email</p>
             <p>{user.email}</p>
           </div>
-
           <div className={styles.infoGroup}>
             <p>Username</p>
             {isEditing ? (
               <div className={styles.editRow}>
-                <input 
-                  type="text" 
-                  value={newUsername} 
+                <input
+                  type="text"
+                  value={newUsername}
                   onChange={(e) => setNewUsername(e.target.value)}
                   className={styles.input}
                 />
@@ -95,7 +83,6 @@ const UserMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               </div>
             )}
           </div>
-
           <button onClick={handleLogout} className={styles.logoutBtn}>
             Log Out
           </button>

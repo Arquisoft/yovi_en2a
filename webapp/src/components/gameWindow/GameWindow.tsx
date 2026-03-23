@@ -9,7 +9,7 @@ import { createMatch, sendMove, requestBotMove, updateScore, saveMatch } from ".
 import { Game, toXYZ, fromXYZ } from "./Game";
 import { useTimer } from "./rightPanel/Timer";
 import modalStyles from "./GameModal.module.css";
-import { GetUserFromCookie } from "../../utils/CookieRetriever";
+import { useUser } from "../../contexts/UserContext";
 
 export type Move = {
   row: number;
@@ -28,11 +28,10 @@ const timeToSeconds = (timeStr: string) => {
 const GameWindow = () => {
   const { size: urlSize, mode: urlMode } = useParams();
   const navigate = useNavigate();
+  const { user: currentUser } = useUser();
 
   const size = urlSize ? Number.parseInt(urlSize, 10) : 8;
   const mode = urlMode;
-
-  const currentUser = GetUserFromCookie();
   const player1 = currentUser ? currentUser.username : "Player 1";
   const player2 = mode === "multi" ? "Player 2" : mode+"";
 

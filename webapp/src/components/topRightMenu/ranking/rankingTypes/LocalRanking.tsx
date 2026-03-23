@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import {GetEmailFromCookie, GetUsernameFromCookie} from "../../../../utils/CookieRetriever";
 import { useNavigate } from 'react-router-dom';
+import { useUser } from "../../../../contexts/UserContext";
 import type { RankingElementLocal } from "../rankingElements/RankingElementLocal";
 import RankingTableLocal from "../RankingTableLocal";
 import type { RankingTypeLocal } from "./RankingTypeLocal";
@@ -12,14 +12,13 @@ const LocalRankingFetcher = () => {
   const [loading, setLoading] = useState(true);
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
   const navigate = useNavigate();
+  const { user } = useUser();
 
   useEffect(() => {
     fetch(`${API_URL}/game/localRankings`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ user_id: GetEmailFromCookie() }) 
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user_id: user?.email ?? '' })
     })
       .then(res => res.json())
       .then(resData => {
@@ -39,7 +38,7 @@ const LocalRankingFetcher = () => {
     return <div className={styles.loadingContainer}>Cargando Historial...</div>;
   }
 
-  if (GetUsernameFromCookie() === "User") {
+  if (!user) {
     return (
       <div className={styles.notLoggedContainer}>
         <p className={styles.notLoggedText}>
@@ -55,7 +54,7 @@ const LocalRankingFetcher = () => {
     );
   }
 
-  return <RankingTableLocal data={data} title={`Personal Records (${GetUsernameFromCookie()})`} />;
+  return <RankingTableLocal data={data} title={`Personal Records (${user?.username ?? ''})`} />;
 };
 
 export class LocalRanking implements RankingTypeLocal {

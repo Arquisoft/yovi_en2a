@@ -1,5 +1,5 @@
 import "./RightPanel.css";
-import {GetUsernameFromCookie} from "../../../utils/CookieRetriever";
+import { useUser } from "../../../contexts/UserContext";
 
 type Props = {
   turn: 1 | 2;
@@ -10,6 +10,8 @@ type Props = {
 };
 
 export default function RightPanel({turn,time = "00:00",mode,}: Readonly<Props>) {
+  const { user } = useUser();
+  const player1Name = user?.username ?? 'Player 1';
   const isP1 = turn === 1;
 
   return (
@@ -33,7 +35,7 @@ export default function RightPanel({turn,time = "00:00",mode,}: Readonly<Props>)
           <div className="rightpanel-left">
             <span className="dot blue" />
             <div>
-              <div className="rightpanel-name">{GetUsernameFromCookie()}</div>
+              <div className="rightpanel-name">{player1Name}</div>
               <div className="rightpanel-meta">Human</div>
             </div>
           </div>
