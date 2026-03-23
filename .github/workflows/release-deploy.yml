@@ -193,7 +193,7 @@ jobs:
           command: |
             wget https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/master/docker-compose.yml -O docker-compose.yml
             docker compose down
+            FIREBASE_PROJECT_ID='${{ secrets.FIREBASE_PROJECT_ID }}' \
+            FIREBASE_CREDENTIALS_B64='${{ secrets.FIREBASE_CREDENTIALS_B64 }}' \
+            DEPLOY_HOST='${{ secrets.DEPLOY_HOST }}' \
             docker compose up -d --pull always
-        env:
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-          FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
