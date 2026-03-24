@@ -7,8 +7,6 @@ WORKDIR /app/game_manager
 
 # Copiamos el código de 'game_manager'
 COPY Cargo.toml Cargo.lock ./
-COPY .secrets/ ./.secrets/
-COPY .env ./.env
 COPY src/ ./src/
 
 RUN cargo build --release
@@ -24,9 +22,12 @@ RUN apt-get update && \
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/game_manager/target/release/game_manager .
-COPY --from=builder /app/game_manager/.env ./.env
-COPY --from=builder /app/game_manager/.secrets/ ./.secrets/
+
+# Copy the entrypoint script that decodes Firebase credentials from env var
+COPY entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 EXPOSE 5000
 
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["./game_manager", "--mode", "server", "--port", "5000"]

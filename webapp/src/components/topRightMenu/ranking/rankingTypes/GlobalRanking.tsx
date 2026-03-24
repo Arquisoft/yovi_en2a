@@ -9,10 +9,10 @@ import type { RankingTypeGlobal } from "./RankingTypeGlobal";
 const GlobalRankingFetcher = () => {
   const [data, setData] = useState<RankingElementGlobal[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
   useEffect(() => {
     // Hacemos GET a nuestro API Gateway (puerto 3000)
-    fetch('http://localhost:3000/game/bestTimes')
+    fetch(`${API_URL}/game/bestTimes`)
       .then(res => res.json())
       .then(resData => {
         // Mapeamos el Score de Rust (data.rs) al formato RankingElementGlobal

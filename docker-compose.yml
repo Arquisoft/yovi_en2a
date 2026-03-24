@@ -19,8 +19,8 @@ services:
     build:
       context: ./webapp
       args:
-        - VITE_API_URL=http://localhost:3000
-        - VITE_GAMEMANAGER_URL=http://localhost:5000
+        - VITE_API_URL=http://${DEPLOY_HOST}:3000
+        - VITE_GAMEMANAGER_URL=http://${DEPLOY_HOST}:5000
     container_name: webapp
     image: ghcr.io/arquisoft/yovi_en2a-webapp:latest
     ports:
@@ -64,8 +64,8 @@ services:
 
   game_manager:
     build: ./game_manager
-    container_name: game_manager
     image: ghcr.io/arquisoft/yovi_en2a-gamemanager:latest
+    container_name: game_manager
     expose:
       - "5000"
     environment:
@@ -73,6 +73,8 @@ services:
       - REDIS_HOST=redis_db
       - REDIS_PORT=6379
       - GAMEY=gamey
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - FIREBASE_CREDENTIALS_B64=${FIREBASE_CREDENTIALS_B64}
     depends_on:
       - redis_db
       - gamey
@@ -91,9 +93,13 @@ services:
 
   auth-engine:
     build: ./userAuthentification
+    image: ghcr.io/arquisoft/yovi_en2a-auth-engine:latest
     container_name: userAuthentification
     expose:
       - "4001"
+    environment:
+      - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
+      - FIREBASE_CREDENTIALS_B64=${FIREBASE_CREDENTIALS_B64}
     networks:
       - monitor-net
 

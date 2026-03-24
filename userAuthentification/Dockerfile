@@ -5,8 +5,6 @@ WORKDIR /app/userAuthentification
 
 # Copy Cargo.toml and Cargo.lock
 COPY Cargo.toml Cargo.lock ./
-COPY .secrets/ ./.secrets/
-COPY .env ./.env
 COPY src/ ./src/
 
 # Build the application
@@ -25,11 +23,14 @@ RUN apt-get update && \
 
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/userAuthentification/target/release/userAuthentification .
-COPY --from=builder /app/userAuthentification/.env ./.env
-COPY --from=builder /app/userAuthentification/.secrets/ ./.secrets/
+
+# Copy the entrypoint script that decodes Firebase credentials from env var
+COPY entrypoint.sh /entrypoint.sh
+RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 
 # Expose the port userAuthentification will listen on
 EXPOSE 4001
 
+ENTRYPOINT ["/entrypoint.sh"]
 # Run the userAuthentification server
 CMD ["./userAuthentification", "--mode", "server", "--port", "4001"]

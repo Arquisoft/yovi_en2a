@@ -7,6 +7,7 @@ Given('the register page is open', async function () {
   await page.goto('http://localhost:5173')
 })
 
+
 When('I enter {string} as the username and submit', async function (username) {
   const page = this.page
   if (!page) throw new Error('Page not initialized')
@@ -21,3 +22,4 @@ Then('I should see a welcome message containing {string}', async function (expec
   const text = await page.textContent('.success-message')
   assert.ok(text && text.includes(expected), `Expected success message to include "${expected}", got: "${text}"`)
 })
+

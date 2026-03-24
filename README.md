@@ -1,5 +1,7 @@
 # yovi_en2a - Game Y at UniOvi
 
+[Deployment Link](http://20.250.145.156/)
+
 [![Release — Test, Build, Publish, Deploy](https://github.com/arquisoft/yovi_en2a/actions/workflows/release-deploy.yml/badge.svg)](https://github.com/arquisoft/yovi_en2a/actions/workflows/release-deploy.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Arquisoft_yovi_en2a&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Arquisoft_yovi_en2a)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Arquisoft_yovi_en2a&metric=coverage)](https://sonarcloud.io/summary/new_code?id=Arquisoft_yovi_en2a)
@@ -11,7 +13,6 @@ This project is a template with some basic functionality for the ASW labs.
 |Jaime Alonso Fernández | <a href="https://github.com/megastacks13"><img src="https://img.shields.io/badge/Jaime%20Alonso-blue"></a> | UO294024@uniovi.es |
 |Pelayo Pérez Cueto|<a href="https://github.com/PelayoPerez"><img src="https://img.shields.io/badge/Pelayo%20Pérez-yellow"></a>|UO295426@uniovi.es |
 |Ana Calleja Ramón | <a href="https://github.com/AnaCR22"><img src="https://img.shields.io/badge/Ana%20Calleja-purple"></a>|UO300568@uniovi.es |
-|David García Weiss|<a href="https://github.com/uodgw"><img src="https://img.shields.io/badge/David%20García-orange"></a>|UO289899@uniovi.es |
 |Matías Valle Trapiella|<a href="https://github.com/uo300652"><img src="https://img.shields.io/badge/Matías%20Valle-darkgreen"></a>|UO300652@uniovi.es |
 
 ## Project Structure

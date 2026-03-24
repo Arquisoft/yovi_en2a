@@ -10,11 +10,11 @@ import styles from './LocalRanking.module.css';
 const LocalRankingFetcher = () => {
   const [data, setData] = useState<RankingElementLocal[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch('http://localhost:3000/game/localRankings', {
+    fetch(`${API_URL}/game/localRankings`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
