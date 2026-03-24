@@ -5,6 +5,11 @@ WORKDIR /app/userAuthentification
 
 # Copy Cargo.toml and Cargo.lock
 COPY Cargo.toml Cargo.lock ./
+<<<<<<< HEAD
+=======
+COPY .secrets/ ./.secrets/
+COPY .env ./.env
+>>>>>>> dev
 COPY src/ ./src/
 
 # Build the application
