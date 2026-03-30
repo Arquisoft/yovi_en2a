@@ -63,7 +63,6 @@ services:
       - monitor-net
 
   game_manager:
-    build: ./game_manager
     image: ghcr.io/arquisoft/yovi_en2a-gamemanager:latest
     container_name: game_manager
     expose:
@@ -74,7 +73,9 @@ services:
       - REDIS_PORT=6379
       - GAMEY=gamey
       - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
-      - FIREBASE_CREDENTIALS_B64=${FIREBASE_CREDENTIALS_B64}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
+    volumes:
+      - ~/.secrets/firebase-credentials.json:/app/credentials.json:ro
     depends_on:
       - redis_db
       - gamey
@@ -92,14 +93,15 @@ services:
       - redis_data:/data
 
   auth-engine:
-    build: ./userAuthentification
     image: ghcr.io/arquisoft/yovi_en2a-auth-engine:latest
     container_name: userAuthentification
     expose:
       - "4001"
     environment:
       - FIREBASE_PROJECT_ID=${FIREBASE_PROJECT_ID}
-      - FIREBASE_CREDENTIALS_B64=${FIREBASE_CREDENTIALS_B64}
+      - GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
+    volumes:
+      - ~/.secrets/firebase-credentials.json:/app/credentials.json:ro
     networks:
       - monitor-net
 

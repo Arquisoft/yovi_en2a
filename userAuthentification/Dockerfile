@@ -24,13 +24,8 @@ RUN apt-get update && \
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/userAuthentification/target/release/userAuthentification .
 
-# Copy the entrypoint script that decodes Firebase credentials from env var
-COPY entrypoint.sh /entrypoint.sh
-RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
-
 # Expose the port userAuthentification will listen on
 EXPOSE 4001
 
-ENTRYPOINT ["/entrypoint.sh"]
 # Run the userAuthentification server
 CMD ["./userAuthentification", "--mode", "server", "--port", "4001"]
