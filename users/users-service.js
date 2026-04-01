@@ -145,20 +145,19 @@ app.post('/api/logout', verifyCsrf, async (req, res) => {
   res.json({ message: 'Logged out' });
 });
 
-// LOGIN — calls auth service, creates server-side session in Redis on success
-app.post('/api/login', verifyCsrf, async (req, res) => {
-  const { email } = req.body;
-
+// Shared helper: calls an auth endpoint, creates a session on success, and sends the response.
+// onFailure maps the failed response to an error message string.
+async function handleAuthRequest(req, res, tag, authPath, sessionFailMsg, onFailure) {
   let response, data;
   try {
-    response = await fetch(`${AUTH_URL}/login`, {
+    response = await fetch(`${AUTH_URL}${authPath}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req.body)
     });
     data = await response.json();
   } catch (err) {
-    console.error(`[LOGIN] Auth service unreachable for ${email}: ${err.message}`);
+    console.error(`[${tag}] Auth service unreachable: ${err.message}`);
     return res.status(500).json({ error: 'Unable to reach the authentication service. Please try again later.' });
   }
 
@@ -166,54 +165,37 @@ app.post('/api/login', verifyCsrf, async (req, res) => {
     try {
       const sessionId = await createSession({ username: data.username, email: data.email });
       res.cookie('sessionId', sessionId, SESSION_COOKIE_OPTIONS);
-      console.log('[LOGIN] Success');
+      console.log(`[${tag}] Success`);
     } catch (err) {
-      console.error(`[LOGIN] Session creation failed for ${email}: ${err.message}`);
-      return res.status(500).json({ error: 'Login succeeded but session could not be created. Please try again.' });
+      console.error(`[${tag}] Session creation failed: ${err.message}`);
+      return res.status(500).json({ error: sessionFailMsg });
     }
   } else {
-    console.warn(`[LOGIN] Failed — HTTP ${response.status}`);
-    data.error = response.status === 401
-      ? 'Invalid email or password.'
-      : 'Login failed. Please try again.';
+    console.warn(`[${tag}] Failed — HTTP ${response.status}`);
+    data.error = onFailure(response, data);
   }
   res.status(response.status).json(data);
-});
+}
+
+// LOGIN — calls auth service, creates server-side session in Redis on success
+app.post('/api/login', verifyCsrf, (req, res) =>
+  handleAuthRequest(req, res, 'LOGIN', '/login',
+    'Login succeeded but session could not be created. Please try again.',
+    (response) => response.status === 401
+      ? 'Invalid email or password.'
+      : 'Login failed. Please try again.'
+  )
+);
 
 // REGISTER — calls auth service, creates server-side session in Redis on success
-app.post('/api/register', verifyCsrf, async (req, res) => {
-  const { email } = req.body;
-
-  let response, data;
-  try {
-    response = await fetch(`${AUTH_URL}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body)
-    });
-    data = await response.json();
-  } catch (err) {
-    console.error(`[REGISTER] Auth service unreachable for ${email}: ${err.message}`);
-    return res.status(500).json({ error: 'Unable to reach the authentication service. Please try again later.' });
-  }
-
-  if (response.ok) {
-    try {
-      const sessionId = await createSession({ username: data.username, email: data.email });
-      res.cookie('sessionId', sessionId, SESSION_COOKIE_OPTIONS);
-      console.log('[REGISTER] Success');
-    } catch (err) {
-      console.error(`[REGISTER] Session creation failed for ${email}: ${err.message}`);
-      return res.status(500).json({ error: 'Registration succeeded but session could not be created. Please try again.' });
-    }
-  } else {
-    console.warn(`[REGISTER] Failed — HTTP ${response.status}`);
-    data.error = data.error?.toLowerCase().includes('already exists')
+app.post('/api/register', verifyCsrf, (req, res) =>
+  handleAuthRequest(req, res, 'REGISTER', '/register',
+    'Registration succeeded but session could not be created. Please try again.',
+    (_response, data) => data.error?.toLowerCase().includes('already exists')
       ? 'An account with this email already exists.'
-      : 'Registration failed. Please try again.';
-  }
-  res.status(response.status).json(data);
-});
+      : 'Registration failed. Please try again.'
+  )
+);
 
 // UPDATE USERNAME — updates the session data in Redis with the new username
 app.post('/api/update-username', verifyCsrf, async (req, res) => {
