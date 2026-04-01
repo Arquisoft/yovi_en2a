@@ -1,11 +1,10 @@
 import { render, screen, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, test, expect, vi, afterEach } from 'vitest'
-import { MemoryRouter } from 'react-router-dom' // <-- 1. Importar el Router
+import { MemoryRouter } from 'react-router-dom'
 import Ranking from '../components/topRightMenu/ranking/Ranking'
 import '@testing-library/jest-dom'
 
-// 2. Mockear react-router-dom para que los componentes hijos no exploten
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom')
@@ -14,6 +13,13 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   }
 })
+
+vi.mock('../contexts/UserContext', () => ({
+  useUser: vi.fn(() => ({
+    user: null, isLoggedIn: false, loading: false, error: null,
+    refreshUser: vi.fn(), logout: vi.fn(), updateUsername: vi.fn()
+  }))
+}))
 
 describe('Ranking Component', () => {
 

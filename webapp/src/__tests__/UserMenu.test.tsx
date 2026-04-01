@@ -5,12 +5,22 @@ import { describe, test, expect, vi, afterEach, beforeEach } from 'vitest';
 import UserMenu from '../components/topRightMenu/user/UserMenu';
 import '@testing-library/jest-dom';
 
-// Mock de navegación
+// Mock react-router-dom navigation
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return { ...actual as any, useNavigate: () => mockNavigate };
 });
+
+// Mock UserContext
+const mockLogout = vi.fn();
+const mockUpdateUsername = vi.fn();
+
+vi.mock('../contexts/UserContext', () => ({
+  useUser: vi.fn()
+}));
+
+import { useUser } from '../contexts/UserContext';
 
 describe('UserMenu Component', () => {
   const mockOnClose = vi.fn();
@@ -18,13 +28,18 @@ describe('UserMenu Component', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
     mockOnClose.mockClear();
-    // Limpiar cookies
-    document.cookie = "user=; path=/; max-age=0";
+    mockLogout.mockClear();
+    mockUpdateUsername.mockClear();
   });
 
   afterEach(cleanup);
 
-  test('renders guest state when no user cookie is present', () => {
+  test('renders guest state when no user is logged in', () => {
+    vi.mocked(useUser).mockReturnValue({
+      user: null, isLoggedIn: false, loading: false, error: null,
+      refreshUser: vi.fn(), logout: mockLogout, updateUsername: mockUpdateUsername
+    });
+
     render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
 
     expect(screen.getByText(/You are not logged in yet/i)).toBeInTheDocument();
@@ -32,6 +47,11 @@ describe('UserMenu Component', () => {
   });
 
   test('navigates to login and closes menu from guest state', async () => {
+    vi.mocked(useUser).mockReturnValue({
+      user: null, isLoggedIn: false, loading: false, error: null,
+      refreshUser: vi.fn(), logout: mockLogout, updateUsername: mockUpdateUsername
+    });
+
     const user = userEvent.setup();
     render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
 
@@ -42,8 +62,11 @@ describe('UserMenu Component', () => {
   });
 
   test('renders user info when logged in', () => {
-    const userData = JSON.stringify({ email: 'pablo@test.com', username: 'Pablo' });
-    document.cookie = `user=${encodeURIComponent(userData)}; path=/`;
+    vi.mocked(useUser).mockReturnValue({
+      user: { email: 'pablo@test.com', username: 'Pablo' },
+      isLoggedIn: true, loading: false, error: null,
+      refreshUser: vi.fn(), logout: mockLogout, updateUsername: mockUpdateUsername
+    });
 
     render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
 
@@ -53,54 +76,60 @@ describe('UserMenu Component', () => {
   });
 
   test('handles logout correctly', async () => {
-    const user = userEvent.setup();
-    const userData = JSON.stringify({ email: 'pablo@test.com', username: 'Pablo' });
-    document.cookie = `user=${encodeURIComponent(userData)}; path=/`;
+    mockLogout.mockResolvedValue(undefined);
+    vi.mocked(useUser).mockReturnValue({
+      user: { email: 'pablo@test.com', username: 'Pablo' },
+      isLoggedIn: true, loading: false, error: null,
+      refreshUser: vi.fn(), logout: mockLogout, updateUsername: mockUpdateUsername
+    });
 
+    const user = userEvent.setup();
     render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
 
     await user.click(screen.getByRole('button', { name: /Log Out/i }));
 
-    // Verificamos que se borra la cookie (max-age=0 o valor vacío)
-    expect(document.cookie).not.toContain('Pablo');
+    expect(mockLogout).toHaveBeenCalled();
     expect(mockNavigate).toHaveBeenCalledWith('/');
     expect(mockOnClose).toHaveBeenCalled();
   });
 
   test('allows editing and saving the username', async () => {
-    const user = userEvent.setup();
-    const userData = JSON.stringify({ email: 'pablo@test.com', username: 'Pablo' });
-    document.cookie = `user=${encodeURIComponent(userData)}; path=/`;
+    mockUpdateUsername.mockResolvedValue(undefined);
+    vi.mocked(useUser).mockReturnValue({
+      user: { email: 'pablo@test.com', username: 'Pablo' },
+      isLoggedIn: true, loading: false, error: null,
+      refreshUser: vi.fn(), logout: mockLogout, updateUsername: mockUpdateUsername
+    });
 
+    const user = userEvent.setup();
     render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
 
-    // 1. Entrar en modo edición
     await user.click(screen.getByRole('button', { name: /Edit/i }));
-    
+
     const input = screen.getByRole('textbox');
     expect(input).toHaveValue('Pablo');
 
-    // 2. Cambiar nombre
     await user.clear(input);
     await user.type(input, 'NuevoNombre');
     await user.click(screen.getByRole('button', { name: /Save/i }));
 
-    // 3. Verificar cambios en pantalla y cookie
-    expect(screen.getByText('NuevoNombre')).toBeInTheDocument();
-    expect(decodeURIComponent(document.cookie)).toContain('NuevoNombre');
+    expect(mockUpdateUsername).toHaveBeenCalledWith('NuevoNombre');
   });
 
   test('can cancel editing without saving', async () => {
-    const user = userEvent.setup();
-    const userData = JSON.stringify({ email: 'pablo@test.com', username: 'Pablo' });
-    document.cookie = `user=${encodeURIComponent(userData)}; path=/`;
+    vi.mocked(useUser).mockReturnValue({
+      user: { email: 'pablo@test.com', username: 'Pablo' },
+      isLoggedIn: true, loading: false, error: null,
+      refreshUser: vi.fn(), logout: mockLogout, updateUsername: mockUpdateUsername
+    });
 
+    const user = userEvent.setup();
     render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
 
     await user.click(screen.getByRole('button', { name: /Edit/i }));
     const input = screen.getByRole('textbox');
     await user.type(input, 'Modificado');
-    
+
     await user.click(screen.getByRole('button', { name: /Cancel/i }));
 
     expect(screen.getByText('Pablo')).toBeInTheDocument();

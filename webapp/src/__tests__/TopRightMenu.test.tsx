@@ -1,9 +1,16 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, test, expect } from 'vitest'
-import { MemoryRouter } from 'react-router-dom' 
+import { describe, test, expect, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import TopRightMenu from '../components/topRightMenu/TopRightMenu'
 import '@testing-library/jest-dom'
+
+vi.mock('../contexts/UserContext', () => ({
+  useUser: vi.fn(() => ({
+    user: null, isLoggedIn: false, loading: false, error: null,
+    refreshUser: vi.fn(), logout: vi.fn(), updateUsername: vi.fn()
+  }))
+}))
 
 describe('TopRightMenu Component', () => {
   

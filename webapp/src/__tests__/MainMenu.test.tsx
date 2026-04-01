@@ -17,6 +17,13 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+vi.mock('../contexts/UserContext', () => ({
+  useUser: vi.fn(() => ({
+    user: null, isLoggedIn: false, loading: false, error: null,
+    refreshUser: vi.fn(), logout: vi.fn(), updateUsername: vi.fn()
+  }))
+}))
+
 describe('MainMenu Component', () => {
   
   // Clear the mock before each test to ensure a clean slate
@@ -51,9 +58,8 @@ describe('MainMenu Component', () => {
 
     const guestBtn = screen.getByRole('button', { name: /play as guest/i })
     await user.click(guestBtn)
-    
-    // Verify navigation for guest play
-    // Adjust '/game' or '/selection' based on your actual route!
-    expect(mockNavigate).toHaveBeenCalledWith('/gameSelection')
+
+    // Verify navigation for guest play (passes state: { guest: true })
+    expect(mockNavigate).toHaveBeenCalledWith('/gameSelection', { state: { guest: true } })
   })
 })
