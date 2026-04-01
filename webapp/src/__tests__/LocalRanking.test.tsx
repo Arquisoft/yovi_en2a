@@ -88,4 +88,32 @@ describe('LocalRanking Strategy & Fetcher', () => {
     expect(screen.getByText('BotLevel3')).toBeInTheDocument()
     expect(screen.getByText('WIN')).toBeInTheDocument()
   })
+
+  test('handles fetch error gracefully and still stops loading', async () => {
+    vi.mocked(useUser).mockReturnValue({
+      user: { username: 'ProGamer', email: 'pro@gamer.com' },
+      isLoggedIn: true,
+      loading: false,
+      error: null,
+      refreshUser: vi.fn(),
+      logout: vi.fn(),
+      updateUsername: vi.fn()
+    })
+
+    globalThis.fetch = vi.fn().mockRejectedValueOnce(new Error('Network error'))
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const strategy = new LocalRanking()
+    render(<MemoryRouter>{strategy.render()}</MemoryRouter>)
+
+    await waitFor(() => {
+      expect(screen.queryByText(/Cargando Historial/i)).not.toBeInTheDocument()
+    })
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('Error fetching local history:'),
+      expect.any(Error)
+    )
+    consoleSpy.mockRestore()
+  })
 })

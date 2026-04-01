@@ -2,7 +2,7 @@ import { render, screen, cleanup, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import LoginForm from '../components/auth/LoginForm'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest' 
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import '@testing-library/jest-dom'
 
 // 1. Mock react-router-dom to track navigation
@@ -15,6 +15,14 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   }
 })
+
+const mockRefreshUser = vi.fn().mockResolvedValue(undefined)
+vi.mock('../contexts/UserContext', () => ({
+  useUser: vi.fn(() => ({
+    user: null, isLoggedIn: false, loading: false, error: null,
+    refreshUser: mockRefreshUser, logout: vi.fn(), updateUsername: vi.fn()
+  }))
+}))
 
 describe('LoginForm Full Coverage', () => {
   
@@ -106,7 +114,7 @@ describe('LoginForm Full Coverage', () => {
     render(<MemoryRouter><LoginForm /></MemoryRouter>)
     await fillOutForm(user, '2')
     await user.click(screen.getByRole('button', { name: /Login/i }))
-    expect(await screen.findByText(/Server error occurred/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Login failed. Please try again./i)).toBeInTheDocument()
   })
 
   test('handles network failures and generic exceptions', async () => {
@@ -118,7 +126,7 @@ describe('LoginForm Full Coverage', () => {
     render(<MemoryRouter><LoginForm /></MemoryRouter>)
     await fillOutForm(user, '3')
     await user.click(screen.getByRole('button', { name: /Login/i }))
-    expect(await screen.findByText(/Failed to fetch/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Could not connect to the server/i)).toBeInTheDocument()
 
     cleanup()
 
@@ -128,6 +136,6 @@ describe('LoginForm Full Coverage', () => {
     render(<MemoryRouter><LoginForm /></MemoryRouter>)
     await fillOutForm(user, '4')
     await user.click(screen.getByRole('button', { name: /Login/i }))
-    expect(await screen.findByText(/A network error occurred/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Could not connect to the server/i)).toBeInTheDocument()
   })
 })

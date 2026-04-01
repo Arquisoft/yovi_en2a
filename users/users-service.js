@@ -1,26 +1,16 @@
-const express = require('express');
-const { createProxyMiddleware, fixRequestBody } = require('http-proxy-middleware');
-const swaggerUi = require('swagger-ui-express');
-const fs = require('node:fs');
-const YAML = require('js-yaml');
-const promBundle = require('express-prom-bundle');
-const crypto = require('node:crypto');
-const cookieParser = require('cookie-parser');
-const Redis = require('ioredis');
+import express from 'express';
+import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
+import swaggerUi from 'swagger-ui-express';
+import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import YAML from 'js-yaml';
+import promBundle from 'express-prom-bundle';
+import crypto from 'node:crypto';
+import cookieParser from 'cookie-parser';
+import redisClient from './redis-client.js';
 
 const app = express();
 const port = 3000;
-
-// --- Redis client for server-side session storage ---
-const redisClient = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-  enableOfflineQueue: false // reject immediately if Redis is down, don't queue
-});
-
-redisClient.on('error', (err) => {
-  console.error('Redis error:', err.message);
-});
 
 const SESSION_TTL_SECONDS = 1800; // 30 minutes
 
@@ -145,20 +135,19 @@ app.post('/api/logout', verifyCsrf, async (req, res) => {
   res.json({ message: 'Logged out' });
 });
 
-// LOGIN — calls auth service, creates server-side session in Redis on success
-app.post('/api/login', verifyCsrf, async (req, res) => {
-  const { email } = req.body;
-
+// Shared helper: calls an auth endpoint, creates a session on success, and sends the response.
+// onFailure maps the failed response to an error message string.
+async function handleAuthRequest(req, res, tag, authPath, sessionFailMsg, onFailure) {
   let response, data;
   try {
-    response = await fetch(`${AUTH_URL}/login`, {
+    response = await fetch(`${AUTH_URL}${authPath}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(req.body)
     });
     data = await response.json();
   } catch (err) {
-    console.error(`[LOGIN] Auth service unreachable for ${email}: ${err.message}`);
+    console.error(`[${tag}] Auth service unreachable: ${err.message}`);
     return res.status(500).json({ error: 'Unable to reach the authentication service. Please try again later.' });
   }
 
@@ -166,54 +155,37 @@ app.post('/api/login', verifyCsrf, async (req, res) => {
     try {
       const sessionId = await createSession({ username: data.username, email: data.email });
       res.cookie('sessionId', sessionId, SESSION_COOKIE_OPTIONS);
-      console.log(`[LOGIN] Success: ${email}`);
+      console.log(`[${tag}] Success`);
     } catch (err) {
-      console.error(`[LOGIN] Session creation failed for ${email}: ${err.message}`);
-      return res.status(500).json({ error: 'Login succeeded but session could not be created. Please try again.' });
+      console.error(`[${tag}] Session creation failed: ${err.message}`);
+      return res.status(500).json({ error: sessionFailMsg });
     }
   } else {
-    console.warn(`[LOGIN] Failed for ${email} — HTTP ${response.status}: ${data.error}`);
-    data.error = response.status === 401
-      ? 'Invalid email or password.'
-      : 'Login failed. Please try again.';
+    console.warn(`[${tag}] Failed — HTTP ${response.status}`);
+    data.error = onFailure(response, data);
   }
   res.status(response.status).json(data);
-});
+}
+
+// LOGIN — calls auth service, creates server-side session in Redis on success
+app.post('/api/login', verifyCsrf, (req, res) =>
+  handleAuthRequest(req, res, 'LOGIN', '/login',
+    'Login succeeded but session could not be created. Please try again.',
+    (response) => response.status === 401
+      ? 'Invalid email or password.'
+      : 'Login failed. Please try again.'
+  )
+);
 
 // REGISTER — calls auth service, creates server-side session in Redis on success
-app.post('/api/register', verifyCsrf, async (req, res) => {
-  const { email } = req.body;
-
-  let response, data;
-  try {
-    response = await fetch(`${AUTH_URL}/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(req.body)
-    });
-    data = await response.json();
-  } catch (err) {
-    console.error(`[REGISTER] Auth service unreachable for ${email}: ${err.message}`);
-    return res.status(500).json({ error: 'Unable to reach the authentication service. Please try again later.' });
-  }
-
-  if (response.ok) {
-    try {
-      const sessionId = await createSession({ username: data.username, email: data.email });
-      res.cookie('sessionId', sessionId, SESSION_COOKIE_OPTIONS);
-      console.log(`[REGISTER] Success: ${email}`);
-    } catch (err) {
-      console.error(`[REGISTER] Session creation failed for ${email}: ${err.message}`);
-      return res.status(500).json({ error: 'Registration succeeded but session could not be created. Please try again.' });
-    }
-  } else {
-    console.warn(`[REGISTER] Failed for ${email} — HTTP ${response.status}: ${data.error}`);
-    data.error = data.error?.toLowerCase().includes('already exists')
+app.post('/api/register', verifyCsrf, (req, res) =>
+  handleAuthRequest(req, res, 'REGISTER', '/register',
+    'Registration succeeded but session could not be created. Please try again.',
+    (_response, data) => data.error?.toLowerCase().includes('already exists')
       ? 'An account with this email already exists.'
-      : 'Registration failed. Please try again.';
-  }
-  res.status(response.status).json(data);
-});
+      : 'Registration failed. Please try again.'
+  )
+);
 
 // UPDATE USERNAME — updates the session data in Redis with the new username
 app.post('/api/update-username', verifyCsrf, async (req, res) => {
@@ -265,10 +237,10 @@ app.use('/game', createProxyMiddleware({
   },
 }));
 
-if (require.main === module) {
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
   app.listen(port, () => {
     console.log(`User Service (API Gateway) listening at http://localhost:${port}`);
   });
 }
 
-module.exports = app;
+export default app;

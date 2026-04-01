@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { fetchCsrfToken } from '../security/useCsrf';
 
 export interface UserData {
@@ -74,8 +74,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     void refreshUser();
   }, [refreshUser]);
 
+  const contextValue = useMemo(
+    () => ({ user, isLoggedIn: user !== null, loading, error, refreshUser, logout, updateUsername }),
+    [user, loading, error, refreshUser, logout, updateUsername]
+  );
+
   return (
-    <UserContext.Provider value={{ user, isLoggedIn: user !== null, loading, error, refreshUser, logout, updateUsername }}>
+    <UserContext.Provider value={contextValue}>
       {children}
     </UserContext.Provider>
   );

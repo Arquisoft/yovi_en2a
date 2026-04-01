@@ -2,7 +2,7 @@ import { render, screen, cleanup } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import RegisterForm from '../components/auth/RegisterForm'
-import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest' 
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import '@testing-library/jest-dom'
 
 // Mock react-router-dom para evitar problemas con useNavigate
@@ -15,6 +15,14 @@ vi.mock('react-router-dom', async () => {
     useNavigate: () => mockNavigate,
   }
 })
+
+const mockRefreshUser = vi.fn().mockResolvedValue(undefined)
+vi.mock('../contexts/UserContext', () => ({
+  useUser: vi.fn(() => ({
+    user: null, isLoggedIn: false, loading: false, error: null,
+    refreshUser: mockRefreshUser, logout: vi.fn(), updateUsername: vi.fn()
+  }))
+}))
 
 describe('RegisterForm Full Coverage', () => {
   
@@ -111,7 +119,7 @@ describe('RegisterForm Full Coverage', () => {
     render(<MemoryRouter><RegisterForm /></MemoryRouter>)
     await fillOutForm(user, '3')
     await user.click(screen.getByRole('button', { name: /Sign Up/i }))
-    expect(await screen.findByText(/dns failure/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Could not connect to the server/i)).toBeInTheDocument()
 
     cleanup()
 
@@ -121,8 +129,7 @@ describe('RegisterForm Full Coverage', () => {
     render(<MemoryRouter><RegisterForm /></MemoryRouter>)
     await fillOutForm(user, '4')
     await user.click(screen.getByRole('button', { name: /Sign Up/i }))
-    // Corregido: Tu componente dice "A network error occurred."
-    expect(await screen.findByText(/A network error occurred/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Could not connect to the server/i)).toBeInTheDocument()
   })
 
   test('ensures loading state is reset in finally block', async () => {

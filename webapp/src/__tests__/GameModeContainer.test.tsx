@@ -3,6 +3,7 @@ import { describe, test, expect, afterEach, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { GameModeContainer } from '../components/gameSelection/gameModes/GameModeContainer'
 import { NormalMode } from '../components/gameSelection/gameModes/NormalMode'
+import { LocalMode } from '../components/gameSelection/gameModes/LocalMode'
 import '@testing-library/jest-dom'
 
 // 1. Mockeamos la navegación porque ahora el botón PLAY usa React Router
@@ -60,5 +61,34 @@ describe('GameModeContainer Component', () => {
     
     expect(leftArrows[0]).toBeInTheDocument()
     expect(rightArrows[0]).toBeInTheDocument()
+  })
+
+  test('should handle size arrow clicks (increase and decrease)', () => {
+    const mode = new NormalMode()
+    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+
+    const rightArrows = screen.getAllByText('→')
+    const leftArrows = screen.getAllByText('←')
+
+    // Size arrows are at index 1 (index 0 is difficulty)
+    const initialSize = Number(screen.getByText(/^\d+$/).textContent)
+
+    fireEvent.click(rightArrows[1])
+    expect(Number(screen.getByText(/^\d+$/).textContent)).toBe(initialSize + 1)
+
+    fireEvent.click(leftArrows[1])
+    expect(Number(screen.getByText(/^\d+$/).textContent)).toBe(initialSize)
+  })
+
+  test('should navigate to /play/.../multi when mode has no difficulty (LocalMode)', () => {
+    const mode = new LocalMode()
+    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+
+    fireEvent.click(screen.getByText('PLAY'))
+
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.stringContaining('/multi'),
+      undefined
+    )
   })
 })
