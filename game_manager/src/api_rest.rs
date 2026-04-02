@@ -263,6 +263,7 @@ async fn save_match(
         result: payload.result,
         board_status,
         time: payload.time,
+        moves: payload.moves,
     };
 
     // 4. Lo guardamos en Firebase

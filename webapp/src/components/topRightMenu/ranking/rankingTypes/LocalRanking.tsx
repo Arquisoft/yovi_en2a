@@ -64,6 +64,8 @@ export const LocalRanking = () => {
           player2Name: match.player2id === user?.email ? (user?.username ?? match.player2id) : match.player2id,
           result: match.result,
           time: match.time ?? 0,
+          moves: match.moves ?? [],
+          boardSize: match.board_status?.size ?? 8,
         }));
         setData(mappedData);
       })

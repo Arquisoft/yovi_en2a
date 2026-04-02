@@ -86,7 +86,8 @@ const GameWindow = () => {
       updateScore(currentUser.email, currentUser.username, isPlayer1Winner, timeInSeconds);
 
       // 2. Guardar el historial de la partida (Requiere endpoint en Rust)
-      saveMatch(game.matchId, currentUser.email, player2, resultString, timeInSeconds);
+      const movesAsCoords = game.moves.map(m => toXYZ(m.row, m.col, game.size));
+      saveMatch(game.matchId, currentUser.email, player2, resultString, timeInSeconds, movesAsCoords);
     }
   };
 
