@@ -42,19 +42,28 @@ const mapToDisplayData = (scores: RawScore[], subTab: SubTabId): RankingElementG
       sorted = [...scores].sort((a, b) => b.wins - a.wins);
       break;
     case 'loses':
-      sorted = [...scores].sort((a, b) => b.losses - a.losses);
+      sorted = [...scores].sort((a, b) => a.losses - b.losses); // fewest losses first
       break;
   }
 
+  // Dense ranking: tied entries share the same position and the same top-3 highlight.
+  let pos = 0;
+  let lastVal: number | null = null;
+
   return sorted.map((score, index) => {
+    const val = subTab === 'time' ? score.best_time
+               : subTab === 'wins' ? score.wins
+               : score.losses;
+    if (index === 0 || val !== lastVal) { pos++; lastVal = val; }
+
     const name = score.username || score.playerid;
     switch (subTab) {
       case 'wins':
-        return { position: index + 1, player1Name: name, metric: String(score.wins),   metricName: 'WINS'  };
+        return { position: pos, player1Name: name, metric: String(score.wins),   metricName: 'WINS'  };
       case 'loses':
-        return { position: index + 1, player1Name: name, metric: String(score.losses), metricName: 'LOSES' };
+        return { position: pos, player1Name: name, metric: String(score.losses), metricName: 'LOSES' };
       default: // time
-        return new RankingElementTime(index + 1, name, formatTime(score.best_time));
+        return new RankingElementTime(pos, name, formatTime(score.best_time));
     }
   });
 };

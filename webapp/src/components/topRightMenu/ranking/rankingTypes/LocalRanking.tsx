@@ -22,9 +22,9 @@ type SubTabId = typeof LOCAL_SUBTABS[number]['id'];
 const getDisplayData = (data: RankingElementLocal[], subTab: SubTabId): RankingElementLocal[] => {
   switch (subTab) {
     case 'historial':
-      return data;
+      return [...data].reverse(); // most recent first
     case 'time':
-      return [...data].sort((a, b) => b.time - a.time);
+      return [...data].sort((a, b) => a.time - b.time); // shortest first
     case 'wins':
       return [...data].filter(m => m.result.toLowerCase().includes('win')).reverse();
     case 'loses':
