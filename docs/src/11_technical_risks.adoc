@@ -25,3 +25,25 @@ See https://docs.arc42.org/section-11/[Risks and Technical Debt] in the arc42 do
 
 ****
 endif::arc42help[]
+
+=== Technical Risks
+
+[cols="1,2,2", options="header"]
+|===
+| Risk | Impact | Mitigation
+| Data Consistency | Potential desync between Redis (volatile) and Firebase (persistent). | Implement robust write-behind patterns and retry logic.
+| JS Performance | Real-time processing lag in the browser client. | Optimize event loop and use Web Workers for networking.
+| Rust Complexity | Steep learning curve affecting development velocity. | Peer programming and strict linting (clippy).
+|===
+
+=== Technical Debts
+
+[cols="1,2,1", options="header"]
+|===
+| Technical Debt | Status/Context | Priority
+| Session Reload | Currently marked as invalid; needs architectural fix. | High
+| End-to-End (e2e) | Missing automated test suite for game flows. | Medium
+| Code Duplication | Identified logic redundancy across modules. | Low
+| Deployment Structure | Incomplete definition of the production pipeline. | High
+| Documentation | README and Game Bot implementation docs are outdated. | Medium
+|===
