@@ -9,7 +9,13 @@ const formatTime = (seconds: number): string => {
   return `${m}:${s}`;
 };
 
-const RankingTableLocal: React.FC<{ data: RankingElementLocal[], title: string }> = ({ data, title }) => {
+interface Props {
+  data: RankingElementLocal[];
+  title: string;
+  onReplay?: (item: RankingElementLocal) => void;
+}
+
+const RankingTableLocal: React.FC<Props> = ({ data, title, onReplay }) => {
   const { currentPage, setCurrentPage, totalPages, pageData, visiblePages } = usePagination(data);
 
   return (
@@ -22,6 +28,7 @@ const RankingTableLocal: React.FC<{ data: RankingElementLocal[], title: string }
         <span>PLAYER 2</span>
         <span>RESULT</span>
         <span>TIME</span>
+        <span></span>
       </div>
 
       <div className={styles.rankingList}>
@@ -32,6 +39,17 @@ const RankingTableLocal: React.FC<{ data: RankingElementLocal[], title: string }
             <span className={styles.rankName}>{item.player2Name}</span>
             <span className={styles.rankResult}>{item.result}</span>
             <span className={styles.rankTime}>{formatTime(item.time)}</span>
+            <span className={styles.replayCell}>
+              {onReplay && (item.moves?.length ?? 0) > 0 && (
+                <button
+                  className={styles.replayBtn}
+                  onClick={() => onReplay(item)}
+                  title="Watch replay"
+                >
+                  ▶
+                </button>
+              )}
+            </span>
           </div>
         ))}
       </div>

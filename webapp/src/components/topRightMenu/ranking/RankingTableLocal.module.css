@@ -24,11 +24,11 @@
   padding-right: 0.5rem;
 }
 
-/* GRID LAYOUT: 1fr (P1) | 3rem (VS) | 1fr (P2) | 5rem (RESULT) | 4rem (TIME) */
+/* GRID LAYOUT: 1fr (P1) | 3rem (VS) | 1fr (P2) | 5rem (RESULT) | 4rem (TIME) | 2.2rem (▶) */
 .rankingHeaderRow,
 .rankingItem {
   display: grid;
-  grid-template-columns: 1fr 3rem 1fr 5rem 4rem;
+  grid-template-columns: 1fr 3rem 1fr 5rem 4rem 2.2rem;
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 1rem;
@@ -69,4 +69,30 @@
   font-weight: 600;
   color: #888;
   font-size: 0.85rem;
+}
+
+.replayCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.replayBtn {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--primary-color);
+  border-radius: 0.25rem;
+  width: 1.8rem;
+  height: 1.8rem;
+  font-size: 0.65rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.replayBtn:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: var(--primary-color);
 }
