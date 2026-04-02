@@ -44,7 +44,7 @@ async fn execute_move(
     // 1. Recoger el estado actual de Redis (el string JSON)
     let current_yen_json = redis_client::get_match_state(&state.redis_pool, &payload.match_id)
         .await
-        .map_err(|_| (StatusCode::NOT_FOUND, "Partida no encontrada".to_string()))?;
+        .map_err(|_| (StatusCode::NOT_FOUND, "Match not found".to_string()))?;
 
     // 2. Enviar al Engine (Contenedor en puerto 4000)
     // Preparamos el cuerpo que el microservicio del Engine espera
@@ -65,18 +65,18 @@ async fn execute_move(
         .json(&engine_payload)
         .send()
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Engine inalcanzable: {}, {}", e, current_yen)))?;
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Unreachable engine: {}, {}", e, current_yen)))?;
 
     let status = response.status();
     let body = response.text().await
         .unwrap_or_else(|_| "No response body".to_string());
 
     if !status.is_success() {
-        return Err((StatusCode::BAD_REQUEST, format!("Movimiento ilegal según el Engine: {}", body)));
+        return Err((StatusCode::BAD_REQUEST, format!("Illegal movement: {}", body)));
     }
 
     let engine_result: EngineResponse = serde_json::from_str(&body)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error al leer respuesta del Engine {}: {}", &body,e)))?;
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error reading engine response {}: {}", &body,e)))?;
 
     redis_client::save_match_state(
         &state.redis_pool,
@@ -101,7 +101,7 @@ async fn request_bot_move(
     for _ in 0..20 {
         let lock_key = format!("lock:match:{}", payload.match_id);
         let mut conn = state.redis_pool.get().await
-            .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Error de pool".to_string()))?;
+            .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Pool error".to_string()))?;
 
         let exists: bool = redis::cmd("EXISTS")
             .arg(&lock_key)
@@ -117,7 +117,7 @@ async fn request_bot_move(
 
     let current_yen_json = redis_client::get_match_state(&state.redis_pool, &payload.match_id)
         .await
-        .map_err(|_| (StatusCode::NOT_FOUND, "Partida no encontrada".to_string()))?;
+        .map_err(|_| (StatusCode::NOT_FOUND, "Match not found".to_string()))?;
 
     let current_yen: serde_json::Value = serde_json::from_str(&current_yen_json)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
@@ -135,7 +135,7 @@ async fn request_bot_move(
         .json(&engine_payload)
         .send()
         .await
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Engine inalcanzable: {}", e)))?;
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Unreachable engine: {}", e)))?;
 
 
     let status = response.status();
@@ -143,11 +143,11 @@ async fn request_bot_move(
         .unwrap_or_else(|_| "No response body".to_string());
 
     if !status.is_success() {
-        return Err((StatusCode::BAD_REQUEST, format!("Error al generar un movimiento: {}", body)));
+        return Err((StatusCode::BAD_REQUEST, format!("Error generating a movement: {}", body)));
     }
 
     let engine_result: PlayResponse = serde_json::from_str(&body)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error al leer respuesta del Engine {}: {}", &body,e)))?;
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error reading engine response {}: {}", &body,e)))?;
 
     redis_client::save_match_state(
         &state.redis_pool,
@@ -233,12 +233,12 @@ async fn update_user_score(
         payload.is_win, 
         payload.time
     ).await.map_err(|e| {
-        eprintln!("🚨 ERROR ACTUALIZANDO SCORE: {:?}", e);
-        (StatusCode::INTERNAL_SERVER_ERROR, "Error actualizando base de datos".to_string())
+        eprintln!("Error updating score: {:?}", e);
+        (StatusCode::INTERNAL_SERVER_ERROR, "Error updating data base".to_string())
     })?;
 
     Ok(Json(UpdateScoreResponse { 
-        message: "Score actualizado correctamente".to_string() 
+        message: "Score updated correctly".to_string()
     }))
 }
 
@@ -250,11 +250,11 @@ async fn save_match(
     // 1. Obtenemos el estado final del tablero desde Redis usando el match_id
     let current_yen_json = redis_client::get_match_state(&state.redis_pool, &payload.match_id)
         .await
-        .map_err(|_| (StatusCode::NOT_FOUND, "Partida no encontrada en Redis".to_string()))?;
+        .map_err(|_| (StatusCode::NOT_FOUND, "Match not found in Redis".to_string()))?;
 
     // 2. Lo convertimos al struct YEN
     let board_status: YEN = serde_json::from_str(&current_yen_json)
-        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error leyendo YEN: {}", e)))?;
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error reading YEN: {}", e)))?;
 
     // 3. Construimos tu struct Match exacto
     let match_data = Match {
@@ -269,7 +269,7 @@ async fn save_match(
     crate::firebase::insert_match_by_id(&payload.match_id, match_data)
         .await
         .map_err(|e| {
-            eprintln!("🚨 ERROR GUARDANDO PARTIDA: {:?}", e);
+            eprintln!("ERROR GUARDANDO PARTIDA: {:?}", e);
             (StatusCode::INTERNAL_SERVER_ERROR, "Error guardando la partida en Firebase".to_string())
         })?;
 
