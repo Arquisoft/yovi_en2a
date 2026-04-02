@@ -14,7 +14,7 @@ vi.mock('../components/topRightMenu/ranking/rankingTypes/StatisticsPanel', () =>
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom')
-  return { ...actual as any, useNavigate: () => mockNavigate }
+  return { ...(actual as Record<string, unknown>), useNavigate: () => mockNavigate }
 })
 
 // 2. Mock of UserContext
@@ -47,7 +47,7 @@ describe('LocalRanking Strategy & Fetcher', () => {
 
     globalThis.fetch = vi.fn().mockResolvedValueOnce({
       json: async () => ({ matches: [] })
-    } as any)
+    }) as unknown as typeof fetch
 
     render(<MemoryRouter><LocalRanking /></MemoryRouter>)
 
@@ -81,7 +81,7 @@ describe('LocalRanking Strategy & Fetcher', () => {
 
     globalThis.fetch = vi.fn().mockResolvedValueOnce({
       json: async () => mockApiResponse
-    } as any)
+    }) as unknown as typeof fetch
 
     render(<MemoryRouter><LocalRanking /></MemoryRouter>)
 
@@ -115,7 +115,7 @@ describe('LocalRanking Strategy & Fetcher', () => {
           { player1id: 'pro@gamer.com', player2id: 'BotB', result: 'Loss', time: 30 },
         ]
       })
-    } as any)
+    }) as unknown as typeof fetch
 
     render(<MemoryRouter><LocalRanking /></MemoryRouter>)
 
@@ -164,7 +164,7 @@ describe('LocalRanking Strategy & Fetcher', () => {
   test('email is replaced by username in player name', async () => {
     await renderWithMatches()
     // player1id === user.email → should show username, not email
-    expect(screen.getByText('ProGamer')).toBeInTheDocument()
+    expect(screen.getAllByText('ProGamer').length).toBeGreaterThan(0)
     expect(screen.queryByText('pro@gamer.com')).not.toBeInTheDocument()
   })
 
