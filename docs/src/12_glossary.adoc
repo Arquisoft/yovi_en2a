@@ -36,9 +36,12 @@ endif::arc42help[]
 |===
 |Term |Definition
 
-|<Term-1>
-|<definition-1>
-
-|<Term-2>
-|<definition-2>
+|Bot API |Public interface allowing external automated agents to interact with the game, request moves, and query game states over HTTPS.
+|Docker |Containerization platform used to package services (Users Service, Gamey Engine) ensuring consistent execution across different hardware and environments.
+|Firebase |Cloud platform providing Authentication and NoSQL persistence (Firestore) for user profiles, match history, and global statistics.
+|Gamey Engine |The core computational module written in Rust, responsible for deterministic game logic, win detection, and AI move generation.
+|Gateway |Node.js service acting as the primary entry point for user-related requests, handling authentication and CSRF protection.
+|Redis |In-memory data store used as a high-performance cache to manage active game states and reduce latency.
+|Rust |High-performance systems programming language used for the game's core logic and AI algorithms to ensure computational efficiency.
+|YEN Notation |Project-specific JSON-based format used for serializing board states and moves between the frontend and backend subsystems.
 |===

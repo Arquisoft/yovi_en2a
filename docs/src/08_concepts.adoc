@@ -57,18 +57,21 @@ See https://docs.arc42.org/section-8/[Concepts] in the arc42 documentation.
 ****
 endif::arc42help[]
 
-=== _<Concept 1>_
+=== Domain Model: YEN Notation
+The core domain concept is the **YEN Notation**. To ensure all components (Frontend, Gateway, and Engine) communicate seamlessly, a standardized JSON format has been established. This format describes the hexagonal board, edge connections, and the current turn, preventing logical interpretation errors when passing data between JavaScript and Rust environments.
 
-_<explanation>_
+=== Security: Layered Authentication and CSRF
+Security is implemented across two main layers:
+* **Identity:** Delegated to **Firebase Auth** for robust JWT token management.
+* **Session Integrity:** The **Users Gateway** enforces *Cross-Site Request Forgery* (CSRF) protection using validated tokens for every state-changing request, securing player actions and statistics.
 
+=== Persistency: Hybrid State Management
+The system distinguishes between two data lifecycles:
+* **Volatile State (Real-time):** Managed by **Redis** for active matches where low latency is critical.
+* **Persistent State:** Managed by **Firebase/Firestore** for long-term storage of user profiles, match history, and global rankings.
 
+=== Deterministic Logic (Rust Engine)
+Since Game Y requires complex graph pathfinding to detect wins, all computational logic is centralized in **Rust**. This ensures that rules are applied deterministically and with maximum CPU efficiency, regardless of whether the move comes from the Web UI or the Bot API.
 
-=== _<Concept 2>_
-
-_<explanation>_
-
-...
-
-=== _<Concept n>_
-
-_<explanation>_
+=== Deployment: Containerization (Docker)
+To ensure "it works on my machine" consistency, every sub-service is encapsulated in a **Docker** container. This cross-cutting concept simplifies local development and cloud deployment, ensuring identical runtimes for the Node.js gateway and the compiled Rust binary.
