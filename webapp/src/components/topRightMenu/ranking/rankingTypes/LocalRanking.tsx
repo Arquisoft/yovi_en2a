@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUser } from "../../../../contexts/UserContext";
 import type { RankingElementLocal } from "../rankingElements/RankingElementLocal";
 import RankingTableLocal from "../RankingTableLocal";
+import StatisticsPanel from "./StatisticsPanel";
 import styles from './LocalRanking.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -101,7 +102,7 @@ export const LocalRanking = () => {
 
       <div className={styles.subContent}>
         {activeSubTab === 'statistics' ? (
-          <div className={styles.comingSoon}>Statistics coming soon...</div>
+          <StatisticsPanel data={data} username={user.username} />
         ) : (
           <RankingTableLocal data={displayed} title={getTitle(activeSubTab, user.username)} />
         )}
