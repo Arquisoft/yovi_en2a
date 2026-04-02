@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Board from '../../../gameWindow/board/Board';
 import { fromXYZ } from '../../../gameWindow/Game';
 import type { RankingElementLocal } from '../rankingElements/RankingElementLocal';
@@ -20,49 +20,69 @@ interface Props {
 }
 
 const GameReplayWindow = ({ match, onClose }: Props) => {
-  const moves      = match.moves ?? [];
-  const boardSize  = match.boardSize ?? 8;
+  const moves     = match.moves ?? [];
+  const boardSize = match.boardSize ?? 8;
   const totalSteps = moves.length;
 
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying,   setIsPlaying]   = useState(false);
 
-  // Auto-play: advance one step every PLAY_INTERVAL_MS
+  // Board scaling via ResizeObserver
+  const boardAreaRef = useRef<HTMLDivElement>(null);
+  const [boardScale, setBoardScale] = useState(1);
+  // Approximate natural board pixel size (hex cells are 64×64, rows overlap by 15px)
+  const naturalBoardW = boardSize * 64;
+  const naturalBoardH = boardSize * 49 + 15;
+
+  useEffect(() => {
+    const el = boardAreaRef.current;
+    if (!el) return;
+    const update = () => {
+      const { width, height } = el.getBoundingClientRect();
+      const pad = 40;
+      const scale = Math.min(1, (width - pad) / naturalBoardW, (height - pad) / naturalBoardH);
+      setBoardScale(Math.max(0.25, scale));
+    };
+    update();
+    const obs = new ResizeObserver(update);
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [naturalBoardW, naturalBoardH]);
+
+  // Auto-play: advance one step per interval tick
   useEffect(() => {
     if (!isPlaying) return;
     const id = setInterval(() => {
-      setCurrentStep(s => {
-        if (s >= totalSteps) {
-          setIsPlaying(false);
-          return s;
-        }
-        return s + 1;
-      });
+      setCurrentStep(s => Math.min(s + 1, totalSteps));
     }, PLAY_INTERVAL_MS);
     return () => clearInterval(id);
   }, [isPlaying, totalSteps]);
 
-  // Stop playing when reaching the end
+  // Stop at end — delay by one full interval so the last move stays visible
+  // before playback stops (without the delay it would disappear almost instantly).
   useEffect(() => {
-    if (currentStep >= totalSteps) setIsPlaying(false);
+    if (totalSteps > 0 && currentStep >= totalSteps) {
+      const t = setTimeout(() => setIsPlaying(false), PLAY_INTERVAL_MS);
+      return () => clearTimeout(t);
+    }
   }, [currentStep, totalSteps]);
 
-  const goFirst = useCallback(() => { setCurrentStep(0);          setIsPlaying(false); }, []);
-  const goPrev  = useCallback(() => { setCurrentStep(s => Math.max(0, s - 1));          setIsPlaying(false); }, []);
-  const goNext  = useCallback(() => { setCurrentStep(s => Math.min(totalSteps, s + 1)); setIsPlaying(false); }, [totalSteps]);
-  const goLast  = useCallback(() => { setCurrentStep(totalSteps); setIsPlaying(false); }, [totalSteps]);
+  const goFirst    = useCallback(() => { setCurrentStep(0);                                setIsPlaying(false); }, []);
+  const goPrev     = useCallback(() => { setCurrentStep(s => Math.max(0, s - 1));         setIsPlaying(false); }, []);
+  const goNext     = useCallback(() => { setCurrentStep(s => Math.min(totalSteps, s + 1)); setIsPlaying(false); }, [totalSteps]);
+  const goLast     = useCallback(() => { setCurrentStep(totalSteps);                      setIsPlaying(false); }, [totalSteps]);
   const togglePlay = useCallback(() => {
     if (currentStep >= totalSteps) setCurrentStep(0);
     setIsPlaying(p => !p);
   }, [currentStep, totalSteps]);
 
-  // Build the Move[] for the Board at the current step
   const boardMoves = moves.slice(0, currentStep).map((coord, i) => {
     const { row, col } = fromXYZ(coord.x, coord.y, coord.z, boardSize);
     return { row, col, player: (i % 2) as 0 | 1 };
   });
 
-  const hasNoMoves = totalSteps === 0;
+  const hasNoMoves  = totalSteps === 0;
+  const progressPct = totalSteps > 0 ? (currentStep / totalSteps) * 100 : 0;
 
   return (
     <div className="top-right-menu-overlay">
@@ -75,28 +95,28 @@ const GameReplayWindow = ({ match, onClose }: Props) => {
 
         <div className={styles.replayBody}>
 
-          {/* ── Board area ── */}
-          <div className={styles.boardArea}>
+          {/* ── Board area (scales to fit) ── */}
+          <div className={styles.boardArea} ref={boardAreaRef}>
             {hasNoMoves ? (
               <p className={styles.noMovesMsg}>
                 No move data available for this match.<br />
                 Only games played after this feature was added can be replayed.
               </p>
             ) : (
-              <div className={styles.boardScroll}>
-                <Board
-                  size={boardSize}
-                  moves={boardMoves}
-                  blocked={true}
-                  onPlace={() => {}}
-                />
+              <div
+                className={styles.boardWrapper}
+                style={{ transform: `scale(${boardScale})`, transformOrigin: 'center center' }}
+              >
+                <Board size={boardSize} moves={boardMoves} blocked={true} onPlace={() => {}} />
               </div>
             )}
           </div>
 
-          {/* ── Info panel ── */}
+          {/* ── Info + Controls panel ── */}
           <aside className={styles.infoPanel}>
-            <div className={styles.players}>
+
+            {/* Players */}
+            <div className={styles.playersSection}>
               <div className={styles.playerRow}>
                 <span className={styles.colorDot} style={{ background: 'rgba(77,163,255,0.9)' }} />
                 <span className={styles.playerName}>{match.player1Name}</span>
@@ -110,10 +130,11 @@ const GameReplayWindow = ({ match, onClose }: Props) => {
               </div>
             </div>
 
-            <div className={styles.matchInfo}>
+            {/* Match info */}
+            <div className={styles.matchSection}>
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Result</span>
-                <span className={styles.infoValue}>{match.result}</span>
+                <span className={`${styles.infoValue} ${styles.resultValue}`}>{match.result}</span>
               </div>
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Duration</span>
@@ -121,54 +142,38 @@ const GameReplayWindow = ({ match, onClose }: Props) => {
               </div>
               <div className={styles.infoRow}>
                 <span className={styles.infoLabel}>Total moves</span>
-                <span className={styles.infoValue}>{totalSteps}</span>
+                <span className={styles.infoValue}>{totalSteps > 0 ? totalSteps : '—'}</span>
               </div>
             </div>
 
+            {/* Progress + Controls */}
             {!hasNoMoves && (
-              <div className={styles.stepIndicator}>
-                Move <strong>{currentStep}</strong> / {totalSteps}
-              </div>
+              <>
+                <div className={styles.progressSection}>
+                  <div className={styles.stepLabel}>
+                    Move <strong>{currentStep}</strong> / {totalSteps}
+                  </div>
+                  <div className={styles.progressTrack}>
+                    <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />
+                  </div>
+                </div>
+
+                <div className={styles.controls}>
+                  <div className={styles.controlsRow}>
+                    <button className={styles.ctrlBtn} onClick={goFirst} disabled={currentStep === 0}          title="First move">⏮</button>
+                    <button className={styles.ctrlBtn} onClick={goPrev}  disabled={currentStep === 0}          title="Previous">◀</button>
+                    <button className={`${styles.ctrlBtn} ${styles.playBtn}`} onClick={togglePlay}             title={isPlaying ? 'Pause' : 'Play'}>
+                      {isPlaying ? '⏸' : '▶'}
+                    </button>
+                    <button className={styles.ctrlBtn} onClick={goNext}  disabled={currentStep === totalSteps} title="Next">▶</button>
+                    <button className={styles.ctrlBtn} onClick={goLast}  disabled={currentStep === totalSteps} title="Last move">⏭</button>
+                  </div>
+                </div>
+              </>
             )}
+
           </aside>
         </div>
-
-        {/* ── Playback controls ── */}
-        {!hasNoMoves && (
-          <div className={styles.controls}>
-            <button
-              className={styles.ctrlBtn}
-              onClick={goFirst}
-              disabled={currentStep === 0}
-              title="First move"
-            >⏮</button>
-            <button
-              className={styles.ctrlBtn}
-              onClick={goPrev}
-              disabled={currentStep === 0}
-              title="Previous move"
-            >◀</button>
-            <button
-              className={styles.ctrlBtn}
-              onClick={goNext}
-              disabled={currentStep === totalSteps}
-              title="Next move"
-            >▶</button>
-            <button
-              className={styles.ctrlBtn}
-              onClick={goLast}
-              disabled={currentStep === totalSteps}
-              title="Last move"
-            >⏭</button>
-            <button
-              className={`${styles.ctrlBtn} ${styles.playBtn}`}
-              onClick={togglePlay}
-              title={isPlaying ? 'Pause' : 'Play'}
-            >
-              {isPlaying ? '⏸' : '▶▶'}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

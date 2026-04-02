@@ -28,6 +28,7 @@ const RankingTableLocal: React.FC<Props> = ({ data, title, onReplay }) => {
         <span>PLAYER 2</span>
         <span>RESULT</span>
         <span>TIME</span>
+        {onReplay && <span className={styles.replayColHeader}></span>}
       </div>
 
       <div className={styles.rankingList}>
@@ -42,6 +43,17 @@ const RankingTableLocal: React.FC<Props> = ({ data, title, onReplay }) => {
             <span className={styles.rankName}>{item.player2Name}</span>
             <span className={styles.rankResult}>{item.result}</span>
             <span className={styles.rankTime}>{formatTime(item.time)}</span>
+            {onReplay && (
+              <span className={styles.replayCell}>
+                <button
+                  className={styles.replayBtnMobile}
+                  onClick={e => { e.stopPropagation(); onReplay(item); }}
+                  aria-label="Watch replay"
+                >
+                  Replay
+                </button>
+              </span>
+            )}
           </div>
         ))}
       </div>

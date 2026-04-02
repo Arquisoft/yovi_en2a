@@ -1,3 +1,4 @@
+/* ── Layout ── */
 .replayBody {
   display: flex;
   flex: 1;
@@ -6,10 +7,10 @@
 }
 
 /* ── Board area ── */
-
 .boardArea {
   flex: 1;
   min-width: 0;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -18,13 +19,11 @@
   border-right: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.boardScroll {
-  overflow: auto;
-  max-width: 100%;
-  max-height: 100%;
-  display: flex;
-  align-items: flex-start;
+.boardWrapper {
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  /* Scale transform is applied via inline style */
 }
 
 .noMovesMsg {
@@ -35,22 +34,22 @@
   padding: 2rem;
 }
 
-/* ── Info panel ── */
-
+/* ── Info + Controls panel ── */
 .infoPanel {
-  width: 14rem;
+  width: 15rem;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  padding: 1.25rem 1rem;
   overflow-y: auto;
 }
 
-.players {
+/* ── Players section ── */
+.playersSection {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.45rem;
+  padding: 1.1rem 1rem 0.9rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .playerRow {
@@ -60,15 +59,15 @@
 }
 
 .colorDot {
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 0.65rem;
+  height: 0.65rem;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
 .playerName {
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: #ddd;
   white-space: nowrap;
   overflow: hidden;
@@ -77,102 +76,137 @@
 }
 
 .playerRole {
-  font-size: 0.62rem;
-  color: #555;
+  font-size: 0.58rem;
+  color: #444;
   text-transform: uppercase;
   letter-spacing: 0.05rem;
   flex-shrink: 0;
 }
 
 .vsText {
-  font-size: 0.65rem;
-  color: #444;
+  font-size: 0.58rem;
+  color: #3a3a3a;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.1rem;
-  padding-left: 1.25rem;
+  letter-spacing: 0.12rem;
+  padding-left: 1.15rem;
+  margin: 0.05rem 0;
 }
 
-.matchInfo {
+/* ── Match info section ── */
+.matchSection {
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  padding-top: 1rem;
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .infoRow {
   display: flex;
   justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem;
+  align-items: center;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.infoRow:last-child {
+  border-bottom: none;
 }
 
 .infoLabel {
-  font-size: 0.62rem;
-  color: #555;
+  font-size: 0.6rem;
+  color: #4a4a4a;
   text-transform: uppercase;
-  letter-spacing: 0.05rem;
+  letter-spacing: 0.06rem;
 }
 
 .infoValue {
   font-size: 0.8rem;
   font-weight: 600;
-  color: #ccc;
+  color: #bbb;
 }
 
-.stepIndicator {
-  font-size: 0.78rem;
-  color: #666;
-  text-align: center;
-  border-top: 1px solid rgba(255,255,255,0.06);
-  padding-top: 0.75rem;
-}
-
-.stepIndicator strong {
+.resultValue {
   color: var(--primary-color);
 }
 
-/* ── Playback controls ── */
+/* ── Progress section ── */
+.progressSection {
+  padding: 0.75rem 1rem 0.6rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
 
+.stepLabel {
+  font-size: 0.72rem;
+  color: #555;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.stepLabel strong {
+  color: var(--primary-color);
+  font-size: 0.82rem;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 0.2rem;
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: var(--primary-color);
+  border-radius: 999px;
+  transition: width 0.25s ease;
+}
+
+/* ── Controls ── */
 .controls {
+  padding: 0.75rem 1rem;
+  margin-top: auto;
+}
+
+.controlsRow {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  flex-shrink: 0;
+  gap: 0.3rem;
 }
 
 .ctrlBtn {
-  background: #1e1e1e;
-  border: 1px solid rgba(255,255,255,0.08);
-  color: #aaa;
-  font-size: 1rem;
-  width: 2.6rem;
-  height: 2.6rem;
-  border-radius: 0.4rem;
+  background: #1c1c1c;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: #888;
+  font-size: 0.8rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.35rem;
   cursor: pointer;
   transition: background 0.15s, color 0.15s, border-color 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .ctrlBtn:hover:not(:disabled) {
   background: #2a2a2a;
-  border-color: rgba(255,255,255,0.18);
+  border-color: rgba(255, 255, 255, 0.16);
   color: #fff;
 }
 
 .ctrlBtn:disabled {
-  opacity: 0.3;
+  opacity: 0.25;
   cursor: not-allowed;
 }
 
 .playBtn {
-  width: 3.4rem;
+  width: 2.6rem;
+  height: 2.6rem;
+  font-size: 0.95rem;
   background: var(--primary-color);
   border-color: var(--primary-color);
   color: #000;
@@ -187,15 +221,16 @@
 }
 
 /* ── Responsive: tablet / mobile ── */
-
 @media (max-width: 45rem) {
   .replayBody {
     flex-direction: column;
   }
 
   .boardArea {
+    flex: 1;
+    min-height: 12rem;
     border-right: none;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
     padding: 0.75rem;
   }
 
@@ -203,27 +238,38 @@
     width: 100%;
     flex-direction: row;
     flex-wrap: wrap;
-    padding: 0.75rem 1rem;
-    gap: 0.75rem;
+    overflow-y: visible;
+    overflow-x: hidden;
+    display: flex;
   }
 
-  .players {
+  .playersSection {
     flex: 1;
-    min-width: 140px;
+    min-width: 130px;
+    border-bottom: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0.6rem 0.75rem;
   }
 
-  .matchInfo {
+  .matchSection {
     flex: 1;
-    min-width: 120px;
-    border-top: none;
-    border-left: 1px solid rgba(255,255,255,0.06);
-    padding-top: 0;
-    padding-left: 0.75rem;
+    min-width: 110px;
+    border-bottom: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0.6rem 0.75rem;
   }
 
-  .stepIndicator {
+  .progressSection {
+    flex: 1;
+    min-width: 100px;
+    border-bottom: none;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .controls {
     width: 100%;
-    border-top: none;
-    padding-top: 0;
+    margin-top: 0;
+    padding: 0.5rem 0.75rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
   }
 }
