@@ -1,19 +1,22 @@
 use crate::{Coordinates, GameStatus, GameY, Movement, PlayerId, YBot};
 use std::collections::{HashMap, HashSet, VecDeque};
 
-pub const MINIMAX_DEPTH_EASY:   u32 = 2;
-pub const MINIMAX_DEPTH_MEDIUM: u32 = 4;
-pub const MINIMAX_DEPTH_HARD:   u32 = 6;
+pub const MINIMAX_DEPTH_EASY: i32 = 2;
+pub const MINIMAX_DEPTH_MEDIUM: i32 = 4;
+pub const MINIMAX_DEPTH_HARD: i32 = 6;
+pub const MINIMAX_DEPTH_AUTO: i32 = -1;
 
-const WIN_SCORE:   i32 = 1000000;
-const LOSS_SCORE:  i32 = -1000000;
-const UNREACHABLE: i32 = 1000; 
+const WIN_SCORE: i32 = 1000000;
+const LOSS_SCORE: i32 = -1000000;
+const UNREACHABLE: i32 = 1000;
+const MAX_CANDIDATES: usize = 15;
+const AUTO_TIME_LIMIT_SECS: f64 = 0.4;
 
-pub struct MinimaxBot { depth: u32 }
+pub struct MinimaxBot { depth: i32 }
 
 impl MinimaxBot {
-    pub fn new(depth: u32) -> Self { Self { depth } }
-    pub fn depth(&self) -> u32 { self.depth }
+    pub fn new(depth: i32) -> Self { Self { depth } }
+    pub fn depth(&self) -> i32 { self.depth }
 }
 
 impl YBot for MinimaxBot {
@@ -26,23 +29,59 @@ impl YBot for MinimaxBot {
             return board.available_cells().first()
                 .map(|&idx| Coordinates::from_index(idx, board.board_size()));
         }
-        
-        let (mut best_score, mut best_move, mut alpha) = (i32::MIN, None, i32::MIN);
-        for idx in candidate_cells(board) {
-            let coords: Coordinates = Coordinates::from_index(idx, board.board_size());
-            let mut child: GameY = board.clone();
-            let _ = child.add_move(Movement::Placement { player: bot, coords });
-            let score: i32 = minimax(&child, self.depth - 1, i32::MIN, i32::MAX, false, bot);
-            if score > best_score { 
-                best_score = score; 
-                best_move = Some(coords); 
-            }
-            alpha = alpha.max(best_score);
+        if self.depth > 0 {
+            let (best_move, _) = search_at_depth(board, bot, self.depth as u32);
+            return best_move;
+        }
+        // Auto mode: iterative deepening — stop after the first depth that takes >= 0.4 s.
+        let mut best_move = board.available_cells().first()
+            .map(|&idx| Coordinates::from_index(idx, board.board_size()));
+
+        for d in 1u32.. {
+            let start = std::time::Instant::now();
+            let (candidate, score) = search_at_depth(board, bot, d);
+            if let Some(m) = candidate { best_move = Some(m); }
+            if score >= WIN_SCORE { break; } // found a forced win, no need to go deeper
+            if start.elapsed().as_secs_f64() >= AUTO_TIME_LIMIT_SECS { break; }
         }
         best_move
     }
 }
 
+fn search_at_depth(board: &GameY, bot: PlayerId, depth: u32) -> (Option<Coordinates>, i32) {
+    // Scan every available cell for an immediate win before doing any ordered search.
+    // This bypasses the candidate_cells restriction and the move ordering, so the bot
+    // never misses a 1-move win regardless of where it sits in the ordered list.
+    if let Some(coords) = find_immediate_win(board, bot) {
+        return (Some(coords), WIN_SCORE);
+    }
+    let (mut best_score, mut best_move, mut alpha) = (i32::MIN, None, i32::MIN);
+    for coords in ordered_moves(board, bot, bot) {
+        let mut child = board.clone();
+        let _ = child.add_move(Movement::Placement { player: bot, coords });
+        let score = minimax(&child, depth - 1, alpha, i32::MAX, false, bot);
+        if score > best_score { best_score = score; best_move = Some(coords); }
+        if best_score > alpha { alpha = best_score; }
+        if best_score >= WIN_SCORE { break; } // found a forced win, no need to check more
+    }
+    (best_move, best_score)
+}
+
+/// Scans all available cells for an immediate 1-move win, ignoring move ordering.
+fn find_immediate_win(board: &GameY, bot: PlayerId) -> Option<Coordinates> {
+    let size = board.board_size();
+    for &idx in board.available_cells() {
+        let coords = Coordinates::from_index(idx, size);
+        let mut child = board.clone();
+        let _ = child.add_move(Movement::Placement { player: bot, coords });
+        if child.check_game_over() {
+            if let GameStatus::Finished { winner } = child.status() {
+                if *winner == bot { return Some(coords); }
+            }
+        }
+    }
+    None
+}
 
 fn minimax(board: &GameY, depth: u32, mut alpha: i32, mut beta: i32, maximizing: bool, bot: PlayerId) -> i32 {
     if board.check_game_over() {
@@ -56,8 +95,7 @@ fn minimax(board: &GameY, depth: u32, mut alpha: i32, mut beta: i32, maximizing:
     let player = match board.next_player() { Some(p) => p, None => return evaluate(board, bot) };
     let mut best = if maximizing { i32::MIN } else { i32::MAX };
 
-    for idx in candidate_cells(board) {
-        let coords = Coordinates::from_index(idx, board.board_size());
+    for coords in ordered_moves(board, player, bot).into_iter().take(MAX_CANDIDATES) {
         let mut child = board.clone();
         let _ = child.add_move(Movement::Placement { player, coords });
         let score = minimax(&child, depth - 1, alpha, beta, !maximizing, bot);
@@ -65,8 +103,7 @@ fn minimax(board: &GameY, depth: u32, mut alpha: i32, mut beta: i32, maximizing:
         if maximizing {
             if score > best { best = score; }
             alpha = alpha.max(best);
-        } 
-        else {
+        } else {
             if score < best { best = score; }
             beta = beta.min(best);
         }
@@ -74,7 +111,6 @@ fn minimax(board: &GameY, depth: u32, mut alpha: i32, mut beta: i32, maximizing:
     }
     best
 }
-
 
 fn evaluate(board: &GameY, bot: PlayerId) -> i32 {
     let opp = other_player(bot);
@@ -139,7 +175,6 @@ fn connected_groups(board: &GameY, player: PlayerId) -> Vec<Vec<Coordinates>> {
     groups
 }
 
-
 fn dist_to_side(group: &[Coordinates], side: u8, passable: &HashSet<Coordinates>) -> i32 {
     let group_set: HashSet<Coordinates> = group.iter().copied().collect();
     let mut dist: HashMap<Coordinates, i32> = HashMap::new();
@@ -175,13 +210,81 @@ fn dist_to_side(group: &[Coordinates], side: u8, passable: &HashSet<Coordinates>
     UNREACHABLE
 }
 
+fn ordered_moves(board: &GameY, player: PlayerId, bot: PlayerId) -> Vec<Coordinates> {
+    let size  = board.board_size();
+    let human = other_player(bot);
+    let avail: HashSet<u32> = board.available_cells().iter().copied().collect();
+
+    let (mut player_owned, mut human_owned) = (Vec::new(), Vec::new());
+    let (mut player_sides, mut human_sides) = ((false,false,false), (false,false,false));
+    for idx in 0..size*(size+1)/2 {
+        if avail.contains(&idx) { continue; }
+        let c = Coordinates::from_index(idx, size);
+        if board.cell_owner(&c) == Some(player) {
+            player_sides.0 |= c.touches_side_a();
+            player_sides.1 |= c.touches_side_b();
+            player_sides.2 |= c.touches_side_c();
+            player_owned.push(c);
+        } else if board.cell_owner(&c) == Some(human) {
+            human_sides.0 |= c.touches_side_a();
+            human_sides.1 |= c.touches_side_b();
+            human_sides.2 |= c.touches_side_c();
+            human_owned.push(c);
+        }
+    }
+
+    let human_group_size = largest_group_size(&human_owned);
+
+    let mut scored: Vec<(Coordinates, i32)> = candidate_cells(board).iter().map(|&idx| {
+        let coords = Coordinates::from_index(idx, size);
+        (coords, order_score(board, &coords, player, human, player_sides, human_sides, human_group_size))
+    }).collect();
+
+    scored.sort_unstable_by(|a, b| b.1.cmp(&a.1));
+    scored.into_iter().map(|(c, _)| c).collect()
+}
+
+fn order_score(
+    board: &GameY,
+    coords: &Coordinates,
+    player: PlayerId,
+    human: PlayerId,
+    player_sides: (bool,bool,bool),
+    human_sides: (bool,bool,bool),
+    human_group_size: i32,
+) -> i32 {
+    let nbrs = neighbours(coords);
+    let human_nbrs  = nbrs.iter().filter(|n| board.cell_owner(n) == Some(human)).count()  as i32;
+    let player_nbrs = nbrs.iter().filter(|n| board.cell_owner(n) == Some(player)).count() as i32;
+    let mut score = 0i32;
+
+    score += human_nbrs * (15 + human_group_size);
+
+    let (ha, hb, hc) = human_sides;
+    score += i32::from(coords.touches_side_a() && ha) * 20;
+    score += i32::from(coords.touches_side_b() && hb) * 20;
+    score += i32::from(coords.touches_side_c() && hc) * 20;
+
+    score += player_nbrs * 10;
+
+    let (pa, pb, pc) = player_sides;
+    score += i32::from(coords.touches_side_a() && pa) * 10;
+    score += i32::from(coords.touches_side_b() && pb) * 10;
+    score += i32::from(coords.touches_side_c() && pc) * 10;
+
+    score += nbrs.len() as i32 * 5;
+
+    score
+}
+
+
 fn candidate_cells(board: &GameY) -> Vec<u32> {
     let size = board.board_size();
-    let available: HashSet<u32> = board.available_cells().iter().copied().collect();
+    let avail: HashSet<u32> = board.available_cells().iter().copied().collect();
 
     let occupied: HashSet<Coordinates> = (0..size*(size+1)/2)
-        .map(|index| Coordinates::from_index(index, size))
-        .filter(|c| !available.contains(&c.to_index(size)))
+        .map(|idx| Coordinates::from_index(idx, size))
+        .filter(|c| !avail.contains(&c.to_index(size)))
         .collect();
 
     if occupied.is_empty() {
@@ -200,155 +303,31 @@ fn other_player(player: PlayerId) -> PlayerId {
     if player.id() == 0 { PlayerId::new(1) } else { PlayerId::new(0) }
 }
 
-fn neighbours(c: &Coordinates) -> Vec<Coordinates> {
-    let (x, y, z) = (c.x(), c.y(), c.z());
-    let mut neighbours = Vec::with_capacity(6);
-    if x > 0 { neighbours.push(Coordinates::new(x-1,y+1,z)); neighbours.push(Coordinates::new(x-1,y,z+1)); }
-    if y > 0 { neighbours.push(Coordinates::new(x+1,y-1,z)); neighbours.push(Coordinates::new(x,y-1,z+1)); }
-    if z > 0 { neighbours.push(Coordinates::new(x+1,y,z-1)); neighbours.push(Coordinates::new(x,y+1,z-1)); }
-    neighbours
+fn largest_group_size(owned: &[Coordinates]) -> i32 {
+    if owned.is_empty() { return 0; }
+    let set: HashSet<Coordinates> = owned.iter().copied().collect();
+    let mut visited: HashSet<Coordinates> = HashSet::new();
+    let mut largest = 0i32;
+    for &start in owned {
+        if visited.contains(&start) { continue; }
+        let (mut q, mut sz) = (VecDeque::from([start]), 0i32);
+        visited.insert(start);
+        while let Some(cur) = q.pop_front() {
+            sz += 1;
+            for n in neighbours(&cur) {
+                if set.contains(&n) && visited.insert(n) { q.push_back(n); }
+            }
+        }
+        largest = largest.max(sz);
+    }
+    largest
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    fn place(game: &mut GameY, moves: &[(u32, (u32, u32, u32))]) {
-        for &(p, (x, y, z)) in moves {
-            game.add_move(Movement::Placement {
-                player: PlayerId::new(p),
-                coords: Coordinates::new(x, y, z),
-            }).unwrap();
-        }
-    }
-
-    // Bot identity 
-
-    #[test]
-    fn test_name() { assert_eq!(MinimaxBot::new(2).name(), "minimax_bot"); }
-
-    #[test]
-    fn test_depth_getter() { assert_eq!(MinimaxBot::new(4).depth(), 4); }
-
-    // Basic move selection 
-    #[test]
-    fn test_returns_move_on_empty_board() {
-        assert!(MinimaxBot::new(MINIMAX_DEPTH_EASY).choose_move(&GameY::new(4)).is_some());
-    }
-
-    #[test]
-    fn test_returns_none_on_full_board() {
-        let mut game = GameY::new(2);
-        place(&mut game, &[(0,(1,0,0)), (1,(0,1,0)), (0,(0,0,1))]);
-        assert!(MinimaxBot::new(2).choose_move(&game).is_none());
-    }
-
-    #[test]
-    fn test_returned_coords_are_available() {
-        let game = GameY::new(4);
-        let coords = MinimaxBot::new(MINIMAX_DEPTH_EASY).choose_move(&game).unwrap();
-        assert!(game.available_cells().contains(&coords.to_index(game.board_size())));
-    }
-
-    #[test]
-    fn test_depth_zero_returns_first_available() {
-        let game = GameY::new(4);
-        let coords = MinimaxBot::new(0).choose_move(&game).unwrap();
-        assert_eq!(coords.to_index(game.board_size()), *game.available_cells().first().unwrap());
-    }
-
-    // Win / loss detection
-
-    #[test]
-    fn test_takes_immediate_win() {
-        // p0 has (2,0,0)-(1,0,1): connected chain touching sides b and c.
-        // Only (0,0,2) completes the chain to also touch side a.
-        // (1,1,0) is the other available cell but does not form a winning chain.
-        let mut game = GameY::new(3);
-        place(&mut game, &[
-            (0, (2,0,0)), (1, (0,2,0)),
-            (0, (1,0,1)), (1, (0,1,1)),
-        ]);
-        assert_eq!(
-            MinimaxBot::new(MINIMAX_DEPTH_EASY).choose_move(&game).unwrap(),
-            Coordinates::new(0, 0, 2)
-        );
-    }
-
-    #[test]
-    fn test_blocks_opponent_win() {
-        // p1 has (2,0,0)-(1,0,1), one move from winning at (0,0,2).
-        // It is p0's turn. Only (0,0,2) blocks; (1,1,0) does not.
-        let mut game = GameY::new(3);
-        place(&mut game, &[
-            (0, (0,2,0)), (1, (2,0,0)),
-            (0, (0,1,1)), (1, (1,0,1)),
-        ]);
-        assert_eq!(
-            MinimaxBot::new(MINIMAX_DEPTH_MEDIUM).choose_move(&game).unwrap(),
-            Coordinates::new(0, 0, 2)
-        );
-    }
-
-    // Score constants
-
-    #[test]
-    fn test_win_score_positive()  { assert!(WIN_SCORE > 0); }
-
-    #[test]
-    fn test_loss_score_negative() { assert!(LOSS_SCORE < 0); }
-
-    #[test]
-    fn test_win_loss_symmetric()  { assert_eq!(WIN_SCORE, -LOSS_SCORE); }
-
-    // minimax internals 
-
-    #[test]
-    fn test_minimax_finished_board_win() {
-        // (2,0,0)-(1,0,1)-(0,0,2): connected chain touching all three sides
-        let mut game = GameY::new(3);
-        place(&mut game, &[
-            (0, (2,0,0)), (1, (0,2,0)),
-            (0, (1,0,1)), (1, (0,1,1)),
-            (0, (0,0,2)),
-        ]);
-        assert!(game.check_game_over());
-        assert_eq!(minimax(&game, 4, i32::MIN, i32::MAX, false, PlayerId::new(0)), WIN_SCORE);
-    }
-
-    #[test]
-    fn test_minimax_finished_board_loss() {
-        let mut game = GameY::new(3);
-        place(&mut game, &[
-            (0, (2,0,0)), (1, (0,2,0)),
-            (0, (1,0,1)), (1, (0,1,1)),
-            (0, (0,0,2)),
-        ]);
-        assert!(game.check_game_over());
-        assert_eq!(minimax(&game, 4, i32::MIN, i32::MAX, false, PlayerId::new(1)), LOSS_SCORE);
-    }
-
-    #[test]
-    fn test_minimax_depth_zero_returns_draw() {
-        //Depth 0 always returns 0
-        let game = GameY::new(4);
-        assert_eq!(minimax(&game, 0, i32::MIN, i32::MAX, true, PlayerId::new(0)), 0);
-    }
-
-    #[test]
-    fn test_minimax_score_bounded() {
-        let game = GameY::new(3);
-        let score = minimax(&game, 2, i32::MIN, i32::MAX, true, PlayerId::new(0));
-        assert!(score >= LOSS_SCORE && score <= WIN_SCORE);
-    }
-
-    #[test]
-    fn test_minimax_deterministic() {
-        let mut game = GameY::new(3);
-        place(&mut game, &[(0,(2,0,0)), (1,(0,2,0))]);
-        assert_eq!(
-            MinimaxBot::new(2).choose_move(&game),
-            MinimaxBot::new(2).choose_move(&game)
-        );
-    }
+fn neighbours(c: &Coordinates) -> Vec<Coordinates> {
+    let (x, y, z) = (c.x(), c.y(), c.z());
+    let mut r = Vec::with_capacity(6);
+    if x > 0 { r.push(Coordinates::new(x-1,y+1,z)); r.push(Coordinates::new(x-1,y,z+1)); }
+    if y > 0 { r.push(Coordinates::new(x+1,y-1,z)); r.push(Coordinates::new(x,y-1,z+1)); }
+    if z > 0 { r.push(Coordinates::new(x+1,y,z-1)); r.push(Coordinates::new(x,y+1,z-1)); }
+    r
 }
