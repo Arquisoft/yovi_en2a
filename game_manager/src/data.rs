@@ -220,6 +220,8 @@ pub struct PlayResponse {
 pub struct CreateOnlineMatchRequest{
     pub match_id: String,
     pub match_password: String,
+    pub player1id: String,
+    pub size:u32,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct CreateOnlineMatchResponse{
@@ -230,6 +232,7 @@ pub struct CreateOnlineMatchResponse{
 pub struct JoinOnlineMatchRequest{
     pub match_id: String,
     pub match_password: String,
+    pub player2id: String,
 }
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct JoinOnlineMatchResponse{

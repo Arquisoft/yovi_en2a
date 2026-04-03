@@ -1,5 +1,6 @@
 use crate::redis_client;
-use crate::data::{EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, Match, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, SaveMatchRequest, SaveMatchResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN};
+use crate::data::{EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, Match, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, SaveMatchRequest, SaveMatchResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN, CreateOnlineMatchRequest, CreateOnlineMatchResponse,
+                  JoinOnlineMatchRequest, JoinOnlineMatchResponse};
 
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -281,27 +282,31 @@ async fn save_match(
 
 // Online matches
 async fn create_online_match(
+    State(state): State<Arc<AppState>>,
     Json(payload): Json<CreateOnlineMatchRequest>
 ) -> Result<Json<CreateOnlineMatchResponse>, (StatusCode, String)> {
 
     let match_id = if payload.match_id.is_empty() {
-        redis_client::create_random_online_match().await
+        redis_client::create_random_online_match(&state.redis_pool, &payload.player1id, &payload.size).await
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
     } else {
-        redis_client::create_random_match_by_id(&payload.match_id, &payload.match_password).await
+        redis_client::create_private_online_match(&state.redis_pool, &payload.player1id, &payload.size, &payload.match_id, &payload.match_password).await
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
     };
 
     Ok(Json(CreateOnlineMatchResponse { match_id }))
 }
 
-async fn join_online_match(Json(payload): Json<JoinOnlineMatchRequest>) -> Result<Json<JoinOnlineMatchResponse>, (StatusCode, String)> {
+async fn join_online_match(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<JoinOnlineMatchRequest>)
+    -> Result<Json<JoinOnlineMatchResponse>, (StatusCode, String)> {
 
     let match_id = if payload.match_id.is_empty() {
-        redis_client::join_random_online_match().await
+        redis_client::join_random_online_match(&state.redis_pool, &payload.player2id).await
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
     }else{
-        redis_client::join_random_online_match_by_id(&payload.match_id, &payload.match_password).await
+        redis_client::join_private_online_match(&state.redis_pool, &payload.player2id, &payload.match_id, &payload.match_password).await
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
     };
 

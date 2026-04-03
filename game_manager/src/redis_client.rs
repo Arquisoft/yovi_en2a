@@ -7,17 +7,22 @@ pub type RedisPool = bb8::Pool<RedisConnectionManager>;
 
 #[derive(Error, Debug)]
 pub enum MatchError {
-    #[error("Error de Redis: {0}")]
+    #[error("Redis error: {0}")]
     Redis(#[from] redis::RedisError),
-
-    #[error("Error de Serialización: {0}")]
+    #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
-
-    #[error("Error del pool de conexiones")]
+    #[error("Connection pool error: {0}")]
     Pool,
-
-    #[error("Error del Timeout de Lock de Redis")]
+    #[error("Redis lock timeout error")]
     LockTimeout,
+    #[error("No match available")]
+    NoMatchesAvailable,
+    #[error("Match ID already exists")]
+    MatchIdAlreadyExists,
+    #[error("Invalid matchID or Password")]
+    WrongPassword,
+    #[error("Match not found")]
+    MatchNotAvailable,
 }
 
 pub async fn acquire_lock(
@@ -148,3 +153,128 @@ pub async fn create_match(
 
     Ok(())
 }
+
+pub async fn create_random_online_match(
+    pool: &RedisPool,
+    player1: &str,
+    size: u32,
+) -> Result<String, MatchError> {
+
+    // Generate match_id random
+    let match_id = loop {
+        let id: String = rand::thread_rng()
+            .sample_iter(&rand::distributions::Alphanumeric)
+            .take(8)
+            .map(char::from)
+            .collect();
+
+        // Verification of none-existance
+        let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
+        let exists: bool = conn.exists(format!("match:{}", id))
+            .await
+            .map_err(MatchError::Redis)?;
+
+        if !exists { break id; }
+    };
+
+    // Crete match with 2nd player empty
+    create_match(pool, &match_id, &size, player1, "waiting").await?;
+
+    let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
+    let _: () = conn
+        .set_ex(format!("match:{}:status", &match_id), "waiting", 300)
+        .await
+        .map_err(MatchError::Redis)?;
+
+    Ok(match_id)
+}
+
+pub async fn create_private_online_match(
+    pool: &RedisPool,
+    player1: &str,
+    size: u32,
+    match_id: &str,
+    password: &str,
+) -> Result<String, MatchError> {
+    let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
+
+    // Verify that id is not in use
+    let exists: bool = conn.exists(format!("match:{}", match_id))
+        .await
+        .map_err(MatchError::Redis)?;
+    if exists {
+        return Err(MatchError::MatchIdAlreadyExists);
+    }
+
+    create_match(pool, &match_id.to_string(), &size, player1, "waiting").await?;
+
+    // Save password and status
+    let _: () = conn.set_ex(format!("match:{}:password", match_id), password, 3600)
+        .await
+        .map_err(MatchError::Redis)?;
+    let _: () = conn.set_ex(format!("match:{}:status", match_id), "waiting", 3600)
+        .await
+        .map_err(MatchError::Redis)?;
+
+    Ok(match_id.to_string())
+}
+
+
+pub async fn join_random_online_match(
+    pool: &RedisPool,
+    player2: &str,
+) -> Result<String, MatchError> {
+    let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
+
+    // Get oldest match in pool
+    let match_id: Option<String> = conn.lpop("pool:random")
+        .await
+        .map_err(MatchError::Redis)?;
+
+    let match_id = match_id.ok_or(MatchError::NoMatchesAvailable)?;
+
+    let (player1, _) = get_match_players(pool, &match_id).await?;
+    save_match_players(pool, &match_id, &player1, player2).await?;
+
+    let _: () = conn.set_ex(format!("match:{}:status", &match_id), "active", 3600)
+        .await
+        .map_err(MatchError::Redis)?;
+
+    Ok(match_id)
+}
+
+// Private join
+pub async fn join_private_online_match(
+    pool: &RedisPool,
+    player2: &str,
+    match_id: &str,
+    password: &str,
+) -> Result<(), MatchError> {
+    let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
+
+    // Verificar contraseña
+    let stored_password: String = conn.get(format!("match:{}:password", match_id))
+        .await
+        .map_err(MatchError::Redis)?;
+    if stored_password != password {
+        return Err(MatchError::WrongPassword);
+    }
+
+    // Verificar estado waiting
+    let status: String = conn.get(format!("match:{}:status", match_id))
+        .await
+        .map_err(MatchError::Redis)?;
+    if status != "waiting" {
+        return Err(MatchError::MatchNotAvailable);
+    }
+
+    let (player1, _) = get_match_players(pool, match_id).await?;
+    save_match_players(pool, match_id, &player1, player2).await?;
+
+    let _: () = conn.set_ex(format!("match:{}:status", match_id), "active", 3600)
+        .await
+        .map_err(MatchError::Redis)?;
+
+    Ok(())
+}
+
