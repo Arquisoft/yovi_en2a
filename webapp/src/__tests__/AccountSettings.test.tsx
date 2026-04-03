@@ -14,10 +14,11 @@ describe('AccountSettings', () => {
     const section = new AccountSettings(false, '', mockNavigate, mockLogout)
     render(<MemoryRouter>{section.render()}</MemoryRouter>)
 
-    expect(screen.getByText('Guest (Not logged in)')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /authentication/i })).toBeInTheDocument()
+    expect(screen.getByText('Guest')).toBeInTheDocument()
+    expect(screen.getByText('Not logged in')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /authentication/i }))
+    await user.click(screen.getByRole('button', { name: /log in/i }))
     expect(mockNavigate).toHaveBeenCalledWith('/login')
     expect(mockLogout).not.toHaveBeenCalled()
   })
@@ -31,9 +32,9 @@ describe('AccountSettings', () => {
     render(<MemoryRouter>{section.render()}</MemoryRouter>)
 
     expect(screen.getByText('Alice')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /session/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /log out/i })).toBeInTheDocument()
 
-    await user.click(screen.getByRole('button', { name: /session/i }))
+    await user.click(screen.getByRole('button', { name: /log out/i }))
     expect(mockNavigate).toHaveBeenCalledWith('/')
     expect(mockLogout).toHaveBeenCalled()
   })

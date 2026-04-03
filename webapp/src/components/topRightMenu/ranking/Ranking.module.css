@@ -39,15 +39,16 @@
 .rankingTabBtn {
   flex: 1;
   border: 0.0625rem solid rgba(255, 255, 255, 0.1);
-  color: #bbb;
+  color: #999;
   background: transparent;
   padding: 0.6rem 0;
   border-radius: 0.4rem;
   cursor: pointer;
-  font-weight: 800;
+  font-family: var(--font-heading, inherit);
+  font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.1rem;
+  font-size: 0.85rem;
+  letter-spacing: 0.08rem;
   transition: all 0.2s ease;
   text-align: center;
 }

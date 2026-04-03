@@ -1,20 +1,5 @@
 /* UserMenu.module.css */
 
-/* --- HEADER --- */
-.header {
-  padding: 1.5rem 1.5rem 0.5rem 1.5rem;
-  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
-  margin-bottom: 1rem;
-}
-
-.header h2 {
-  color: var(--primary-color);
-  margin: 0;
-  font-size: 1.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05rem;
-}
-
 /* --- BODY & CONTENT --- */
 .body {
   padding: 0 1.5rem 1.5rem 1.5rem;
@@ -193,15 +178,11 @@
 
 /* --- MOBILE ADAPTATION --- */
 @media (max-width: 48rem) {
-  .header h2 {
-    font-size: 1.2rem;
-  }
-
   .editRow {
     flex-wrap: wrap;
   }
 
   .input {
-    min-width: 100%; /* Input takes full width on small screens */
+    min-width: 100%;
   }
 }

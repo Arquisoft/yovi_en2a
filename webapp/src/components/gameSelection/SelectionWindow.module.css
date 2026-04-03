@@ -65,16 +65,29 @@
 }
 
 .mainTitle h2 {
-  font-size: clamp(1.5rem, 4vw, 3rem); /* Adjusted size for better fit */
+  font-family: var(--font-heading, inherit);
+  font-size: clamp(1.4rem, 3.5vw, 2.6rem);
   color: #ffffff;
   text-transform: uppercase;
-  letter-spacing: 0.6rem;
-  font-weight: 900;
-  margin: 0;
-  text-shadow: 0 0 1.5rem rgba(255, 255, 255, 0.3),
-               0 0 0.5rem var(--primary-color);
-  opacity: 0.9;
+  letter-spacing: 0.55rem;
+  font-weight: 700;
+  margin: 0 0 0.6rem;
+  text-shadow: 0 0 2rem rgba(22, 163, 74, 0.3),
+               0 0 0.5rem rgba(255, 255, 255, 0.15);
+  opacity: 0.92;
   line-height: 1.2;
+}
+
+/* Thin accent line below the title */
+.mainTitle::after {
+  content: '';
+  display: block;
+  margin: 0 auto;
+  width: clamp(3rem, 8vw, 6rem);
+  height: 0.15rem;
+  background: linear-gradient(90deg, transparent, #16a34a, transparent);
+  border-radius: 999px;
+  opacity: 0.7;
 }
 
 /* 4. THE SELECTION STAGE */

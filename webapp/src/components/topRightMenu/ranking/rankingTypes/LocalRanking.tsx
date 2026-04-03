@@ -4,6 +4,7 @@ import { useUser } from "../../../../contexts/UserContext";
 import type { RankingElementLocal } from "../rankingElements/RankingElementLocal";
 import RankingTableLocal from "../RankingTableLocal";
 import StatisticsPanel from "./StatisticsPanel";
+import GameReplayWindow from "./GameReplayWindow";
 import styles from './LocalRanking.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -21,9 +22,9 @@ type SubTabId = typeof LOCAL_SUBTABS[number]['id'];
 const getDisplayData = (data: RankingElementLocal[], subTab: SubTabId): RankingElementLocal[] => {
   switch (subTab) {
     case 'historial':
-      return data;
+      return [...data].reverse(); // most recent first
     case 'time':
-      return [...data].sort((a, b) => b.time - a.time);
+      return [...data].sort((a, b) => a.time - b.time); // shortest first
     case 'wins':
       return [...data].filter(m => m.result.toLowerCase().includes('win')).reverse();
     case 'loses':
@@ -47,6 +48,7 @@ export const LocalRanking = () => {
   const [data, setData] = useState<RankingElementLocal[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSubTab, setActiveSubTab] = useState<SubTabId>('historial');
+  const [replayMatch, setReplayMatch] = useState<RankingElementLocal | null>(null);
   const navigate = useNavigate();
   const { user } = useUser();
 
@@ -64,6 +66,8 @@ export const LocalRanking = () => {
           player2Name: match.player2id === user?.email ? (user?.username ?? match.player2id) : match.player2id,
           result: match.result,
           time: match.time ?? 0,
+          moves: match.moves ?? [],
+          boardSize: match.board_status?.size ?? 8,
         }));
         setData(mappedData);
       })
@@ -87,6 +91,10 @@ export const LocalRanking = () => {
   const displayed = getDisplayData(data, activeSubTab);
 
   return (
+    <>
+    {replayMatch && (
+      <GameReplayWindow match={replayMatch} onClose={() => setReplayMatch(null)} />
+    )}
     <div className={styles.localContainer}>
       <nav className={styles.subMenu}>
         {LOCAL_SUBTABS.map(tab => (
@@ -104,9 +112,14 @@ export const LocalRanking = () => {
         {activeSubTab === 'statistics' ? (
           <StatisticsPanel data={data} username={user.username} />
         ) : (
-          <RankingTableLocal data={displayed} title={getTitle(activeSubTab, user.username)} />
+          <RankingTableLocal
+            data={displayed}
+            title={getTitle(activeSubTab, user.username)}
+            onReplay={setReplayMatch}
+          />
         )}
       </div>
     </div>
+    </>
   );
 };

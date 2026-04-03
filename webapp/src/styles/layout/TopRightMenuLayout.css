@@ -61,12 +61,12 @@
 /* The specific title style (small, spaced, uppercase) */
 .top-right-menu-title {
   color: var(--primary-color);
-  font-size: 6vw;
+  font-size: clamp(2.4rem, 4.5vw, 3.8rem);
   margin: 0;
-  letter-spacing: 0.4rem;
-  font-weight: 800;
+  letter-spacing: 0.35rem;
+  font-weight: 700;
+  font-family: var(--font-heading, inherit);
   text-transform: uppercase;
-  opacity: 0.7;
 }
 
 /* The main body area below the header */
@@ -95,7 +95,7 @@
 
 @media (max-width: 30rem) {
   .top-right-menu-title {
-    font-size: 8vw;
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
     letter-spacing: 0.2rem;
   }
 

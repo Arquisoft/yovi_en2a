@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap');
+
 /* Centralized design tokens and theme variables */
 :root {
   /* Colors */
@@ -6,9 +8,10 @@
   --accent-color: #ff5733;
   --bg-overlay: rgba(0, 0, 0, 0.6);
   --y-white: #f5f5f5;
-  
+
   /* Typography */
   --font-main: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  --font-heading: 'Rajdhani', Inter, system-ui, sans-serif;
 
   /* Effects */
   --glow-primary: 0 0 0.6rem var(--primary-color);
