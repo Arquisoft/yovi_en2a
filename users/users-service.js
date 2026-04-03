@@ -15,7 +15,7 @@ const port = 3000;
 const SESSION_TTL_SECONDS = 1800; // 30 minutes
 
 async function createSession(userData) {
-  const sessionId = crypto.randomUUID();
+  const sessionId = crypto.randomBytes(32).toString('hex');
   await redisClient.setex(`session:${sessionId}`, SESSION_TTL_SECONDS, JSON.stringify(userData));
   return sessionId;
 }
@@ -110,7 +110,7 @@ const SESSION_COOKIE_OPTIONS = {
 
 // CSRF TOKEN GENERATION
 app.get('/api/csrf-token', (req, res) => {
-  const csrfToken = crypto.randomUUID();
+  const csrfToken = crypto.randomBytes(32).toString('hex');
   res.cookie('csrf_token', csrfToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -245,7 +245,7 @@ app.use('/game', createProxyMiddleware({
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   app.listen(port, () => {
-    console.log(`User Service (API Gateway) listening at http://localhost:${port}`);
+    console.log(`User Service (API Gateway) listening on port ${port}`);
   });
 }
 
