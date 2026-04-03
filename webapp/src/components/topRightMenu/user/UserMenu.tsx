@@ -57,8 +57,8 @@ const UserMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
     <div className="top-right-menu-overlay">
       <div className="top-right-menu-container">
         <button className="top-right-menu-close-btn" onClick={onClose} aria-label="Close">✕</button>
-        <header className={styles.header}>
-          <h2>USER PROFILE</h2>
+        <header className="top-right-menu-global-header">
+          <h2 className="top-right-menu-title">USER PROFILE</h2>
         </header>
         <div className={styles.body}>
           <div className={styles.infoGroup}>
