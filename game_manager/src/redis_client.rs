@@ -186,6 +186,10 @@ pub async fn create_random_online_match(
         .await
         .map_err(MatchError::Redis)?;
 
+    let _: () = conn.rpush("pool:random", &match_id)
+        .await
+        .map_err(MatchError::Redis)?;
+
     Ok(match_id)
 }
 
