@@ -4,83 +4,37 @@ import { useUser } from "../../../contexts/UserContext";
 type Props = {
   turn: 1 | 2;
   time?: string;
-  paused?: boolean;
   mode: string | undefined;
-  onPauseToggle?: () => void;
 };
 
-export default function RightPanel({turn,time = "00:00",mode,}: Readonly<Props>) {
+export default function RightPanel({ turn, time = "00:00", mode }: Readonly<Props>) {
   const { user } = useUser();
-  const player1Name = user?.username ?? 'Player 1';
   const isP1 = turn === 1;
-  const isP2 = !isP1;
+
+  const Player = ({ name, isBlue, isActive, meta }: { name: string; isBlue: boolean; isActive: boolean; meta: string }) => (
+    <div className={`rightpanel-player ${isActive ? "active" : ""}`}>
+    <div className="rightpanel-left">
+      <span className={`dot ${isBlue ? "blue" : "red"}`} />
+      <div>
+        <div className="rightpanel-name">{name}</div>
+        <div className="rightpanel-meta">{meta}</div>
+      </div>
+    </div>
+    <span className="rightpanel-chip">{isActive ? "YOUR TURN" : "WAITING"}</span>
+  </div>
+  );
 
   return (
-    
     <div className="rightpanel">
-      {/* Card Timer */}
       <section className="rightpanel-card">
         <h4 className="rightpanel-title">Timer</h4>
-
-        <div className="rightpanel-timer">
-          <div className="rightpanel-time">{time}</div>
-        </div>
+        <div className="rightpanel-time">{time}</div>
       </section>
 
-      {/* Card Players */}
       <section className="rightpanel-card">
         <h4 className="rightpanel-title">Players</h4>
-
-        {/* Player 1 */}
-        <div className={`rightpanel-player ${isP1 ? "active" : ""}`}>
-          <div className="rightpanel-left">
-            <span className="dot blue" />
-            <div>
-              <div className="rightpanel-name">{player1Name}</div>
-              <div className="rightpanel-meta">Human</div>
-            </div>
-          </div>
-          <span className="rightpanel-chip">{isP1 ? "YOUR TURN" : "WAITING"}</span>
-        </div>
-
-        {/* Player 2 */}
-        <div className={`rightpanel-player ${isP2 ? "active" : ""}`}>
-          <div className="rightpanel-left">
-            <span className="dot red" />
-            <div>
-              <div className="rightpanel-name">Player 2</div>
-              <div className="rightpanel-meta">{mode === "bot" ? "Bot" : "Human"}</div>            </div>
-          </div>
-          <span className="rightpanel-chip">{isP2 ? "YOUR TURN" : "WAITING"}</span>
-        </div>
-      </section>
-
-      {/* Card Actions */}
-      <section className="rightpanel-card">
-        <h4 className="rightpanel-title">Actions</h4>
-      {/*
-        <div className="rightpanel-actions">
-          <button
-            className="rightpanel-btn primary"
-            onClick={onUndo}
-            disabled={!canUndo}
-          >Undo
-          </button>
-
-          <button
-            className="rightpanel-btn"
-            onClick={onEndTurn}
-            disabled={!canEndTurn}
-          > End Turn
-          </button>
-
-          <button
-            className="rightpanel-btn danger"
-            onClick={onReset}
-          > Reset
-          </button>
-        </div>
-        */}
+        <Player name={user?.username ?? "Player 1"} isBlue isActive={isP1} meta="Human" />
+        <Player name="Player 2" isBlue={false} isActive={!isP1} meta={mode === "bot" ? "Bot" : "Human"} />
       </section>
     </div>
   );
