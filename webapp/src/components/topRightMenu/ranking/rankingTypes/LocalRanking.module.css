@@ -2,34 +2,124 @@
 
 .loadingContainer {
   text-align: center;
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 .notLoggedContainer {
   text-align: center;
-  padding: 40px;
+  padding: 2.5rem;
   background-color: #1a1a1a;
-  border-radius: 10px;
+  border-radius: 0.625rem;
 }
 
 .notLoggedText {
-  font-size: 18px;
+  font-size: 1.125rem;
   color: #fff;
-  margin-bottom: 20px;
+  margin-bottom: 1.25rem;
 }
 
 .loginButton {
-  padding: 10px 20px;
-  font-size: 16px;
+  padding: 0.625rem 1.25rem;
+  font-size: 1rem;
   cursor: pointer;
-  background-color: #2f00ff;
-  color: rgb(255, 255, 255);
+  background-color: #0056b3;
+  color: #ffffff;
   border: none;
-  border-radius: 5px;
+  border-radius: 0.3125rem;
   font-weight: bold;
   transition: background-color 0.2s ease;
 }
 
 .loginButton:hover {
-  background-color: #0056b3;
+  background-color: #003d82;
+}
+
+/* --- Local submenu layout --- */
+
+.localContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.subMenu {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.6rem 0 0.8rem;
+  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.subTabBtn {
+  flex: 1;
+  background: transparent;
+  border: 0.0625rem solid rgba(255, 255, 255, 0.08);
+  color: #777;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.subTabBtn:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #bbb;
+}
+
+.subTabBtn.active {
+  background: var(--primary-color);
+  color: #000;
+  border-color: var(--primary-color);
+}
+
+.subContent {
+  flex: 1;
+  min-height: 0;
+  padding-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.comingSoon {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 0.9rem;
+  letter-spacing: 0.05rem;
+  text-transform: uppercase;
+}
+
+/* ── Mobile < 45rem ── */
+@media (max-width: 45rem) {
+  .subMenu {
+    gap: 0.3rem;
+    padding-bottom: 0.6rem;
+  }
+
+  .subTabBtn {
+    flex: 1;
+    min-height: 2.5rem;
+    padding: 0.4rem 0.25rem;
+    font-size: 0.65rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+/* ── Mobile < 30rem ── */
+@media (max-width: 30rem) {
+  .subTabBtn {
+    padding: 0.4rem 0.15rem;
+    font-size: 0.6rem;
+    min-height: 2.25rem;
+  }
 }

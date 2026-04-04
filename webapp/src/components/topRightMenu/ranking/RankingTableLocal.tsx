@@ -1,45 +1,82 @@
 import React from 'react';
 import styles from './RankingTableLocal.module.css';
 import type { RankingElementLocal } from "./rankingElements/RankingElementLocal";
+import Pagination, { usePagination } from './Pagination';
 
-const RankingTableLocal: React.FC<{ data: RankingElementLocal[], title: string }> = ({ data, title }) => {
-  return (
-    <div className={styles.rankingContainer}>
-      <h3 className={styles.rankingSubtitle}>{title}</h3>
-      
-      {/* Fixed Header Row: Stays at the top while the list scrolls */}
-      <div className={styles.rankingHeaderRow}>
-        <span>PLAYER 1</span>
-        <span className={styles.vsLabel}></span> {/* Placeholder to align with the VS column */}
-        <span>PLAYER 2</span>
-        <span>RESULT</span>
-      </div>
+const formatTime = (seconds: number): string => {
+    const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+    const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+};
 
-      {/* Scrollable Container: This div handles the vertical scroll via CSS overflow-y */}
-      <div className={styles.rankingList}>
-        {data.map((item, index) => {
-          return (
-            <div 
-              key={`rank-${index}-${item.player1Name}`} 
-              className={styles.rankingItem}
-            >
-              {/* 1. Left Side: Player 1 Name */}
-              <span className={styles.rankName}>{item.player1Name}</span>
-              
-              {/* 2. Center: VS Label */}
-              <span className={styles.vsLabel}>VS</span>
-              
-              {/* 3. Middle/Right: Player 2 Name */}
-              <span className={styles.rankName}>{item.player2Name}</span>
-              
-              {/* 4. Far Right: Match Result (e.g., WIN/LOSS) */}
-              <span className={styles.rankTime}>{item.result}</span>
+interface Props {
+    data: RankingElementLocal[];
+    title: string;
+    onReplay?: (item: RankingElementLocal) => void;
+    showPosition?: boolean;
+}
+
+const RankingTableLocal: React.FC<Props> = ({ data, title, onReplay, showPosition }) => {
+    const { currentPage, setCurrentPage, totalPages, pageData, visiblePages } = usePagination(data);
+
+    const rowClass = (extra = '') =>
+        [styles.rankingItem, showPosition ? styles.withPosition : '', extra].filter(Boolean).join(' ');
+
+    return (
+        <div className={styles.rankingContainer}>
+            <h3 className={styles.rankingSubtitle}>{title}</h3>
+
+            <div className={`${styles.rankingHeaderRow} ${showPosition ? styles.withPosition : ''}`}>
+                {showPosition && <span>POS</span>}
+                <span className={styles.rankName}>PLAYER 1</span>
+                <span className={styles.vsLabel}></span>
+                <span className={styles.rankName}>PLAYER 2</span>
+                <span>RESULT</span>
+                <span>TIME</span>
+                {onReplay && <span className={styles.replayColHeader}></span>}
             </div>
-          );
-        })}
-      </div>
-    </div>
-  );
+
+            <div className={styles.rankingList}>
+                {pageData.map((item, index) => onReplay ? (
+                    <button
+                        key={`rank-${index}-${item.player1Name}`}
+                        type="button"
+                        className={`${rowClass()} ${styles.clickableRow} ${styles.buttonRow}`}
+                        onClick={() => onReplay(item)}
+                    >
+                        {showPosition && <span className={styles.rankPos}>#{item.position}</span>}
+                        <span className={styles.rankName}>{item.player1Name}</span>
+                        <span className={styles.vsLabel}>VS</span>
+                        <span className={styles.rankName}>{item.player2Name}</span>
+                        <span className={styles.rankResult}>{item.result}</span>
+                        <span className={styles.rankTime}>{formatTime(item.time)}</span>
+                        <span className={styles.replayCell}>
+                            <span className={styles.replayBtnMobile}>Replay</span>
+                        </span>
+                    </button>
+                ) : (
+                    <div
+                        key={`rank-${index}-${item.player1Name}`}
+                        className={rowClass()}
+                    >
+                        {showPosition && <span className={styles.rankPos}>#{item.position}</span>}
+                        <span className={styles.rankName}>{item.player1Name}</span>
+                        <span className={styles.vsLabel}>VS</span>
+                        <span className={styles.rankName}>{item.player2Name}</span>
+                        <span className={styles.rankResult}>{item.result}</span>
+                        <span className={styles.rankTime}>{formatTime(item.time)}</span>
+                    </div>
+                ))}
+            </div>
+
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                visiblePages={visiblePages}
+                onPageChange={setCurrentPage}
+            />
+        </div>
+    );
 };
 
 export default RankingTableLocal;

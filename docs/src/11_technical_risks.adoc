@@ -45,5 +45,4 @@ endif::arc42help[]
 | End-to-End (e2e) | Missing automated test suite for game flows. | Medium
 | Code Duplication | Identified logic redundancy across modules. | Low
 | Deployment Structure | Incomplete definition of the production pipeline. | High
-| Documentation | README and Game Bot implementation docs are outdated. | Medium
 |===

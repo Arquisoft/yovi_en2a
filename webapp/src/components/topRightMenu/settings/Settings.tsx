@@ -23,6 +23,8 @@ const SettingsMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
   return (
     <div className="top-right-menu-overlay">
       <div className="top-right-menu-container">
+        <button className="top-right-menu-close-btn" onClick={onClose} aria-label="Close">✕</button>
+
         <header className="top-right-menu-global-header">
           <h2 className="top-right-menu-title">SETTINGS</h2>
         </header>
@@ -43,7 +45,6 @@ const SettingsMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
           <main className={styles.settingsPanel}>
             <header className={styles.settingsPanelHeader}>
               <h2 className={styles.sectionLabel}>{currentSection?.label}</h2>
-              <button className={styles.closeButton} onClick={onClose} aria-label="Close">✕</button>
             </header>
             <div className={styles.tabContent}>
               {currentSection?.render()}

@@ -12,10 +12,13 @@ export function createMatch(player1: string, player2: string, size: number) {
       player2,
       size,
     }),
-  }).then((res) => res.json())
-    .catch((err) => {
-      console.error("Error create match:", err);
-      return null;
+  }).then(async (res) => {
+    const text = await res.text();
+    if (!res.ok) throw new Error(`Status ${res.status}: ${text}`);
+    return JSON.parse(text);
+  }).catch((err) => {
+    console.error("Error create match:", err);
+    return null;
   });
 }
 
@@ -32,12 +35,14 @@ export function sendMove(matchId: string, x: number, y: number, z: number) {
       coord_y: y,
       coord_z: z,
     }),
-  })
-    .then((res) => res.json())
-    .catch((err) => {
-      console.error("Error sending move:", err);
-      return null;
-    });
+  }).then(async (res) => {
+    const text = await res.text();
+    if (!res.ok) throw new Error(`Status ${res.status}: ${text}`);
+    return JSON.parse(text);
+  }).catch((err) => {
+    console.error("Error sending move:", err);
+    return null;
+  });
 }
 
 // response: match_id:string, coordinates, game_over:boolean
@@ -61,11 +66,7 @@ export function requestBotMove(matchId: string) {
       }
       
       // 3. Si todo va bien, intentamos convertir ese texto a JSON
-      try {
-        return JSON.parse(text);
-      } catch (e) {
-        throw new Error(`El servidor devolvió texto en vez de JSON: ${text}`);
-      }
+      return JSON.parse(text);
     })
     .catch((err) => {
       console.error("[GameApi] requestBotMove error:", err.message);
@@ -97,7 +98,14 @@ export function requestBotMove(matchId: string) {
     });
 }
 
-export function saveMatch(matchId: string, player1id: string, player2id: string, result: string, time: number) {
+export function saveMatch(
+  matchId: string,
+  player1id: string,
+  player2id: string,
+  result: string,
+  time: number,
+  moves: { x: number; y: number; z: number }[] = [],
+) {
   return fetch(`${API_URL}/game/saveMatch`, {
     method: "POST",
     headers: {
@@ -109,6 +117,7 @@ export function saveMatch(matchId: string, player1id: string, player2id: string,
       player2id,
       result,
       time,
+      moves,
     }),
   })
     .then(async (res) => {

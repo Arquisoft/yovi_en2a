@@ -1,85 +1,83 @@
-/* RankingTableGlobal.module.css */
+/* GlobalRanking.module.css */
 
-.rankingContainer {
-  background: #181818;
-  border-radius: 0.5rem;
-  padding: 1.5rem;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.rankingSubtitle {
+.loadingContainer {
   text-align: center;
-  color: var(--primary-color, #007bff);
-  margin-top: 0;
-  margin-bottom: 1.5rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1rem;
+  padding: 1.25rem;
 }
 
-/* --- LÓGICA DE LA CUADRÍCULA (GRID) --- */
-/* 1fr = Player 1 ocupa el espacio restante hasta el VS
-  3rem = Ancho fijo para el "VS"
-  1fr = Player 2 empieza en la mitad exacta y ocupa espacio
-  5rem = Espacio fijo al final para el Tiempo/Resultado
-*/
-.rankingHeaderRow,
-.rankingItem {
-  display: grid;
-  grid-template-columns: 1fr 3rem 1fr 5rem;
-  align-items: center;
-  padding: 0.75rem 1rem;
+/* --- Global submenu layout --- */
+
+.globalContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
-/* Cabecera de la tabla */
-.rankingHeaderRow {
+.subMenu {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.6rem 0 0.8rem;
+  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.subTabBtn {
+  flex: 1;
+  background: transparent;
+  border: 0.0625rem solid rgba(255, 255, 255, 0.08);
+  color: #777;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  font-size: 0.7rem;
   font-weight: 700;
-  font-size: 0.8rem;
-  color: #888;
   text-transform: uppercase;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 0.5rem;
-}
-
-/* Fila de cada partida */
-.rankingItem {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: background-color 0.2s;
-}
-
-.rankingItem:hover {
-  background: rgba(255, 255, 255, 0.03);
-}
-
-/* --- ALINEACIONES ESPECÍFICAS DE CADA COLUMNA --- */
-.player1 {
-  text-align: left;
-  font-weight: 600;
+  letter-spacing: 0.05rem;
+  transition: all 0.15s ease;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.vsLabel {
-  text-align: center;
-  color: #555;
-  font-size: 0.8rem;
-  font-style: italic;
-  font-weight: 700;
+.subTabBtn:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #bbb;
 }
 
-.player2 {
-  text-align: left; /* Empieza desde la mitad hacia la derecha */
-  font-weight: 600;
-  color: #aaa; /* Color ligeramente distinto para diferenciarlo */
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.subTabBtn.active {
+  background: var(--primary-color);
+  color: #000;
+  border-color: var(--primary-color);
 }
 
-.result {
-  text-align: right; /* Pegado al extremo derecho */
-  font-family: monospace; /* Fuente de ancho fijo ideal para tiempos/números */
-  font-size: 1.1rem;
-  color: var(--primary-color, #007bff);
+.subContent {
+  flex: 1;
+  min-height: 0;
+  padding-top: 0.8rem;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Mobile < 45rem ── */
+@media (max-width: 45rem) {
+  .subMenu {
+    gap: 0.3rem;
+    padding-bottom: 0.6rem;
+  }
+
+  .subTabBtn {
+    flex: 1;
+    min-height: 2.5rem;
+    padding: 0.4rem 0.25rem;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+}
+
+/* ── Mobile < 30rem ── */
+@media (max-width: 30rem) {
+  .subTabBtn {
+    padding: 0.4rem 0.15rem;
+    font-size: 0.65rem;
+    min-height: 2.25rem;
+  }
 }

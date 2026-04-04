@@ -91,4 +91,69 @@ describe('GameModeContainer Component', () => {
       undefined
     )
   })
+
+  test('passes guest state in navState when location has guest:true', () => {
+    const mode = new NormalMode()
+    render(
+      <MemoryRouter initialEntries={[{ pathname: '/gameSelection', state: { guest: true } }]}>
+        <GameModeContainer mode={mode} />
+      </MemoryRouter>
+    )
+    fireEvent.click(screen.getByText('PLAY'))
+    expect(mockNavigate).toHaveBeenCalledWith(
+      expect.any(String),
+      { state: { guest: true } }
+    )
+  })
+
+  test('decrease size button is hidden when size is at minimum', () => {
+    const mode = new NormalMode()
+    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+
+    const leftArrows = screen.getAllByText('←')
+    // Click left on size until minimum (4) — the size left arrow is index 1
+    for (let i = 0; i < 10; i++) fireEvent.click(leftArrows[1])
+
+    expect(leftArrows[1]).toHaveStyle({ visibility: 'hidden' })
+  })
+
+  test('increase size button is hidden when size is at maximum', () => {
+    const mode = new NormalMode()
+    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+
+    const rightArrows = screen.getAllByText('→')
+    for (let i = 0; i < 10; i++) fireEvent.click(rightArrows[1])
+
+    expect(rightArrows[1]).toHaveStyle({ visibility: 'hidden' })
+  })
+
+  test('decrease difficulty button is hidden when at minimum difficulty', () => {
+    const mode = new NormalMode()
+    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+
+    const leftArrows = screen.getAllByText('←')
+    // Click difficulty left (index 0) many times to reach min
+    for (let i = 0; i < 10; i++) fireEvent.click(leftArrows[0])
+
+    expect(leftArrows[0]).toHaveStyle({ visibility: 'hidden' })
+  })
+
+  test('increase difficulty button is hidden when at maximum difficulty', () => {
+    const mode = new NormalMode()
+    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+
+    const rightArrows = screen.getAllByText('→')
+    // Click difficulty right (index 0) many times to reach max
+    for (let i = 0; i < 10; i++) fireEvent.click(rightArrows[0])
+
+    expect(rightArrows[0]).toHaveStyle({ visibility: 'hidden' })
+  })
+
+  test('size defaults to 8 when mode.size is 0 (falsy)', () => {
+    const mode = new NormalMode()
+    mode.size = 0
+    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+    // The size display should show 8 (the fallback)
+    expect(screen.getByText('8')).toBeInTheDocument()
+  })
 })

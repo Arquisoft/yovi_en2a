@@ -32,27 +32,38 @@
 
 .rankingTabs {
   display: flex;
-  gap: 1rem;
+  flex: 1;
+  gap: 0.75rem;
 }
 
 .rankingTabBtn {
+  flex: 1;
   border: 0.0625rem solid rgba(255, 255, 255, 0.1);
-  color: #bbb; 
-  background: transparent;
-  padding: 0.6rem 1.8rem;
-  border-radius: 0.4rem;
+  color: #999;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.6rem 0;
+  border-radius: 0.5rem;
   cursor: pointer;
-  font-weight: 800;
+  font-family: var(--font-heading, inherit);
+  font-weight: 700;
   text-transform: uppercase;
-  font-size: 0.75rem;
-  letter-spacing: 0.1rem;
-  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  letter-spacing: 0.08rem;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  text-align: center;
+}
+
+.rankingTabBtn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ddd;
 }
 
 .rankingTabBtn.active {
   background: var(--primary-color);
   color: #000;
   border-color: var(--primary-color);
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.3);
+  transform: translateY(-0.1rem);
 }
 
 .rankingContent {
@@ -65,32 +76,42 @@
   overflow: hidden; 
 }
 
-.closeButton {
-  background: transparent;
-  border: none;
-  color: #555;
-  font-size: 1.2rem;
-  cursor: pointer;
-  transition: color 0.2s;
-}
 
-.closeButton:hover {
-  color: #ff4444;
-}
-
-/* Mobile Responsiveness */
-@media (max-width: 48rem) {
+/* ── Mobile < 45rem (720 px) ── */
+@media (max-width: 45rem) {
   .rankingNavHeader {
-    padding: 0.5rem 1rem; 
+    padding: 0.5rem 0.75rem;
   }
 
   .rankingTabs {
-    gap: 0.5rem;
-    overflow-x: auto; 
+    gap: 0.4rem;
   }
 
   .rankingTabBtn {
-    padding: 0.5rem 1rem; 
-    font-size: 0.7rem;      
+    flex: 1;
+    padding: 0.65rem 0.5rem;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    min-height: 2.75rem;
+  }
+
+  .rankingContent {
+    padding: 0.75rem;
+  }
+}
+
+/* ── Mobile < 30rem (480 px) ── */
+@media (max-width: 30rem) {
+  .rankingNavHeader {
+    padding: 0.4rem 0.5rem;
+  }
+
+  .rankingTabBtn {
+    padding: 0.6rem 0.9rem;
+    font-size: 0.7rem;
+  }
+
+  .rankingContent {
+    padding: 0.5rem;
   }
 }

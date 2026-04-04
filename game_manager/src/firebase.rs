@@ -147,8 +147,9 @@ pub async fn get_user_matches(user_id: &str) -> Result<Vec<Match>, Box<dyn Error
         .query() 
         .await?;
 
-    // 3. Combine both lists
+    // 3. Combine both lists and sort chronologically (oldest first)
     matches_p1.extend(matches_p2);
+    matches_p1.sort_by_key(|m| m.created_at);
     Ok(matches_p1)
 }
 
@@ -176,7 +177,7 @@ pub async fn get_ranking_time() -> Result<Vec<Score>, Box<dyn Error>> {
 /// Si el jugador no existe en la base de datos, lo crea automáticamente.
 pub async fn update_score(
     playerid: &str,
-    username: &str, 
+    username: &str,
     is_win: bool,
     time: f32,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
@@ -265,7 +266,7 @@ pub async fn insert_score(
         losses,
         win_rate: win_rate as std::ffi::c_float,
         elo,
-        best_time: time, 
+        best_time: time,
     };
 
     db.fluent()

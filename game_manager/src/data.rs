@@ -64,6 +64,10 @@
         pub result: String,
         pub board_status:YEN,
         pub time: f32,
+        #[serde(default)]
+        pub moves: Vec<Coordinates>,
+        #[serde(default)]
+        pub created_at: u64,
     }
     impl DBData for Match {}
 
@@ -192,6 +196,8 @@ pub struct SaveMatchRequest {
     pub player2id: String,
     pub result: String,
     pub time: f32,
+    #[serde(default)]
+    pub moves: Vec<Coordinates>,
 }
 
 #[derive(Serialize)]

@@ -4,13 +4,34 @@ ifndef::imagesdir[:imagesdir: ../images]
 == Solution Strategy
 
 === Technical Decisions
-* **Firebase** is the chosen data base management tool for our project. 
-* All of the bot logic will be implemented in **rust**.
-* We will implement our user interface using the **react** javaScript library because it allows us to organize and reuse our ui components easily.
-* **Docker** will be used to launch the project in the same way regardless of hardware.
+
+==== Frontend
+* The user interface is implemented using **React** with **TypeScript**, built with **Vite**. React's component model allows us to organize and reuse UI elements efficiently, while TypeScript enforces type safety across the codebase.
+
+==== Backend Services
+The backend follows a **microservices architecture** with the following services:
+
+* **Users Service (Node.js/Express):** Acts as the central API gateway. All client requests go through this service, which proxies to the appropriate internal service. It also handles CSRF protection.
+* **Auth Engine (Rust/Axum):** A dedicated Rust microservice responsible for user registration, login, and token validation, backed by Firebase Auth.
+* **Game Manager (Rust/Axum):** Manages match lifecycle — game creation, move processing, and result persistence. Bridges Redis for active game state and Firestore for long-term storage.
+* **Gamey Engine (Rust/Axum):** The computational core. Implements game rules, win detection, and AI move generation. Written in Rust for maximum performance and determinism.
+
+==== Data Storage
+* **Firebase (Firestore + Auth):** Chosen as the primary persistent data store for user accounts, match history, and global rankings. Fully managed with built-in authentication.
+* **Redis:** Used as an in-memory cache for active match state, providing low-latency reads and writes during gameplay.
+
+==== Infrastructure
+* **Docker & Docker Compose:** Every service is containerized to ensure environment parity between development and production. A single `docker-compose.yml` orchestrates all services.
+* **Azure VM:** The production deployment target. All containers run on a single Azure virtual machine at `20.250.145.156`.
+
+==== Monitoring & Quality
+* **Prometheus + Grafana:** The Users Service exposes metrics collected by Prometheus and visualized through Grafana dashboards for operational monitoring.
+* **SonarCloud:** Integrated into the CI/CD pipeline for static analysis, code quality gates, and coverage reporting.
 
 === Organizational Decisions
-* We are using github to organize the project's developement, using the wiki to document our meetings and using the branch protection features to avoid mistakes and make sure every push to a main brach is reviewed by another team member.  
+* **GitHub** is used to manage the project, with branch protection rules ensuring every push to a main branch is reviewed by at least one other team member.
+* **GitHub Actions** automates the CI/CD pipeline: unit tests, E2E tests, Docker image builds, and deployment to Azure on each release.
+* **GitHub Wiki** is used to document team meetings and decisions.
 
 
 ifdef::arc42help[]

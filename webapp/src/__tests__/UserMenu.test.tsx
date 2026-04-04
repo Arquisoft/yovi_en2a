@@ -42,7 +42,7 @@ describe('UserMenu Component', () => {
 
     render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
 
-    expect(screen.getByText(/You are not logged in yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Not logged in/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Go to Login/i })).toBeInTheDocument();
   });
 
@@ -71,7 +71,7 @@ describe('UserMenu Component', () => {
     render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
 
     expect(screen.getByText('pablo@test.com')).toBeInTheDocument();
-    expect(screen.getByText('Pablo')).toBeInTheDocument();
+    expect(screen.getAllByText('Pablo')[0]).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Log Out/i })).toBeInTheDocument();
   });
 
@@ -133,6 +133,18 @@ describe('UserMenu Component', () => {
     expect(await screen.findByText('Failed to update username.')).toBeInTheDocument()
   })
 
+  test('shows U avatar when username is empty', () => {
+    vi.mocked(useUser).mockReturnValue({
+      user: { email: 'anon@test.com', username: '' },
+      isLoggedIn: true, loading: false, error: null,
+      refreshUser: vi.fn(), logout: mockLogout, updateUsername: mockUpdateUsername
+    });
+
+    render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
+    // Empty username → avatar fallback 'U'
+    expect(screen.getByText('U')).toBeInTheDocument();
+  });
+
   test('can cancel editing without saving', async () => {
     vi.mocked(useUser).mockReturnValue({
       user: { email: 'pablo@test.com', username: 'Pablo' },
@@ -149,7 +161,7 @@ describe('UserMenu Component', () => {
 
     await user.click(screen.getByRole('button', { name: /Cancel/i }));
 
-    expect(screen.getByText('Pablo')).toBeInTheDocument();
+    expect(screen.getAllByText('Pablo')[0]).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 });

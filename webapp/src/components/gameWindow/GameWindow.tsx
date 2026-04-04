@@ -38,7 +38,8 @@ const GameWindow = () => {
   const [game, setGame] = useState<Game>(new Game(size, player1, player2));
   const [loading, setLoading] = useState(false);
   const [paused, setPaused] = useState(false);
-  
+  const [showMobilePanel, setShowMobilePanel] = useState(false);
+
   // NUEVO ESTADO: Controla el mensaje del modal. Si es null, el modal está oculto.
   const [modalMessage, setModalMessage] = useState<string | null>(null);
 
@@ -73,7 +74,9 @@ const GameWindow = () => {
   }
 
   // --- NUEVA FUNCIÓN PARA GESTIONAR EL FINAL DEL JUEGO ---
-  const handleGameOver = (isPlayer1Winner: boolean) => {
+  // finishedMoves must be passed in explicitly — reading game.moves here would give
+  // the stale snapshot from before the winning move was added.
+  const handleGameOver = (isPlayer1Winner: boolean, finishedMoves: Move[]) => {
     const winnerName = isPlayer1Winner ? player1 : player2;
     setModalMessage(`Game finished! ${winnerName} won.`);
 
@@ -86,7 +89,8 @@ const GameWindow = () => {
       updateScore(currentUser.email, currentUser.username, isPlayer1Winner, timeInSeconds);
 
       // 2. Guardar el historial de la partida (Requiere endpoint en Rust)
-      saveMatch(game.matchId, currentUser.email, player2, resultString, timeInSeconds);
+      const movesAsCoords = finishedMoves.map(m => toXYZ(m.row, m.col, size));
+      saveMatch(game.matchId, currentUser.email, player2, resultString, timeInSeconds, movesAsCoords);
     }
   };
 
@@ -108,7 +112,7 @@ const GameWindow = () => {
 
       if (data.game_over) {
         // game.turn era 0 (Player 1) al hacer el movimiento que dio la victoria
-        handleGameOver(game.turn === 0);
+        handleGameOver(game.turn === 0, updatedGame.moves);
         return;
       }
 
@@ -125,7 +129,7 @@ const GameWindow = () => {
       let t1 = Date.now();
       const botData = await requestBotMove(currentGame.matchId!);
       let t2 = Date.now();
-      if(t2-t1 < 500) await sleep(Math.random()*500 + 500)
+      if(t2-t1 < 500) await sleep(crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF * 500 + 500)
       if (!botData) return;
 
       const x = botData.coordinates?.x ?? botData.coord_x ?? botData.x;
@@ -142,7 +146,7 @@ const GameWindow = () => {
       setGame(botGame);
 
       if (botData.game_over) {
-          handleGameOver(false); // Falso porque ganó el Bot (Jugador 2)
+          handleGameOver(false, botGame.moves); // Falso porque ganó el Bot (Jugador 2)
       }
     } finally {
       // Dejamos de cargar si el bot ha terminado
@@ -156,22 +160,28 @@ const GameWindow = () => {
       <TopRightMenu />
       <TopLeftHeader />
 
+      <button className="mobile-menu-button"
+            onClick={() => setShowMobilePanel(!showMobilePanel)}>
+            {showMobilePanel ? "✕" : "☰"}
+      </button>
+      
       <div className="center-area">
+
         <Board
           size={game.size}
           moves={game.moves}
           blocked={loading || game.gameOver || isBotTurn}
           onPlace={handlePlace}
         />
-      </div>
 
-      <RightPanel
-        turn={game.turn === 0 ? 1 : 2}
-        time={formattedTime}
-        paused={paused}
-        mode={mode}
-        onPauseToggle={() => setPaused(!paused)}
-      />
+        <div className={`rightpanel-container ${showMobilePanel ? "open" : ""}`}>
+          <RightPanel
+            turn={game.turn === 0 ? 1 : 2}
+            time={formattedTime}
+            mode={mode}
+          />
+        </div>
+      </div>
 
       {/* --- EL MODAL DE VICTORIA --- */}
       {modalMessage && (

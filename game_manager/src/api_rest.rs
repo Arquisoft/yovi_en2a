@@ -229,9 +229,9 @@ async fn update_user_score(
 ) -> Result<Json<UpdateScoreResponse>, (StatusCode, String)> {
     
     crate::firebase::update_score(
-        &payload.playerid, 
-        &payload.username, 
-        payload.is_win, 
+        &payload.playerid,
+        &payload.username,
+        payload.is_win,
         payload.time
     ).await.map_err(|e| {
         eprintln!("Error updating score: {:?}", e);
@@ -258,12 +258,18 @@ async fn save_match(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error reading YEN: {}", e)))?;
 
     // 3. Construimos tu struct Match exacto
+    let created_at = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
     let match_data = Match {
         player1id: payload.player1id,
         player2id: payload.player2id,
         result: payload.result,
         board_status,
         time: payload.time,
+        moves: payload.moves,
+        created_at,
     };
 
     // 4. Lo guardamos en Firebase

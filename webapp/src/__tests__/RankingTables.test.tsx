@@ -32,8 +32,8 @@ describe('Ranking UI Tables', () => {
 
   test('RankingTableLocal renders matches correctly', () => {
     const mockData = [
-      { player1Name: 'Alice', player2Name: 'Bot', result: 'WIN' },
-      { player1Name: 'Charlie', player2Name: 'David', result: 'LOSS' }
+      { position: 1, player1Name: 'Alice',   player2Name: 'Bot',   result: 'WIN',  time: 30 },
+      { position: 2, player1Name: 'Charlie', player2Name: 'David', result: 'LOSS', time: 45 },
     ]
 
     render(<RankingTableLocal data={mockData} title="My Matches" />)

@@ -1,8 +1,8 @@
 .selectionPanelContainer {
   position: relative;
   display: flex;
-  flex-direction: row; /* Explicitly set to row */
-  align-items: center; /* Centers the arrows vertically */
+  flex-direction: row;
+  align-items: center;
   width: 100%;
   max-width: 90rem;
   margin: 0 auto;
@@ -12,38 +12,36 @@
   overflow: hidden;
 }
 
-/* Let the arrows behave as normal flex items */
 .arrow {
   font-size: 3rem;
   width: 4.5rem;
   height: 4.5rem;
-  flex-shrink: 0; /* CRUCIAL: Prevents the viewport from squishing the arrows */
+  flex-shrink: 0;
   cursor: pointer;
   background: transparent;
   border: none;
   color: #ffffff;
   z-index: 100;
-  display: none; /* Hidden on mobile by default */
+  display: none;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease; /* Adds a smooth transition for the hover effect */
+  transition: transform 0.2s ease;
 }
 
 .carouselViewport {
   flex: 1;
-  align-self: stretch; /* Forces the viewport to take the full height of the container */
+  align-self: stretch;
   width: 100%;
   height: 100%;
   overflow-x: auto;
   overflow-y: hidden;
   scroll-behavior: smooth;
   padding: 2rem 0;
-  scrollbar-width: none; /* Hides scrollbar in Firefox */
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-  scroll-snap-type: x mandatory; /* Enables snapping to the closest item */
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x mandatory;
 }
 
-/* Hides scrollbar in WebKit browsers (Chrome, Safari, Edge) */
 .carouselViewport::-webkit-scrollbar {
   display: none;
 }
@@ -53,48 +51,97 @@
   flex-direction: row;
   align-items: stretch;
   gap: 2.5rem;
-  /* Set left padding to match the exact gap. Right padding is 0 to avoid browser bugs */
   padding-left: 2.5rem;
-  padding-right: 0; 
+  padding-right: 0;
   height: 100%;
 }
 
-/* * CRUCIAL FIX: WebKit/Blink browsers often ignore right-padding on scrolling flex containers. 
- * This invisible pseudo-element forces exactly 2.5rem of space at the very end of the scroll,
- * perfectly matching the gap between items to keep it symmetrical.
- */
+/* Prevents missing right-padding in WebKit scrolling containers */
 .modesWrapper::after {
   content: "";
   display: block;
-  flex: 0 0 0.1rem; /* Matches the gap perfectly */
+  flex: 0 0 0.1rem;
 }
 
 .modeItem {
   flex: 0 0 auto;
-  width: 75vw; /* Base width for mobile (shows mostly 1 card) */
+  width: 75vw;
   min-width: 17.5rem;
   max-width: 24rem;
   height: 100%;
   display: flex;
   overflow: hidden;
-  scroll-snap-align: center; /* Snaps the center of the card to the center of the viewport */
+  scroll-snap-align: center;
   transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
-/* --- RESPONSIVE BREAKPOINTS --- */
+/* ── Mobile < 30rem (480 px) ───────────────────────────────── */
+@media (max-width: 30rem) {
+  .modeItem {
+    min-height: 20rem;
+  }
 
-/* Mobile (Up to 48rem) */
-@media (max-width: 48rem) {
-  .modeItem:hover {
-    transform: none; /* Disable scale effect on touch devices */
+  .carouselViewport {
+    padding: 0.75rem;
   }
 }
 
-/* Tablet (Between 48.1rem and 64rem) */
-@media (min-width: 48.1rem) and (max-width: 64rem) {
+/* ── Mobile < 45rem (720 px) ───────────────────────────────── */
+@media (max-width: 45rem) {
+  .selectionPanelContainer {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .arrow {
+    display: none !important;
+  }
+
+  /* Vertical scroll; bottom gradient fades out to hint more content below */
+  .carouselViewport {
+    overflow-x: hidden;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    padding: 1rem;
+    height: 100%;
+    -webkit-mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
+    mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
+  }
+
+  .modesWrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1.5rem;
+    padding: 0;
+    height: auto;
+    width: 100%;
+  }
+
+  .modesWrapper::after {
+    display: none;
+  }
+
   .modeItem {
-    width: 42vw; /* Fluid width allows the card to grow nicely on tablets */
-    max-width: 28rem; /* Higher cap so it uses the extra space well */
+    width: 100%;
+    height: auto;
+    min-height: 22rem;
+    max-width: none;
+    scroll-snap-align: start;
+  }
+
+  .modeItem:hover {
+    transform: none;
+  }
+}
+
+/* ── Tablet 45.1rem – 64rem ────────────────────────────────── */
+@media (min-width: 45.1rem) and (max-width: 64rem) {
+  .modeItem {
+    width: 42vw;
+    max-width: 28rem;
   }
 
   .modeItem:hover {
@@ -107,14 +154,14 @@
   }
 
   .arrow:hover {
-    transform: scale(1.15); /* Slightly enlarges the arrow on hover */
+    transform: scale(1.15);
   }
 }
 
-/* Desktop (Greater than 64rem) */
+/* ── Desktop > 64rem ───────────────────────────────────────── */
 @media (min-width: 64.1rem) {
   .modeItem {
-    width: 24rem; /* Safely locks to a fixed width so it doesn't get ridiculously massive on wide monitors */
+    width: 24rem;
     max-width: none;
   }
 

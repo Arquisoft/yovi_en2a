@@ -5,11 +5,25 @@ import { describe, test, expect, vi, afterEach, beforeEach } from 'vitest'
 import { LocalRanking } from '../components/topRightMenu/ranking/rankingTypes/LocalRanking'
 import '@testing-library/jest-dom'
 
+// Mock StatisticsPanel so recharts doesn't blow up in jsdom
+vi.mock('../components/topRightMenu/ranking/rankingTypes/StatisticsPanel', () => ({
+  default: () => <div data-testid="statistics-panel">StatisticsPanel</div>,
+}))
+
+// Mock GameReplayWindow to avoid rendering the full board
+vi.mock('../components/topRightMenu/ranking/rankingTypes/GameReplayWindow', () => ({
+  default: ({ onClose }: { onClose: () => void }) => (
+    <div data-testid="replay-window">
+      <button onClick={onClose}>Close Replay</button>
+    </div>
+  ),
+}))
+
 // 1. Mock of React Router
 const mockNavigate = vi.fn()
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom')
-  return { ...actual as any, useNavigate: () => mockNavigate }
+  return { ...(actual as Record<string, unknown>), useNavigate: () => mockNavigate }
 })
 
 // 2. Mock of UserContext
@@ -42,10 +56,9 @@ describe('LocalRanking Strategy & Fetcher', () => {
 
     globalThis.fetch = vi.fn().mockResolvedValueOnce({
       json: async () => ({ matches: [] })
-    } as any)
+    }) as unknown as typeof fetch
 
-    const strategy = new LocalRanking()
-    render(<MemoryRouter>{strategy.render()}</MemoryRouter>)
+    render(<MemoryRouter><LocalRanking /></MemoryRouter>)
 
     await waitFor(() => {
       expect(screen.getByText(/You are not logged yet/i)).toBeInTheDocument()
@@ -77,18 +90,205 @@ describe('LocalRanking Strategy & Fetcher', () => {
 
     globalThis.fetch = vi.fn().mockResolvedValueOnce({
       json: async () => mockApiResponse
-    } as any)
+    }) as unknown as typeof fetch
 
-    const strategy = new LocalRanking()
-    render(<MemoryRouter>{strategy.render()}</MemoryRouter>)
+    render(<MemoryRouter><LocalRanking /></MemoryRouter>)
 
     await waitFor(() => {
-      expect(screen.queryByText(/Cargando Historial/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Loading history/i)).not.toBeInTheDocument()
     })
 
-    expect(screen.getByText(/Personal Records \(ProGamer\)/i)).toBeInTheDocument()
+    expect(screen.getByText(/Match History \(ProGamer\)/i)).toBeInTheDocument()
     expect(screen.getByText('BotLevel3')).toBeInTheDocument()
     expect(screen.getByText('WIN')).toBeInTheDocument()
+  })
+
+  // ── Sub-tab switching ────────────────────────────────────────────────────
+
+  /** Render LocalRanking logged in, with two pre-baked matches */
+  const renderWithMatches = async () => {
+    vi.mocked(useUser).mockReturnValue({
+      user: { username: 'ProGamer', email: 'pro@gamer.com' },
+      isLoggedIn: true,
+      loading: false,
+      error: null,
+      refreshUser: vi.fn(),
+      logout: vi.fn(),
+      updateUsername: vi.fn()
+    })
+
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+      json: async () => ({
+        matches: [
+          { player1id: 'pro@gamer.com', player2id: 'BotA', result: 'Win',  time: 90 },
+          { player1id: 'pro@gamer.com', player2id: 'BotB', result: 'Loss', time: 30 },
+        ]
+      })
+    }) as unknown as typeof fetch
+
+    render(<MemoryRouter><LocalRanking /></MemoryRouter>)
+
+    await waitFor(() =>
+      expect(screen.queryByText(/Loading history/i)).not.toBeInTheDocument()
+    )
+  }
+
+  test('default tab shows match history title', async () => {
+    await renderWithMatches()
+    expect(screen.getByText(/Match History \(ProGamer\)/i)).toBeInTheDocument()
+  })
+
+  test('switching to Time tab shows correct title', async () => {
+    const user = userEvent.setup()
+    await renderWithMatches()
+    await user.click(screen.getByRole('button', { name: /^Time$/i }))
+    expect(screen.getByText(/By Duration/i)).toBeInTheDocument()
+  })
+
+  test('switching to Wins tab shows only Win results', async () => {
+    const user = userEvent.setup()
+    await renderWithMatches()
+    await user.click(screen.getByRole('button', { name: /^Wins$/i }))
+    expect(screen.getByText(/Wins — Most Recent First/i)).toBeInTheDocument()
+    expect(screen.getByText('Win')).toBeInTheDocument()
+    expect(screen.queryByText('Loss')).not.toBeInTheDocument()
+  })
+
+  test('switching to Loses tab shows only Loss results', async () => {
+    const user = userEvent.setup()
+    await renderWithMatches()
+    await user.click(screen.getByRole('button', { name: /^Loses$/i }))
+    expect(screen.getByText(/Loses — Most Recent First/i)).toBeInTheDocument()
+    expect(screen.getByText('Loss')).toBeInTheDocument()
+    expect(screen.queryByText('Win')).not.toBeInTheDocument()
+  })
+
+  test('switching to Statistics tab renders StatisticsPanel', async () => {
+    const user = userEvent.setup()
+    await renderWithMatches()
+    await user.click(screen.getByRole('button', { name: /Statistics/i }))
+    expect(screen.getByTestId('statistics-panel')).toBeInTheDocument()
+  })
+
+  test('email is replaced by username in player name', async () => {
+    await renderWithMatches()
+    // player1id === user.email → should show username, not email
+    expect(screen.getAllByText('ProGamer').length).toBeGreaterThan(0)
+    expect(screen.queryByText('pro@gamer.com')).not.toBeInTheDocument()
+  })
+
+  test('clicking a match row opens the replay window', async () => {
+    const user = userEvent.setup()
+    await renderWithMatches()
+    // Click the first row to trigger onReplay → sets replayMatch → renders GameReplayWindow
+    const rows = screen.getAllByRole('button')
+    const matchRow = rows.find(btn => btn.textContent?.includes('BotA') || btn.textContent?.includes('BotB'))
+    expect(matchRow).toBeDefined()
+    await user.click(matchRow!)
+    expect(screen.getByTestId('replay-window')).toBeInTheDocument()
+  })
+
+  test('closing the replay window hides it', async () => {
+    const user = userEvent.setup()
+    await renderWithMatches()
+    const rows = screen.getAllByRole('button')
+    const matchRow = rows.find(btn => btn.textContent?.includes('BotA') || btn.textContent?.includes('BotB'))
+    await user.click(matchRow!)
+    await user.click(screen.getByText('Close Replay'))
+    expect(screen.queryByTestId('replay-window')).not.toBeInTheDocument()
+  })
+
+  test('shows username for player2 when player2id matches user email', async () => {
+    vi.mocked(useUser).mockReturnValue({
+      user: { username: 'ProGamer', email: 'pro@gamer.com' },
+      isLoggedIn: true,
+      loading: false,
+      error: null,
+      refreshUser: vi.fn(),
+      logout: vi.fn(),
+      updateUsername: vi.fn()
+    })
+
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+      json: async () => ({
+        matches: [
+          { player1id: 'Opponent', player2id: 'pro@gamer.com', result: 'Win', time: 60 }
+        ]
+      })
+    }) as unknown as typeof fetch
+
+    render(<MemoryRouter><LocalRanking /></MemoryRouter>)
+
+    await waitFor(() =>
+      expect(screen.queryByText(/Loading history/i)).not.toBeInTheDocument()
+    )
+    // player2id matches email → should display username 'ProGamer' not email
+    expect(screen.getAllByText('ProGamer').length).toBeGreaterThan(0)
+    expect(screen.queryByText('pro@gamer.com')).not.toBeInTheDocument()
+  })
+
+  test('uses provided moves and board_status size from match data', async () => {
+    vi.mocked(useUser).mockReturnValue({
+      user: { username: 'ProGamer', email: 'pro@gamer.com' },
+      isLoggedIn: true,
+      loading: false,
+      error: null,
+      refreshUser: vi.fn(),
+      logout: vi.fn(),
+      updateUsername: vi.fn()
+    })
+
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+      json: async () => ({
+        matches: [
+          {
+            player1id: 'pro@gamer.com',
+            player2id: 'Bot',
+            result: 'Win',
+            time: 45,
+            moves: [{ row: 0, col: 0, player: 0 }],
+            board_status: { size: 10 }
+          }
+        ]
+      })
+    }) as unknown as typeof fetch
+
+    render(<MemoryRouter><LocalRanking /></MemoryRouter>)
+
+    await waitFor(() =>
+      expect(screen.queryByText(/Loading history/i)).not.toBeInTheDocument()
+    )
+    // Should render match with the provided time
+    expect(screen.getByText('00:45')).toBeInTheDocument()
+  })
+
+  test('falls back to playerid when user username is null/undefined', async () => {
+    vi.mocked(useUser).mockReturnValue({
+      user: { username: undefined as any, email: 'anon@test.com' },
+      isLoggedIn: true,
+      loading: false,
+      error: null,
+      refreshUser: vi.fn(),
+      logout: vi.fn(),
+      updateUsername: vi.fn()
+    })
+
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+      json: async () => ({
+        matches: [
+          // player1 is user (email match), player2 is also user (email match)
+          { player1id: 'anon@test.com', player2id: 'anon@test.com', result: 'Win', time: 30 }
+        ]
+      })
+    }) as unknown as typeof fetch
+
+    render(<MemoryRouter><LocalRanking /></MemoryRouter>)
+
+    await waitFor(() =>
+      expect(screen.queryByText(/Loading history/i)).not.toBeInTheDocument()
+    )
+    // username is undefined → fallback to player id (email) for both player1 and player2
+    expect(screen.getAllByText('anon@test.com').length).toBeGreaterThanOrEqual(1)
   })
 
   test('handles fetch error gracefully and still stops loading', async () => {
@@ -105,11 +305,10 @@ describe('LocalRanking Strategy & Fetcher', () => {
     globalThis.fetch = vi.fn().mockRejectedValueOnce(new Error('Network error'))
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-    const strategy = new LocalRanking()
-    render(<MemoryRouter>{strategy.render()}</MemoryRouter>)
+    render(<MemoryRouter><LocalRanking /></MemoryRouter>)
 
     await waitFor(() => {
-      expect(screen.queryByText(/Cargando Historial/i)).not.toBeInTheDocument()
+      expect(screen.queryByText(/Loading history/i)).not.toBeInTheDocument()
     })
 
     expect(consoleSpy).toHaveBeenCalledWith(

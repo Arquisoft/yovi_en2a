@@ -1,0 +1,169 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.25rem 0;
+  overflow-y: auto;
+}
+
+.emptyState {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+/* ── Stat cards ── */
+
+.cardRow {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.card {
+  flex: 1;
+  min-width: 70px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.cardValue {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.cardLabel {
+  font-size: 0.58rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  text-align: center;
+}
+
+/* ── Chart sections ── */
+
+.chartsRow {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.chartBox {
+  flex: 1;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.6rem 0.5rem;
+  min-width: 0;
+}
+
+.chartBoxFull {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.6rem 0.5rem;
+}
+
+.chartTitle {
+  font-size: 0.62rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06rem;
+  color: #555;
+  margin: 0 0 0.45rem;
+  font-weight: 600;
+}
+
+.noData {
+  color: #444;
+  font-size: 0.75rem;
+  text-align: center;
+  padding: 1rem 0;
+}
+
+/* ── Recent form ── */
+
+.formBox {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 0.5rem;
+  padding: 0.65rem 0.75rem 0.6rem;
+}
+
+.formDots {
+  display: flex;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+
+/* Each dot grows to fill the row — becomes a pill bar */
+.formDot {
+  flex: 1;
+  height: 1.5rem;
+  border-radius: 0.3rem;
+  min-width: 0;
+}
+
+/* ── Responsive: tablet (<= 720px) ── */
+@media (max-width: 45rem) {
+  .chartsRow {
+    flex-direction: column;
+  }
+
+  .cardRow {
+    gap: 0.35rem;
+  }
+
+  .card {
+    min-width: 60px;
+  }
+
+  .cardValue {
+    font-size: 0.9rem;
+  }
+
+  .formDot {
+    height: 1.25rem;
+  }
+}
+
+/* ── Responsive: mobile (<= 480px) ── */
+@media (max-width: 30rem) {
+  .cardRow {
+    gap: 0.3rem;
+  }
+
+  /* 3 cards per row on small screens */
+  .card {
+    min-width: calc(33% - 0.3rem);
+    flex-basis: calc(33% - 0.3rem);
+    flex-grow: 0;
+  }
+
+  .cardValue {
+    font-size: 0.85rem;
+  }
+
+  .cardLabel {
+    font-size: 0.54rem;
+  }
+
+  .chartTitle {
+    font-size: 0.58rem;
+  }
+
+  .formDot {
+    height: 1rem;
+    border-radius: 0.2rem;
+  }
+}
