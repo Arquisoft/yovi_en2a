@@ -41,27 +41,35 @@ describe('GlobalRanking Strategy & Fetcher', () => {
   test('fetches data, formats time, and renders the global table', async () => {
     const mockApiResponse = {
       rankings: [
-        { username: 'SpeedRunner', best_time: 95 },
-        { playerid: 'Guest123', best_time: 125 }
+        { username: 'SpeedRunner', playerid: 'speed@x.com', best_time: 95,  wins: 1, losses: 0, total_matches: 1, win_rate: 1.0, elo: 20 },
+        { username: '',            playerid: 'Guest123',    best_time: 125, wins: 0, losses: 1, total_matches: 1, win_rate: 0.0, elo: 0  },
       ]
     }
 
-    globalThis.fetch = vi.fn().mockResolvedValueOnce({
-      json: async () => mockApiResponse
-    }) as unknown as typeof fetch
+    // SpeedRunner sorted first (lower best_time), so its localRankings fetch comes first
+    globalThis.fetch = vi.fn()
+      .mockResolvedValueOnce({ json: async () => mockApiResponse })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ matches: [{ player1id: 'speed@x.com', player2id: 'bot', result: 'Win',  time: 95,  moves: [], board_status: { size: 8 } }] })
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ matches: [{ player1id: 'Guest123',    player2id: 'bot', result: 'Loss', time: 125, moves: [], board_status: { size: 8 } }] })
+      }) as unknown as typeof fetch
 
     render(<GlobalRanking />)
 
-    // Esperamos a que desaparezca el mensaje de carga
-    await waitFor(() => {
+    await waitFor(() =>
       expect(screen.queryByText(/Loading leaderboard/i)).not.toBeInTheDocument()
-    })
+    )
+    await waitFor(() =>
+      expect(screen.queryByText(/Loading fastest games/i)).not.toBeInTheDocument()
+    )
 
-    // Verificamos que se calculó bien el MM:SS y se renderizan los datos
-    expect(screen.getByText('Fastest Games — Best Time (Top 20)')).toBeInTheDocument()
+    expect(screen.getByText('Fastest Games — World Top 20')).toBeInTheDocument()
     expect(screen.getByText('SpeedRunner')).toBeInTheDocument()
     expect(screen.getByText('01:35')).toBeInTheDocument()
-    
     expect(screen.getByText('Guest123')).toBeInTheDocument()
     expect(screen.getByText('02:05')).toBeInTheDocument()
   })
@@ -121,7 +129,7 @@ describe('GlobalRanking Strategy & Fetcher', () => {
     const user = userEvent.setup()
     await renderWithMock()
     await user.click(screen.getByRole('button', { name: /Loses/i }))
-    expect(screen.getByText('Most Losses — World')).toBeInTheDocument()
+    expect(screen.getByText('Fewest Losses — World Top 20')).toBeInTheDocument()
     expect(screen.getByText('LOSES')).toBeInTheDocument()
   })
 
@@ -146,6 +154,147 @@ describe('GlobalRanking Strategy & Fetcher', () => {
     })
   })
 
+  // ── Elo tab ───────────────────────────────────────────────────────────────
+
+  test('switching to Elo tab shows correct title and ELO column header', async () => {
+    const user = userEvent.setup()
+    await renderWithMock()
+    await user.click(screen.getByRole('button', { name: /^Elo$/i }))
+    expect(screen.getByText('Elo Ranking — World Top 20')).toBeInTheDocument()
+    expect(screen.getByText('ELO')).toBeInTheDocument()
+  })
+
+  test('Elo tab renders elo values for all players', async () => {
+    const user = userEvent.setup()
+    await renderWithMock()
+    await user.click(screen.getByRole('button', { name: /^Elo$/i }))
+    expect(screen.getByText('180')).toBeInTheDocument()
+    expect(screen.getByText('90')).toBeInTheDocument()
+    expect(screen.getByText('60')).toBeInTheDocument()
+  })
+
+  test('Elo tab orders players by highest elo first', async () => {
+    const user = userEvent.setup()
+    await renderWithMock()
+    await user.click(screen.getByRole('button', { name: /^Elo$/i }))
+    const names = screen.getAllByText(/Alice|Bob|Charlie/).map(el => el.textContent)
+    expect(names[0]).toBe('Alice') // Alice has 180 elo — should be first
+  })
+
+  test('Elo tab assigns tied players the same position', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValueOnce({
+      json: async () => ({
+        rankings: [
+          { username: 'X', playerid: 'x@x.com', wins: 5, losses: 1, best_time: 60, total_matches: 6, win_rate: 0.83, elo: 80 },
+          { username: 'Y', playerid: 'y@y.com', wins: 5, losses: 1, best_time: 70, total_matches: 6, win_rate: 0.83, elo: 80 },
+          { username: 'Z', playerid: 'z@z.com', wins: 3, losses: 3, best_time: 90, total_matches: 6, win_rate: 0.50, elo: 30 },
+        ]
+      })
+    }) as unknown as typeof fetch
+
+    const user = userEvent.setup()
+    render(<GlobalRanking />)
+    await waitFor(() =>
+      expect(screen.queryByText(/Loading leaderboard/i)).not.toBeInTheDocument()
+    )
+    await user.click(screen.getByRole('button', { name: /^Elo$/i }))
+
+    // X and Y both have elo 80 → both get position #1
+    expect(screen.getAllByText('#1').length).toBe(2)
+    // Z gets position #2 (skips #1 due to tie)
+    expect(screen.getByText('#2')).toBeInTheDocument()
+  })
+
+  // ── fetchBestMatch edge cases ────────────────────────────────────────────
+
+  test('time tab filters out entries when fetch returns !ok', async () => {
+    const player = { username: 'A', playerid: 'a@a.com', best_time: 60, wins: 1, losses: 0, total_matches: 1, win_rate: 1, elo: 20 }
+    globalThis.fetch = (vi.fn()
+      .mockResolvedValueOnce({ json: async () => ({ rankings: [player] }) })
+      .mockResolvedValueOnce({ ok: false, json: async () => ({}) })) as unknown as typeof fetch
+
+    render(<GlobalRanking />)
+
+    await waitFor(() =>
+      expect(screen.queryByText(/Loading leaderboard/i)).not.toBeInTheDocument()
+    )
+    await waitFor(() =>
+      expect(screen.queryByText(/Loading fastest games/i)).not.toBeInTheDocument()
+    )
+    // fetchBestMatch returned null (ok=false), so no rows
+    expect(screen.queryByText('A')).not.toBeInTheDocument()
+  })
+
+  test('time tab filters out entries when localRankings returns empty matches', async () => {
+    const player = { username: 'B', playerid: 'b@b.com', best_time: 90, wins: 1, losses: 0, total_matches: 1, win_rate: 1, elo: 20 }
+    globalThis.fetch = (vi.fn()
+      .mockResolvedValueOnce({ json: async () => ({ rankings: [player] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ matches: [] }) })) as unknown as typeof fetch
+
+    render(<GlobalRanking />)
+
+    await waitFor(() =>
+      expect(screen.queryByText(/Loading fastest games/i)).not.toBeInTheDocument()
+    )
+    // Empty matches → fetchBestMatch returns null → no row
+    expect(screen.queryByText('B')).not.toBeInTheDocument()
+  })
+
+  test('time tab shows correct opponent when logged user is player2', async () => {
+    const player = { username: 'C', playerid: 'c@c.com', best_time: 55, wins: 1, losses: 0, total_matches: 1, win_rate: 1, elo: 20 }
+    globalThis.fetch = (vi.fn()
+      .mockResolvedValueOnce({ json: async () => ({ rankings: [player] }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          matches: [{
+            player1id: 'Opponent',
+            player2id: 'c@c.com',
+            result: 'Win',
+            time: 55,
+            moves: [],
+            board_status: { size: 8 }
+          }]
+        })
+      })) as unknown as typeof fetch
+
+    render(<GlobalRanking />)
+
+    await waitFor(() =>
+      expect(screen.queryByText(/Loading fastest games/i)).not.toBeInTheDocument()
+    )
+    expect(screen.getByText('C')).toBeInTheDocument()
+    expect(screen.getByText('Opponent')).toBeInTheDocument()
+  })
+
+  test('time tab inverts result to Loss when user is player2 and match result is Win', async () => {
+    const player = { username: 'D', playerid: 'd@d.com', best_time: 70, wins: 0, losses: 1, total_matches: 1, win_rate: 0, elo: 0 }
+    globalThis.fetch = (vi.fn()
+      .mockResolvedValueOnce({ json: async () => ({ rankings: [player] }) })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          matches: [{
+            player1id: 'Winner',
+            player2id: 'd@d.com',
+            result: 'Win',
+            time: 70,
+            moves: [],
+            board_status: { size: 8 }
+          }]
+        })
+      })) as unknown as typeof fetch
+
+    render(<GlobalRanking />)
+
+    await waitFor(() =>
+      expect(screen.queryByText(/Loading fastest games/i)).not.toBeInTheDocument()
+    )
+    expect(screen.getByText('D')).toBeInTheDocument()
+    // isP1=false, result='Win' → displayed as 'Loss'
+    expect(screen.getByText('Loss')).toBeInTheDocument()
+  })
+
   // ── playerid fallback ─────────────────────────────────────────────────────
 
   test('uses playerid when username is absent', async () => {
@@ -155,10 +304,12 @@ describe('GlobalRanking Strategy & Fetcher', () => {
       })
     }) as unknown as typeof fetch
 
+    const user = userEvent.setup()
     render(<GlobalRanking />)
     await waitFor(() =>
       expect(screen.queryByText(/Loading leaderboard/i)).not.toBeInTheDocument()
     )
+    await user.click(screen.getByRole('button', { name: /Wins/i }))
 
     expect(screen.getByText('anon@x.com')).toBeInTheDocument()
   })
@@ -189,7 +340,7 @@ describe('GlobalRanking Strategy & Fetcher', () => {
     await waitFor(() =>
       expect(screen.queryByText(/Loading leaderboard/i)).not.toBeInTheDocument()
     )
-    expect(screen.getByText('Fastest Games — Best Time (Top 20)')).toBeInTheDocument()
+    expect(screen.getByText('Fastest Games — World Top 20')).toBeInTheDocument()
   })
 
   test('renders without crash when rankings field is missing', async () => {
@@ -201,6 +352,6 @@ describe('GlobalRanking Strategy & Fetcher', () => {
     await waitFor(() =>
       expect(screen.queryByText(/Loading leaderboard/i)).not.toBeInTheDocument()
     )
-    expect(screen.getByText('Fastest Games — Best Time (Top 20)')).toBeInTheDocument()
+    expect(screen.getByText('Fastest Games — World Top 20')).toBeInTheDocument()
   })
 })

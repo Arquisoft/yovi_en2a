@@ -133,6 +133,18 @@ describe('UserMenu Component', () => {
     expect(await screen.findByText('Failed to update username.')).toBeInTheDocument()
   })
 
+  test('shows U avatar when username is empty', () => {
+    vi.mocked(useUser).mockReturnValue({
+      user: { email: 'anon@test.com', username: '' },
+      isLoggedIn: true, loading: false, error: null,
+      refreshUser: vi.fn(), logout: mockLogout, updateUsername: mockUpdateUsername
+    });
+
+    render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
+    // Empty username → avatar fallback 'U'
+    expect(screen.getByText('U')).toBeInTheDocument();
+  });
+
   test('can cancel editing without saving', async () => {
     vi.mocked(useUser).mockReturnValue({
       user: { email: 'pablo@test.com', username: 'Pablo' },

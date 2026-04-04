@@ -38,4 +38,13 @@ describe('AccountSettings', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/')
     expect(mockLogout).toHaveBeenCalled()
   })
+
+  test('renders ? avatar when username is empty string', () => {
+    const mockNavigate = vi.fn()
+    const mockLogout = vi.fn().mockResolvedValue(undefined)
+    const section = new AccountSettings(true, '', mockNavigate, mockLogout)
+    render(<MemoryRouter>{section.render()}</MemoryRouter>)
+    // Empty username → initial falls back to '?'
+    expect(screen.getByText('?')).toBeInTheDocument()
+  })
 })

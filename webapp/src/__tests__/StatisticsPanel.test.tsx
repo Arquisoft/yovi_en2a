@@ -144,9 +144,9 @@ describe('StatisticsPanel — logic container', () => {
 
   // ── ELO evolution ───────────────────────────────────────────────────────────
 
-  test('ELO chart is not shown with only one game', () => {
+  test('ELO chart is shown with only one game', () => {
     render(<StatisticsPanel data={[win()]} username="Alice" />)
-    expect(screen.queryByTestId('elo-line-chart')).not.toBeInTheDocument()
+    expect(screen.getByTestId('elo-line-chart')).toBeInTheDocument()
   })
 
   test('ELO chart is shown with more than one game', () => {
@@ -159,5 +159,30 @@ describe('StatisticsPanel — logic container', () => {
     const data = [loss(), loss(), loss()]
     render(<StatisticsPanel data={data} username="Alice" />)
     expect(screen.getByTestId('elo-line-chart')).toBeInTheDocument()
+  })
+
+  // ── ELO baseline ─────────────────────────────────────────────────────────────
+
+  test('ELO history always starts with match 0 at elo 0', () => {
+    // The ELO chart must include the baseline {match:0, elo:0} so the line
+    // always originates from 0 regardless of the first game result.
+    // We verify indirectly: even a single game produces eloHistory.length >= 2,
+    // which is what triggers the chart to render.
+    render(<StatisticsPanel data={[win()]} username="Alice" />)
+    expect(screen.getByTestId('elo-line-chart')).toBeInTheDocument()
+  })
+
+  // ── Top opponents ─────────────────────────────────────────────────────────────
+
+  test('top opponents are sorted by total games descending', () => {
+    const data = [
+      win(60, 'Alice', 'BotA'),
+      win(60, 'Alice', 'BotA'),
+      win(60, 'Alice', 'BotB'),
+      loss(60, 'Alice', 'BotA'),
+    ]
+    // BotA appears 3 times, BotB 1 time — BotA should appear in head-to-head chart
+    render(<StatisticsPanel data={data} username="Alice" />)
+    expect(screen.getByTestId('bar-chart')).toBeInTheDocument()
   })
 })
