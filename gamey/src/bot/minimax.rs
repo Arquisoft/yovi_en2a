@@ -331,3 +331,184 @@ fn neighbours(c: &Coordinates) -> Vec<Coordinates> {
     if z > 0 { r.push(Coordinates::new(x+1,y,z-1)); r.push(Coordinates::new(x,y+1,z-1)); }
     r
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn place(game: &mut GameY, moves: &[(u32, (u32, u32, u32))]) {
+        for &(p, (x, y, z)) in moves {
+            game.add_move(Movement::Placement {
+                player: PlayerId::new(p),
+                coords: Coordinates::new(x, y, z),
+            }).unwrap();
+        }
+    }
+
+    // Bot identity 
+
+    #[test]
+    fn test_name() { assert_eq!(MinimaxBot::new(2).name(), "minimax_bot"); }
+
+    #[test]
+    fn test_depth_getter() { assert_eq!(MinimaxBot::new(4).depth(), 4); }
+
+    // Basic move selection 
+    #[test]
+    fn test_returns_move_on_empty_board() {
+        assert!(MinimaxBot::new(MINIMAX_DEPTH_EASY).choose_move(&GameY::new(4)).is_some());
+    }
+
+    #[test]
+    fn test_returns_none_on_full_board() {
+        let mut game = GameY::new(2);
+        place(&mut game, &[(0,(1,0,0)), (1,(0,1,0)), (0,(0,0,1))]);
+        assert!(MinimaxBot::new(2).choose_move(&game).is_none());
+    }
+
+    #[test]
+    fn test_returned_coords_are_available() {
+        let game = GameY::new(4);
+        let coords = MinimaxBot::new(MINIMAX_DEPTH_EASY).choose_move(&game).unwrap();
+        assert!(game.available_cells().contains(&coords.to_index(game.board_size())));
+    }
+
+    #[test]
+    fn test_depth_zero_returns_first_available() {
+        let game = GameY::new(4);
+        let coords = MinimaxBot::new(0).choose_move(&game).unwrap();
+        assert_eq!(coords.to_index(game.board_size()), *game.available_cells().first().unwrap());
+    }
+
+    // Win / loss detection
+
+    #[test]
+    fn test_takes_immediate_win() {
+        // p0 has (2,0,0)-(1,0,1): connected chain touching sides b and c.
+        // Only (0,0,2) completes the chain to also touch side a.
+        // (1,1,0) is the other available cell but does not form a winning chain.
+        let mut game = GameY::new(3);
+        place(&mut game, &[
+            (0, (2,0,0)), (1, (0,2,0)),
+            (0, (1,0,1)), (1, (0,1,1)),
+        ]);
+        assert_eq!(
+            MinimaxBot::new(MINIMAX_DEPTH_EASY).choose_move(&game).unwrap(),
+            Coordinates::new(0, 0, 2)
+        );
+    }
+
+    #[test]
+    fn test_blocks_opponent_win() {
+        // p1 has (2,0,0)-(1,0,1), one move from winning at (0,0,2).
+        // It is p0's turn. Only (0,0,2) blocks; (1,1,0) does not.
+        let mut game = GameY::new(3);
+        place(&mut game, &[
+            (0, (0,2,0)), (1, (2,0,0)),
+            (0, (0,1,1)), (1, (1,0,1)),
+        ]);
+        assert_eq!(
+            MinimaxBot::new(MINIMAX_DEPTH_MEDIUM).choose_move(&game).unwrap(),
+            Coordinates::new(0, 0, 2)
+        );
+    }
+
+    // Score constants
+
+    #[test]
+    fn test_win_score_positive()  { assert!(WIN_SCORE > 0); }
+
+    #[test]
+    fn test_loss_score_negative() { assert!(LOSS_SCORE < 0); }
+
+    #[test]
+    fn test_win_loss_symmetric()  { assert_eq!(WIN_SCORE, -LOSS_SCORE); }
+
+    // minimax internals 
+
+    #[test]
+    fn test_minimax_finished_board_win() {
+        // (2,0,0)-(1,0,1)-(0,0,2): connected chain touching all three sides
+        let mut game = GameY::new(3);
+        place(&mut game, &[
+            (0, (2,0,0)), (1, (0,2,0)),
+            (0, (1,0,1)), (1, (0,1,1)),
+            (0, (0,0,2)),
+        ]);
+        assert!(game.check_game_over());
+        assert_eq!(minimax(&game, 4, i32::MIN, i32::MAX, false, PlayerId::new(0)), WIN_SCORE);
+    }
+
+    #[test]
+    fn test_minimax_finished_board_loss() {
+        let mut game = GameY::new(3);
+        place(&mut game, &[
+            (0, (2,0,0)), (1, (0,2,0)),
+            (0, (1,0,1)), (1, (0,1,1)),
+            (0, (0,0,2)),
+        ]);
+        assert!(game.check_game_over());
+        assert_eq!(minimax(&game, 4, i32::MIN, i32::MAX, false, PlayerId::new(1)), LOSS_SCORE);
+    }
+
+    #[test]
+    fn test_minimax_depth_zero_returns_draw() {
+        //Depth 0 always returns 0
+        let game = GameY::new(4);
+        assert_eq!(minimax(&game, 0, i32::MIN, i32::MAX, true, PlayerId::new(0)), 0);
+    }
+
+    #[test]
+    fn test_minimax_score_bounded() {
+        let game = GameY::new(3);
+        let score = minimax(&game, 2, i32::MIN, i32::MAX, true, PlayerId::new(0));
+        assert!(score >= LOSS_SCORE && score <= WIN_SCORE);
+    }
+
+    #[test]
+    fn test_minimax_deterministic() {
+        let mut game = GameY::new(3);
+        place(&mut game, &[(0,(2,0,0)), (1,(0,2,0))]);
+        assert_eq!(
+            MinimaxBot::new(2).choose_move(&game),
+            MinimaxBot::new(2).choose_move(&game)
+        );
+    }
+
+     #[test]
+  fn test_auto_mode_returns_a_valid_move() {
+      let game = GameY::new(4);
+      let coords = MinimaxBot::new(MINIMAX_DEPTH_AUTO).choose_move(&game).unwrap();
+      assert!(game.available_cells().contains(&coords.to_index(game.board_size())));
+  }
+
+  #[test]
+  fn test_auto_mode_takes_immediate_win() {
+      // reuse same near-win position from test_takes_immediate_win
+      let mut game = GameY::new(3);
+      place(&mut game, &[
+          (0, (2,0,0)), (1, (0,2,0)),
+          (0, (1,0,1)), (1, (0,1,1)),
+      ]);
+      assert_eq!(
+          MinimaxBot::new(MINIMAX_DEPTH_AUTO).choose_move(&game).unwrap(),
+          Coordinates::new(0, 0, 2)
+      );
+  }
+
+   #[test]
+    fn test_prefers_win_over_high_scoring_block() {
+        let mut game = GameY::new(5);
+        place(&mut game, &[
+            (0, (0,0,4)), (1, (4,0,0)),
+            (0, (0,1,3)), (1, (3,1,0)),
+            (0, (0,2,2)), (1, (2,1,1)),
+            (0, (0,3,1)), (1, (1,2,1)),
+        ]);
+        assert_eq!(game.next_player(), Some(PlayerId::new(0)));
+        assert_eq!(
+            MinimaxBot::new(MINIMAX_DEPTH_EASY).choose_move(&game).unwrap(),
+             Coordinates::new(1, 3, 0),
+        );
+    }
+}
