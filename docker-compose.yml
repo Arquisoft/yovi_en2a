@@ -31,7 +31,9 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      - GAMEMANAGER_URL=http://game_manager:5000
+      - CERTBOT_FLAGS=--register-unsafely-without-email
+    volumes:
+      - letsencrypt:/etc/letsencrypt
     depends_on:
       - users
       - game_manager
@@ -114,3 +116,4 @@ networks:
 
 volumes:
   redis_data:
+  letsencrypt:
