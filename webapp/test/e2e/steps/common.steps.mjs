@@ -3,20 +3,17 @@ import assert from 'assert'
 
 Then('I should be on the login page', async function () {
   await this.page.waitForURL('**/login')
-  const heading = await this.page.locator('h2').textContent()
-  assert.strictEqual(heading, 'Login')
+  await this.page.locator('h2:has-text("Login")').waitFor({ timeout: 5000 })
 })
 
 Then('I should be on the register page', async function () {
   await this.page.waitForURL('**/register')
-  const heading = await this.page.locator('h2').textContent()
-  assert.strictEqual(heading, 'Register')
+  await this.page.locator('h2:has-text("Register")').waitFor({ timeout: 5000 })
 })
 
 Then('I should be on the game selection page', async function () {
   await this.page.waitForURL('**/gameSelection')
-  const heading = await this.page.locator('header h2').textContent()
-  assert.strictEqual(heading, 'SELECT YOUR GAME MODE')
+  await this.page.locator('header h2:has-text("SELECT YOUR GAME MODE")').waitFor({ timeout: 5000 })
 })
 
 Then('I should see an error message {string}', async function (expected) {
