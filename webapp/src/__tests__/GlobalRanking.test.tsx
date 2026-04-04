@@ -60,18 +60,13 @@ describe('GlobalRanking Strategy & Fetcher', () => {
 
     render(<GlobalRanking />)
 
-    await waitFor(() =>
-      expect(screen.queryByText(/Loading leaderboard/i)).not.toBeInTheDocument()
-    )
-    await waitFor(() =>
-      expect(screen.queryByText(/Loading fastest games/i)).not.toBeInTheDocument()
-    )
-
-    expect(screen.getByText('Fastest Games — World Top 20')).toBeInTheDocument()
-    expect(screen.getByText('SpeedRunner')).toBeInTheDocument()
-    expect(screen.getByText('01:35')).toBeInTheDocument()
-    expect(screen.getByText('Guest123')).toBeInTheDocument()
-    expect(screen.getByText('02:05')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('Fastest Games — World Top 20')).toBeInTheDocument()
+      expect(screen.getByText('SpeedRunner')).toBeInTheDocument()
+      expect(screen.getByText('01:35')).toBeInTheDocument()
+      expect(screen.getByText('Guest123')).toBeInTheDocument()
+      expect(screen.getByText('02:05')).toBeInTheDocument()
+    })
   })
 
   // ── Wins tab ─────────────────────────────────────────────────────────────
@@ -216,10 +211,7 @@ describe('GlobalRanking Strategy & Fetcher', () => {
     render(<GlobalRanking />)
 
     await waitFor(() =>
-      expect(screen.queryByText(/Loading leaderboard/i)).not.toBeInTheDocument()
-    )
-    await waitFor(() =>
-      expect(screen.queryByText(/Loading fastest games/i)).not.toBeInTheDocument()
+      expect(screen.getByText('Fastest Games — World Top 20')).toBeInTheDocument()
     )
     // fetchBestMatch returned null (ok=false), so no rows
     expect(screen.queryByText('A')).not.toBeInTheDocument()
@@ -234,7 +226,7 @@ describe('GlobalRanking Strategy & Fetcher', () => {
     render(<GlobalRanking />)
 
     await waitFor(() =>
-      expect(screen.queryByText(/Loading fastest games/i)).not.toBeInTheDocument()
+      expect(screen.getByText('Fastest Games — World Top 20')).toBeInTheDocument()
     )
     // Empty matches → fetchBestMatch returns null → no row
     expect(screen.queryByText('B')).not.toBeInTheDocument()
@@ -260,10 +252,7 @@ describe('GlobalRanking Strategy & Fetcher', () => {
 
     render(<GlobalRanking />)
 
-    await waitFor(() =>
-      expect(screen.queryByText(/Loading fastest games/i)).not.toBeInTheDocument()
-    )
-    expect(screen.getByText('C')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('C')).toBeInTheDocument())
     expect(screen.getByText('Opponent')).toBeInTheDocument()
   })
 
@@ -287,10 +276,7 @@ describe('GlobalRanking Strategy & Fetcher', () => {
 
     render(<GlobalRanking />)
 
-    await waitFor(() =>
-      expect(screen.queryByText(/Loading fastest games/i)).not.toBeInTheDocument()
-    )
-    expect(screen.getByText('D')).toBeInTheDocument()
+    await waitFor(() => expect(screen.getByText('D')).toBeInTheDocument())
     // isP1=false, result='Win' → displayed as 'Loss'
     expect(screen.getByText('Loss')).toBeInTheDocument()
   })
