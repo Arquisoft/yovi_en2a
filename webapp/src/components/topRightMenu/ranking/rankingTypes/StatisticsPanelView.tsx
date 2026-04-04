@@ -69,7 +69,7 @@ const StatisticsPanelView = ({
       </div>
       <div className={styles.card}>
         <span className={styles.cardValue}>
-          {fastestWin !== null ? formatTime(fastestWin) : '—'}
+          {fastestWin === null ? '—' : formatTime(fastestWin)}
         </span>
         <span className={styles.cardLabel}>Fastest Win</span>
       </div>
@@ -192,7 +192,7 @@ const StatisticsPanelView = ({
       <div className={styles.formDots}>
         {recentForm.map((win, i) => (
           <span
-            key={i}
+            key={`form-${i}`}
             className={styles.formDot}
             style={{ background: win ? WIN_COLOR : LOSS_COLOR }}
             title={win ? 'Win' : 'Loss'}

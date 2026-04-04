@@ -39,7 +39,8 @@ const GameWindow = () => {
   const [game, setGame] = useState<Game>(new Game(size, player1, player2));
   const [loading, setLoading] = useState(false);
   const [paused, setPaused] = useState(false);
-  
+  const [showMobilePanel, setShowMobilePanel] = useState(false);
+
   // NUEVO ESTADO: Controla el mensaje del modal. Si es null, el modal está oculto.
   const [modalMessage, setModalMessage] = useState<string | null>(null);
 
@@ -132,7 +133,7 @@ const GameWindow = () => {
       let t1 = Date.now();
       const botData = await requestBotMove(currentGame.matchId!);
       let t2 = Date.now();
-      if(t2-t1 < 500) await sleep(Math.random()*500 + 500)
+      if(t2-t1 < 500) await sleep(crypto.getRandomValues(new Uint32Array(1))[0] / 0xFFFFFFFF * 500 + 500)
       if (!botData) return;
 
       const x = botData.coordinates?.x ?? botData.coord_x ?? botData.x;
@@ -163,22 +164,28 @@ const GameWindow = () => {
       <TopRightMenu />
       <TopLeftHeader />
 
+      <button className="mobile-menu-button"
+            onClick={() => setShowMobilePanel(!showMobilePanel)}>
+            {showMobilePanel ? "✕" : "☰"}
+      </button>
+      
       <div className="center-area">
+
         <Board
           size={game.size}
           moves={game.moves}
           blocked={loading || game.gameOver || isBotTurn}
           onPlace={handlePlace}
         />
-      </div>
 
-      <RightPanel
-        turn={game.turn === 0 ? 1 : 2}
-        time={formattedTime}
-        paused={paused}
-        mode={mode}
-        onPauseToggle={() => setPaused(!paused)}
-      />
+        <div className={`rightpanel-container ${showMobilePanel ? "open" : ""}`}>
+          <RightPanel
+            turn={game.turn === 0 ? 1 : 2}
+            time={formattedTime}
+            mode={mode}
+          />
+        </div>
+      </div>
 
       {/* --- EL MODAL DE VICTORIA --- */}
       {modalMessage && (

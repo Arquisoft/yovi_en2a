@@ -37,7 +37,7 @@ const getDisplayData = (data: RankingElementLocal[], subTab: SubTabId): RankingE
 const getTitle = (subTab: SubTabId, username: string): string => {
   switch (subTab) {
     case 'historial':   return `Match History (${username})`;
-    case 'time':        return `By Duration — Longest First (${username})`;
+    case 'time':        return `By Duration — Shortest First (${username})`;
     case 'wins':        return `Wins — Most Recent First (${username})`;
     case 'loses':       return `Loses — Most Recent First (${username})`;
     case 'statistics':  return '';

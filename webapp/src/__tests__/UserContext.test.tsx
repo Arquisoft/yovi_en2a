@@ -149,6 +149,22 @@ describe('UserContext — updateUsername', () => {
 
     await expect(act(async () => { await ctx!.updateUsername('X') })).rejects.toThrow('Failed to update username.')
   })
+
+  test('setUser callback returns null when user is already null at update time', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce({ ok: false })          // refreshUser → user stays null
+      .mockResolvedValueOnce({ ok: true, json: async () => ({}) }) // updateUsername → ok
+    globalThis.fetch = fetchMock
+
+    let ctx: ReturnType<typeof useUser> | null = null
+    renderWithProvider(c => { ctx = c })
+
+    await waitFor(() => expect(ctx!.loading).toBe(false))
+    // user is null; calling updateUsername should not throw and user stays null
+    await act(async () => { await ctx!.updateUsername('GhostName') })
+
+    expect(ctx!.user).toBeNull()
+  })
 })
 
 describe('UserContext — useUser guard', () => {

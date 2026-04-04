@@ -61,7 +61,7 @@ pub fn create_default_state() -> AppState {
     let bots = YBotRegistry::new()
     .with_bot(Arc::new(RandomBot))
     .with_bot(Arc::new(GreedyBot))
-    .with_bot(Arc::new(MinimaxBot::new(4)));
+    .with_bot(Arc::new(MinimaxBot::new(-1)));
     AppState::new(bots)
 }
 

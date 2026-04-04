@@ -15,7 +15,7 @@ const port = 3000;
 const SESSION_TTL_SECONDS = 1800; // 30 minutes
 
 async function createSession(userData) {
-  const sessionId = crypto.randomUUID();
+  const sessionId = crypto.randomBytes(32).toString('hex');
   await redisClient.setex(`session:${sessionId}`, SESSION_TTL_SECONDS, JSON.stringify(userData));
   return sessionId;
 }
@@ -41,13 +41,21 @@ const GAME_MANAGER_URL = process.env.GAMEMANAGER_URL || 'http://localhost:5000';
 const AUTH_URL = process.env.AUTH_URL || 'http://localhost:4001';
 
 // 3. CORS Configuration Middleware
-const allowedOrigins = new Set(['http://20.250.145.156', 'http://localhost', 'http://localhost:80', 'http://localhost:5173']);
+const deployHost = process.env.DEPLOY_HOST;
+const allowedOriginsList = [
+  ...(deployHost ? [`https://${deployHost}`] : []),
+  'http://localhost',
+  'http://localhost:80',
+  'http://localhost:5173',
+];
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
+  // Look up the origin from our own trusted list so the header value is never user-controlled
+  const matchedOrigin = allowedOriginsList.find(o => o === origin);
 
-  if (allowedOrigins.has(origin)) {
-    res.setHeader('Access-Control-Allow-Origin', origin);
+  if (matchedOrigin) {
+    res.setHeader('Access-Control-Allow-Origin', matchedOrigin);
     // Credentials (cookies) require a specific origin
     res.setHeader('Access-Control-Allow-Credentials', 'true');
   } else if (!origin && process.env.NODE_ENV !== 'production') {
@@ -104,7 +112,7 @@ const SESSION_COOKIE_OPTIONS = {
 
 // CSRF TOKEN GENERATION
 app.get('/api/csrf-token', (req, res) => {
-  const csrfToken = crypto.randomUUID();
+  const csrfToken = crypto.randomBytes(32).toString('hex');
   res.cookie('csrf_token', csrfToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -181,25 +189,46 @@ app.post('/api/login', verifyCsrf, (req, res) =>
 app.post('/api/register', verifyCsrf, (req, res) =>
   handleAuthRequest(req, res, 'REGISTER', '/register',
     'Registration succeeded but session could not be created. Please try again.',
-    (_response, data) => data.error?.toLowerCase().includes('already exists')
-      ? 'An account with this email already exists.'
-      : 'Registration failed. Please try again.'
+    (response, data) => {
+      if (response.status === 409) return data.error || 'An account with this email already exists.';
+      const errLower = data.error?.toLowerCase() || '';
+      if (errLower.includes('username already in use')) return 'This username is already taken.';
+      return 'Registration failed. Please try again.';
+    }
   )
 );
 
-// UPDATE USERNAME — updates the session data in Redis with the new username
+// UPDATE USERNAME — persists the new username via Auth service and updates the Redis session
 app.post('/api/update-username', verifyCsrf, async (req, res) => {
   const sessionId = req.cookies.sessionId;
   if (!sessionId) return res.status(401).json({ error: 'Not authenticated' });
+  
   try {
     const user = await getSession(sessionId);
     if (!user) return res.status(401).json({ error: 'Session expired or invalid' });
+    
     const { username } = req.body;
     if (!username) return res.status(400).json({ error: 'Username is required' });
+    
+    // Call the Auth service to persist the change in Firebase
+    const response = await fetch(`${AUTH_URL}/update-username`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: user.email, new_username: username })
+    });
+    
+    const data = await response.json().catch(() => ({}));
+    
+    if (!response.ok) {
+      return res.status(response.status).json({ error: data.error || 'Failed to update username' });
+    }
+    
+    // Update the session state in Redis mapping
     await redisClient.setex(`session:${sessionId}`, SESSION_TTL_SECONDS, JSON.stringify({ ...user, username }));
     res.json({ username });
-  } catch {
-    res.status(500).json({ error: 'Session store unavailable' });
+  } catch (err) {
+    console.error('[UPDATE-USERNAME] Error:', err.message);
+    res.status(500).json({ error: 'Internal server error while updating username' });
   }
 });
 
@@ -239,7 +268,7 @@ app.use('/game', createProxyMiddleware({
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   app.listen(port, () => {
-    console.log(`User Service (API Gateway) listening at http://localhost:${port}`);
+    console.log(`User Service (API Gateway) listening on port ${port}`);
   });
 }
 

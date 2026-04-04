@@ -11,56 +11,56 @@ describe('useTimer', () => {
     vi.useRealTimers()
   })
 
-  test('starts at 00:00 and does not tick when not running', () => {
+  test('starts at 00:00 and does not tick when not running', async () => {
     const { result } = renderHook(() => useTimer(false))
 
     expect(result.current.seconds).toBe(0)
     expect(result.current.formattedTime).toBe('00:00')
 
-    act(() => { vi.advanceTimersByTime(3000) })
+    await act(async () => { vi.advanceTimersByTime(3000) })
 
     expect(result.current.seconds).toBe(0)
   })
 
-  test('ticks every second when running', () => {
+  test('ticks every second when running', async () => {
     const { result } = renderHook(() => useTimer(true))
 
-    act(() => { vi.advanceTimersByTime(3000) })
+    await act(async () => { vi.advanceTimersByTime(3000) })
 
     expect(result.current.seconds).toBe(3)
     expect(result.current.formattedTime).toBe('00:03')
   })
 
-  test('formats time correctly beyond 60 seconds', () => {
+  test('formats time correctly beyond 60 seconds', async () => {
     const { result } = renderHook(() => useTimer(true))
 
-    act(() => { vi.advanceTimersByTime(65000) })
+    await act(async () => { vi.advanceTimersByTime(65000) })
 
     expect(result.current.seconds).toBe(65)
     expect(result.current.formattedTime).toBe('01:05')
   })
 
-  test('resetTimer sets seconds back to 0', () => {
+  test('resetTimer sets seconds back to 0', async () => {
     const { result } = renderHook(() => useTimer(true))
 
-    act(() => { vi.advanceTimersByTime(5000) })
+    await act(async () => { vi.advanceTimersByTime(5000) })
     expect(result.current.seconds).toBe(5)
 
-    act(() => { result.current.resetTimer() })
+    await act(async () => { result.current.resetTimer() })
     expect(result.current.seconds).toBe(0)
     expect(result.current.formattedTime).toBe('00:00')
   })
 
-  test('stops ticking when isRunning changes to false', () => {
+  test('stops ticking when isRunning changes to false', async () => {
     const { result, rerender } = renderHook(({ running }) => useTimer(running), {
       initialProps: { running: true }
     })
 
-    act(() => { vi.advanceTimersByTime(3000) })
+    await act(async () => { vi.advanceTimersByTime(3000) })
     expect(result.current.seconds).toBe(3)
 
     rerender({ running: false })
-    act(() => { vi.advanceTimersByTime(3000) })
+    await act(async () => { vi.advanceTimersByTime(3000) })
     expect(result.current.seconds).toBe(3)
   })
 })

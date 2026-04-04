@@ -53,12 +53,16 @@ const StatisticsPanel = ({ data, username }: Props) => {
       .map(([name, { wins: w, losses: l }]) => ({ name, wins: w, losses: l }));
 
     // ELO evolution — same formula as the backend: +20 win / -15 loss / floor 0
+    // Start with match 0 at elo 0 so the line always begins from the baseline.
     let elo = 0;
-    const eloHistory = data.map((m, i) => {
-      const isWin = m.result.toLowerCase().includes('win');
-      elo = Math.max(0, isWin ? elo + 20 : elo - 15);
-      return { match: i + 1, elo };
-    });
+    const eloHistory = [
+      { match: 0, elo: 0 },
+      ...data.map((m, i) => {
+        const isWin = m.result.toLowerCase().includes('win');
+        elo = Math.max(0, isWin ? elo + 20 : elo - 15);
+        return { match: i + 1, elo };
+      }),
+    ];
 
     // Last RECENT_FORM_MAX results as booleans (oldest → newest)
     const recentForm = data.slice(-RECENT_FORM_MAX).map(m => m.result.toLowerCase().includes('win'));

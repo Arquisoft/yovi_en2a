@@ -2,7 +2,7 @@
 
 .loadingContainer {
   text-align: center;
-  padding: 20px;
+  padding: 1.25rem;
 }
 
 /* --- Global submenu layout --- */
@@ -55,4 +55,29 @@
   padding-top: 0.8rem;
   display: flex;
   flex-direction: column;
+}
+
+/* ── Mobile < 45rem ── */
+@media (max-width: 45rem) {
+  .subMenu {
+    gap: 0.3rem;
+    padding-bottom: 0.6rem;
+  }
+
+  .subTabBtn {
+    flex: 1;
+    min-height: 2.5rem;
+    padding: 0.4rem 0.25rem;
+    font-size: 0.72rem;
+    white-space: nowrap;
+  }
+}
+
+/* ── Mobile < 30rem ── */
+@media (max-width: 30rem) {
+  .subTabBtn {
+    padding: 0.4rem 0.15rem;
+    font-size: 0.65rem;
+    min-height: 2.25rem;
+  }
 }

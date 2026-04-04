@@ -41,40 +41,65 @@ Rel(users_app, db, "Reads/Writes", "Admin SDK")
 
 
 Motivation::
-The system is containerized to ensure environment parity between development and production. Since the **Gamey Engine** is built in Rust, it requires a high-performance runtime environment, while the **Users Service** and **Webapp** benefit from the managed scalability of Firebase and standard Node.js container hosting.
+The system is fully containerized using Docker, orchestrated via `docker-compose.yml`. All backend services run on a single **Azure VM** (20.250.145.156). Firebase is used as a managed external platform for authentication and persistence, reducing infrastructure overhead.
 
 Quality and/or Performance Features::
-* **Scalability:** The Rust Game Engine can be scaled vertically or horizontally depending on the number of active game sessions.
-* **Latency:** WebSockets are used for the Game Engine to minimize overhead during competitive play.
-* **Security:** Sensitive user data is offloaded to Firebase, reducing the attack surface of the self-hosted infrastructure.
+* **Containerization:** Every service runs in an isolated Docker container, ensuring consistent behavior across development and production.
+* **Separation of concerns:** The Users API acts as a single entry point, hiding the internal service topology from external clients.
+* **Low-latency state management:** Redis caches active game states, enabling fast move validation without hitting Firebase on every request.
+* **Managed auth and persistence:** Firebase offloads identity management and long-term data storage, reducing the attack surface of the self-hosted infrastructure.
 
 Mapping of Building Blocks to Infrastructure::
 [cols="1,2" options="header"]
 |===
 | Building Block | Infrastructure Element
-| **Webapp** | Distributed via Content Delivery Network (CDN) for low-latency frontend delivery.
-| **Users Service** | Deployed as a Docker container (referencing `/users/Dockerfile`).
-| **Gamey Engine** | Deployed as a high-performance Docker container (referencing `/gamey/Dockerfile`).
-| **Database/Auth** | Managed by Firebase (Google Cloud Infrastructure).
+| **Webapp** | Docker container serving the compiled React/Vite SPA on port 80.
+| **Users API** | Docker container running the Node.js/Express gateway on port 3000.
+| **Auth Engine** | Docker container running the Rust/Axum authentication service on port 4001.
+| **Game Manager** | Docker container running the Rust/Axum game state manager on port 5000.
+| **Gamey Engine** | Docker container running the Rust/Axum game engine and bot service on port 4000.
+| **Redis** | Docker container running Redis for in-memory game state caching on port 6379.
+| **Firebase Auth + Firestore** | Fully managed by Google Cloud (Firebase Platform). No self-hosted component.
 |===
 
 === Infrastructure Level 2
 
-==== Docker Environment (Internal Node)
-Each service (Users and Gamey) is encapsulated in a Docker image to isolate dependencies.
+==== Docker Environment
 
-**Users Service Node:**
+Each service is defined as a container in `docker-compose.yml` and shares a common internal Docker network, allowing inter-service communication by service name.
 
-- **Runtime:** Node.js 20+.
+**Webapp:**
 
-- **Config:** Environment variables for Firebase Admin credentials.
+- **Runtime:** Node.js (build stage), Nginx or static file server for the compiled output.
+- **Build Args:** `VITE_API_URL` and `VITE_GAMEMANAGER_URL` are injected at build time.
+- **Port:** Exposes 80 (HTTPS via reverse proxy in production).
 
-- **Port:** Exposes 3000 (REST API).
+**Users API:**
 
-**Game Engine Node:**
+- **Runtime:** Node.js 22.
+- **Config:** Environment variables for Firebase Admin credentials and internal service URLs (`AUTH_URL`, `GAMEMANAGER_URL`, `GAMEY_URL`).
+- **Port:** Exposes 3000 (REST API gateway).
 
-- **Runtime:** Scratch or Debian-slim (for the compiled Rust binary).
+**Auth Engine:**
 
-- **Performance:** Optimized with LTO (Link Time Optimization) during the build stage.
+- **Runtime:** Compiled Rust binary on a minimal base image.
+- **Config:** `FIREBASE_PROJECT_ID` and `FIREBASE_CREDENTIALS_B64` for Firebase Admin SDK.
+- **Port:** Exposes 4001.
 
-- **Port:** Exposes 8080 (WebSockets/gRPC).
+**Game Manager:**
+
+- **Runtime:** Compiled Rust binary on a minimal base image.
+- **Config:** Firebase credentials and `REDIS_HOST` for Redis connectivity.
+- **Port:** Exposes 5000.
+
+**Gamey Engine:**
+
+- **Runtime:** Compiled Rust binary on a minimal base image.
+- **Performance:** Built with release optimizations (LTO) for maximum throughput.
+- **Port:** Exposes 4000.
+
+**Redis:**
+
+- **Runtime:** Official Redis image.
+- **Persistence:** Volume-mounted data directory to survive container restarts.
+- **Port:** Exposes 6379 (internal network only).

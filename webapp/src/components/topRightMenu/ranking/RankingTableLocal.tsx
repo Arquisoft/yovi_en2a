@@ -13,56 +13,58 @@ interface Props {
     data: RankingElementLocal[];
     title: string;
     onReplay?: (item: RankingElementLocal) => void;
+    showPosition?: boolean;
 }
 
-const RankingTableLocal: React.FC<Props> = ({ data, title, onReplay }) => {
+const RankingTableLocal: React.FC<Props> = ({ data, title, onReplay, showPosition }) => {
     const { currentPage, setCurrentPage, totalPages, pageData, visiblePages } = usePagination(data);
+
+    const rowClass = (extra = '') =>
+        [styles.rankingItem, showPosition ? styles.withPosition : '', extra].filter(Boolean).join(' ');
 
     return (
         <div className={styles.rankingContainer}>
             <h3 className={styles.rankingSubtitle}>{title}</h3>
 
-            <div className={styles.rankingHeaderRow}>
-                <span>PLAYER 1</span>
+            <div className={`${styles.rankingHeaderRow} ${showPosition ? styles.withPosition : ''}`}>
+                {showPosition && <span>POS</span>}
+                <span className={styles.rankName}>PLAYER 1</span>
                 <span className={styles.vsLabel}></span>
-                <span>PLAYER 2</span>
+                <span className={styles.rankName}>PLAYER 2</span>
                 <span>RESULT</span>
                 <span>TIME</span>
                 {onReplay && <span className={styles.replayColHeader}></span>}
             </div>
 
             <div className={styles.rankingList}>
-                {pageData.map((item, index) => (
-                    <div
+                {pageData.map((item, index) => onReplay ? (
+                    <button
                         key={`rank-${index}-${item.player1Name}`}
-                        className={`${styles.rankingItem} ${onReplay ? styles.clickableRow : ''}`}
-                        // A11y Fixes:
-                        onClick={onReplay ? () => onReplay(item) : undefined}
-                        role={onReplay ? 'button' : undefined}
-                        tabIndex={onReplay ? 0 : undefined}
-                        onKeyDown={onReplay ? (e) => {
-                            if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
-                                onReplay(item);
-                            }
-                        } : undefined}
+                        type="button"
+                        className={`${rowClass()} ${styles.clickableRow} ${styles.buttonRow}`}
+                        onClick={() => onReplay(item)}
                     >
+                        {showPosition && <span className={styles.rankPos}>#{item.position}</span>}
                         <span className={styles.rankName}>{item.player1Name}</span>
                         <span className={styles.vsLabel}>VS</span>
                         <span className={styles.rankName}>{item.player2Name}</span>
                         <span className={styles.rankResult}>{item.result}</span>
                         <span className={styles.rankTime}>{formatTime(item.time)}</span>
-                        {onReplay && (
-                            <span className={styles.replayCell}>
-                <button
-                    className={styles.replayBtnMobile}
-                    onClick={e => { e.stopPropagation(); onReplay(item); }}
-                    aria-label="Watch replay"
-                >
-                  Replay
-                </button>
-              </span>
-                        )}
+                        <span className={styles.replayCell}>
+                            <span className={styles.replayBtnMobile}>Replay</span>
+                        </span>
+                    </button>
+                ) : (
+                    <div
+                        key={`rank-${index}-${item.player1Name}`}
+                        className={rowClass()}
+                    >
+                        {showPosition && <span className={styles.rankPos}>#{item.position}</span>}
+                        <span className={styles.rankName}>{item.player1Name}</span>
+                        <span className={styles.vsLabel}>VS</span>
+                        <span className={styles.rankName}>{item.player2Name}</span>
+                        <span className={styles.rankResult}>{item.result}</span>
+                        <span className={styles.rankTime}>{formatTime(item.time)}</span>
                     </div>
                 ))}
             </div>

@@ -76,7 +76,7 @@ pub fn run_cli_game() -> Result<()> {
     let bots_registry = YBotRegistry::new()
     .with_bot(Arc::new(RandomBot))
     .with_bot(Arc::new(GreedyBot))
-    .with_bot(Arc::new(MinimaxBot::new(4)));
+    .with_bot(Arc::new(MinimaxBot::new(-1)));
     let bot: Arc<dyn YBot> = match bots_registry.find(&args.bot) {
         Some(b) => b,
         None => {

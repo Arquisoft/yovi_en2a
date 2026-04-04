@@ -8,7 +8,8 @@ beforeEach(() => {
 describe('createMatch', () => {
   test('returns parsed JSON on success', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
-      json: async () => ({ match_id: 'abc123' })
+      ok: true,
+      text: async () => JSON.stringify({ match_id: 'abc123' })
     } as any)
 
     const result = await createMatch('player1', 'bot', 11)
@@ -17,6 +18,25 @@ describe('createMatch', () => {
       expect.stringContaining('/game/new'),
       expect.objectContaining({ method: 'POST' })
     )
+  })
+
+  test('returns null when server responds with error status', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 422,
+      text: async () => 'Unprocessable Entity'
+    } as any)
+    const result = await createMatch('player1', 'bot', 11)
+    expect(result).toBeNull()
+  })
+
+  test('returns null when response is not valid JSON', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => 'not-valid-json'
+    } as any)
+    const result = await createMatch('player1', 'bot', 11)
+    expect(result).toBeNull()
   })
 
   test('returns null on network error', async () => {
@@ -29,7 +49,8 @@ describe('createMatch', () => {
 describe('sendMove', () => {
   test('returns parsed JSON on success', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({
-      json: async () => ({ match_id: 'abc123', game_over: false })
+      ok: true,
+      text: async () => JSON.stringify({ match_id: 'abc123', game_over: false })
     } as any)
 
     const result = await sendMove('abc123', 1, 2, 3)
@@ -38,6 +59,25 @@ describe('sendMove', () => {
       expect.stringContaining('/game/executeMove'),
       expect.objectContaining({ method: 'POST' })
     )
+  })
+
+  test('returns null when server responds with error status', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 404,
+      text: async () => 'Not Found'
+    } as any)
+    const result = await sendMove('abc123', 1, 2, 3)
+    expect(result).toBeNull()
+  })
+
+  test('returns null when response is not valid JSON', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      text: async () => 'not-valid-json'
+    } as any)
+    const result = await sendMove('abc123', 1, 2, 3)
+    expect(result).toBeNull()
   })
 
   test('returns null on network error', async () => {

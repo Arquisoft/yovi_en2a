@@ -22,20 +22,28 @@
   width: 100%;
   background: transparent;
   border: none;
+  border-left: 0.25rem solid transparent;
   color: #666;
-  padding: 1rem 1.5rem;
+  padding: 1rem 1.25rem;
   text-align: left;
   cursor: pointer;
   font-weight: 700;
   font-size: 0.8rem;
   text-transform: uppercase;
-  transition: 0.2s;
+  transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.sidebarButtons button:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ddd;
+  padding-left: 1.5rem;
 }
 
 .sidebarButtons button.active {
   color: var(--primary-color);
-  background: rgba(255, 255, 255, 0.03);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
   border-left: 0.25rem solid var(--primary-color);
+  padding-left: 1.5rem;
 }
 
 /* --- MAIN CONTENT PANEL --- */
@@ -78,8 +86,8 @@
   border-radius: 1rem;
 }
 
-/* --- MOBILE RESPONSIVENESS (Fixes Disappearing Text) --- */
-@media (max-width: 48rem) {
+/* --- MOBILE RESPONSIVENESS --- */
+@media (max-width: 45rem) {
   .settingsBody {
     /* Stack components vertically so panel isn't pushed horizontally */
     flex-direction: column;
@@ -130,5 +138,31 @@
   
   .sectionLabel {
     font-size: 1.2rem;
+  }
+
+  .tabContent {
+    padding: 1rem;
+  }
+}
+
+/* ── Mobile < 30rem ── */
+@media (max-width: 30rem) {
+  .sidebarButtons button {
+    padding: 0 0.9rem;
+    height: 3rem;
+    line-height: 3rem;
+    font-size: 0.7rem;
+  }
+
+  .settingsPanelHeader {
+    padding: 0.75rem;
+  }
+
+  .sectionLabel {
+    font-size: 1rem;
+  }
+
+  .tabContent {
+    padding: 0.75rem;
   }
 }

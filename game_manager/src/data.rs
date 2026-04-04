@@ -80,6 +80,8 @@
         pub time: f32,
         #[serde(default)]
         pub moves: Vec<Coordinates>,
+        #[serde(default)]
+        pub created_at: u64,
     }
     impl DBData for Match {}
 

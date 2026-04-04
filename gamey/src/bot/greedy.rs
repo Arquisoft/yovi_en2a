@@ -1,9 +1,40 @@
-//! A greedy bot implementation.
+//! Greedy bot implementation.
 //!
 //! This module provides [`GreedyBot`], a bot that uses a greedy heuristic
-//! to select moves.
+//! to select moves in the Game of Y. Unlike the minimax bot it performs no
+//! look-ahead: it scores every available cell with a fixed heuristic and
+//! immediately picks the best one.
+//!
+//! # Heuristic
+//!
+//! Each candidate cell is scored with a two-component tuple
+//! `(own_neighbours, centrality)`:
+//!
+//! 1. **Own-neighbour count** – the number of adjacent cells already occupied
+//!    by the bot. Preferring cells next to existing pieces encourages building
+//!    connected groups, which is essential for winning in Game of Y.
+//!
+//! 2. **Centrality** – a tiebreaker that prefers cells closer to the centre of
+//!    the triangular board. For a cell with barycentric coordinates `(x, y, z)`
+//!    the score is computed as:
+//!
+//!    Central cells have the most neighbours and connect more
+//!    easily to all three sides.
+//!
+//! # Trade-offs
+//!
+//! The greedy heuristic is fast (O(n) per move, where n is the number of
+//! available cells) but plays weaker than the minimax bot because it cannot
+//! anticipate threats or plan ahead. It is useful as a lightweight opponent
+//! for easy difficulty or for testing purposes.
 
 use crate::{Coordinates, GameY, PlayerId, YBot};
+
+/// A bot that selects moves using a greedy one-step heuristic.
+///
+/// On each turn it scores every empty cell by the number of its own adjacent
+/// pieces (to promote connectivity) and breaks ties by centrality (to favour
+/// strong board positions). No lookahead is performed.
 pub struct GreedyBot;
 
 impl YBot for GreedyBot {
@@ -11,6 +42,12 @@ impl YBot for GreedyBot {
         "greedy_bot"
     }
 
+    /// Selects the best available cell according to the greedy heuristic.
+    ///
+    /// The scoring key for each candidate cell is `(own_neighbours, centrality)`,
+    /// compared lexicographically. The cell with the highest key is chosen.
+    ///
+    /// Returns `None` if the board is full or the game is already finished
     fn choose_move(&self, board: &GameY) -> Option<Coordinates> {
         let available = board.available_cells();
         if available.is_empty() {
@@ -19,8 +56,7 @@ impl YBot for GreedyBot {
 
         let size = board.board_size();
 
-        // The bot plays as whoever's turn it is now.
-        // next_player() returns None only when the game is already finished.
+
         let bot_player: PlayerId = board.next_player()?;
 
 
@@ -53,6 +89,12 @@ impl YBot for GreedyBot {
     }
 }
 
+/// Returns all valid neighbours of `coords` on the triangular Game of Y board.
+///
+/// The Game of Y uses a triangular grid with barycentric coordinates `(x, y, z)`
+/// where `x + y + z = size - 1`.
+/// Neighbours that would produce a negative coordinate are omitted, so corner
+/// cells have 2 neighbours and edge cells have 4.
 fn neighbours(coords: &Coordinates) -> Vec<Coordinates> {
     let x = coords.x();
     let y = coords.y();

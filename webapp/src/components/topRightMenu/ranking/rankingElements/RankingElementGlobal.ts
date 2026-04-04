@@ -3,4 +3,5 @@ export interface RankingElementGlobal {
   player1Name: string;
   metric: string;
   metricName: string;
+  playerId?: string;
 }

@@ -237,6 +237,9 @@ describe('POST /api/update-username', () => {
   it('returns 200 and updates username successfully', async () => {
     const { cookie, token } = await getCsrfToken()
     redisMock.get.mockResolvedValueOnce(JSON.stringify({ username: 'Alice', email: 'a@a.com' }))
+    globalThis.fetch = vi.fn().mockResolvedValue({
+      ok: true, status: 200, json: async () => ({})
+    })
     const res = await request(app)
       .post('/api/update-username')
       .set('Cookie', `${cookie}; sessionId=valid`)

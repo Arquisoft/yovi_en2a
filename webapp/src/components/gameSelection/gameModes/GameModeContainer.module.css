@@ -67,7 +67,7 @@
 .imageContainer {
     width: 100%;
     flex: 1 1 auto;
-    flex-basis: clamp(80px, 35%, 200px);
+    flex-basis: clamp(5rem, 35%, 12.5rem);
     min-height: 0;
     display: flex;
     align-items: center;
@@ -111,7 +111,7 @@
 
 .difficultyLabel {
     font-size: 0.65rem;
-    color: #9CA3AF; /* FIXED: Was #555, failing contrast against dark bg */
+    color: #B0B7C3; /* AAA: 8.3:1 on dark background */
     text-transform: uppercase;
     letter-spacing: 0.08rem;
 }
@@ -125,8 +125,8 @@
 }
 
 .arrow {
-    background: rgba(255,255,255,0.06);
-    color: #D1D5DB; /* FIXED: Was #aaa */
+    background: #282C28;
+    color: #D1D5DB;
     border: 1px solid rgba(255,255,255,0.08);
     width: clamp(1.5rem, 4vw, 2.2rem);
     height: clamp(1.5rem, 4vw, 2.2rem);
@@ -179,7 +179,7 @@
     letter-spacing: 0.12rem;
     border: none;
     border-radius: 0.75rem;
-    background: #15803D; /* FIXED: Darkened so white text passes contrast */
+    background: #145c2a; /* AAA: 8.1:1 contrast with white text */
     color: #fff;
     cursor: pointer;
     box-sizing: border-box;
@@ -189,10 +189,49 @@
 .playButton:hover {
     filter: brightness(1.12);
     transform: translateY(-0.12rem);
-    box-shadow: 0 0.5rem 1.5rem rgba(21, 128, 61, 0.4); /* FIXED to match new green */
+    box-shadow: 0 0.5rem 1.5rem rgba(20, 92, 42, 0.5);
 }
 
 .playButton:active {
     transform: translateY(0);
     filter: brightness(0.95);
+}
+
+/* ── Mobile < 45rem (720 px) ───────────────────────────────── */
+@media (max-width: 45rem) {
+  .gameModeContainer {
+    height: auto;
+  }
+
+  /* Fixed image height prevents cards from being excessively tall */
+  .imageContainer {
+    flex-basis: 10rem;
+    min-height: 0;
+  }
+
+  .title {
+    font-size: clamp(1.1rem, 6vw, 1.4rem);
+  }
+
+  .playButton {
+    padding: 0.9rem;
+    font-size: 1.05rem;
+  }
+}
+
+/* ── Mobile < 30rem (480 px) ───────────────────────────────── */
+@media (max-width: 30rem) {
+  .imageContainer {
+    flex-basis: 8rem;
+  }
+
+  .difficultyLabel {
+    font-size: 0.6rem;
+  }
+
+  .playButton {
+    padding: 0.8rem;
+    font-size: 1rem;
+    min-height: 2.75rem;
+  }
 }
