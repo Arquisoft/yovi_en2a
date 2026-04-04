@@ -17,7 +17,7 @@ const RankingTableGlobal: React.FC<{ data: RankingElementGlobal[], title: string
       {/* Static Header: This stays fixed at the top */}
       <div className={styles.rankingHeaderRow}>
         <span>POS</span>
-        <span>PLAYER 1</span>
+        <span className={styles.rankName}>PLAYER 1</span>
         <span>{dynamicMetricName}</span>
       </div>
 
@@ -27,7 +27,7 @@ const RankingTableGlobal: React.FC<{ data: RankingElementGlobal[], title: string
           const positionHighlight = styles[`pos-${item.position}`] || '';
           return (
             <div
-              key={item.position}
+              key={item.player1Name}
               className={`${styles.rankingItem} ${positionHighlight}`}
             >
               <span className={styles.rankPos}>#{item.position}</span>

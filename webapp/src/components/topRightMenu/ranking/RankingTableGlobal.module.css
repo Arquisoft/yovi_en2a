@@ -39,6 +39,11 @@
   padding-right: calc(0.5rem + 6px);
 }
 
+.rankingItem {
+  border-bottom: 0.0625rem solid rgba(255, 255, 255, 0.05);
+  transition: background 0.12s;
+}
+
 /* TOP 3 HIGHLIGHTS */
 .pos-1 .rankPos { color: #ffd700; } /* Gold */
 .pos-2 .rankPos { color: #c0c0c0; } /* Silver */

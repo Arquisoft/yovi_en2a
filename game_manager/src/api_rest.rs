@@ -257,6 +257,10 @@ async fn save_match(
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, format!("Error leyendo YEN: {}", e)))?;
 
     // 3. Construimos tu struct Match exacto
+    let created_at = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
     let match_data = Match {
         player1id: payload.player1id,
         player2id: payload.player2id,
@@ -264,6 +268,7 @@ async fn save_match(
         board_status,
         time: payload.time,
         moves: payload.moves,
+        created_at,
     };
 
     // 4. Lo guardamos en Firebase

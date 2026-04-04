@@ -50,7 +50,7 @@ const UserMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               <p className={styles.guestText}>Join us to save your progress!</p>
               <p className={styles.guestSubtext}>Log in to access your profile settings and match history.</p>
             </div>
-            
+
             <button
               className={styles.loginBtn}
               onClick={() => { onClose(); navigate('/login'); }}
@@ -106,7 +106,7 @@ const UserMenu: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               )}
             </div>
           </div>
-          
+
           <button onClick={handleLogout} className={styles.logoutBtn}>
             Log Out
           </button>

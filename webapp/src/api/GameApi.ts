@@ -12,10 +12,13 @@ export function createMatch(player1: string, player2: string, size: number) {
       player2,
       size,
     }),
-  }).then((res) => res.json())
-    .catch((err) => {
-      console.error("Error create match:", err);
-      return null;
+  }).then(async (res) => {
+    const text = await res.text();
+    if (!res.ok) throw new Error(`Status ${res.status}: ${text}`);
+    return JSON.parse(text);
+  }).catch((err) => {
+    console.error("Error create match:", err);
+    return null;
   });
 }
 
@@ -32,12 +35,14 @@ export function sendMove(matchId: string, x: number, y: number, z: number) {
       coord_y: y,
       coord_z: z,
     }),
-  })
-    .then((res) => res.json())
-    .catch((err) => {
-      console.error("Error sending move:", err);
-      return null;
-    });
+  }).then(async (res) => {
+    const text = await res.text();
+    if (!res.ok) throw new Error(`Status ${res.status}: ${text}`);
+    return JSON.parse(text);
+  }).catch((err) => {
+    console.error("Error sending move:", err);
+    return null;
+  });
 }
 
 // response: match_id:string, coordinates, game_over:boolean

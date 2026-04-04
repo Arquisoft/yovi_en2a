@@ -147,8 +147,9 @@ pub async fn get_user_matches(user_id: &str) -> Result<Vec<Match>, Box<dyn Error
         .query() 
         .await?;
 
-    // 3. Combine both lists
+    // 3. Combine both lists and sort chronologically (oldest first)
     matches_p1.extend(matches_p2);
+    matches_p1.sort_by_key(|m| m.created_at);
     Ok(matches_p1)
 }
 

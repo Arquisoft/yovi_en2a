@@ -28,9 +28,9 @@ const RankingTableLocal: React.FC<Props> = ({ data, title, onReplay, showPositio
 
             <div className={`${styles.rankingHeaderRow} ${showPosition ? styles.withPosition : ''}`}>
                 {showPosition && <span>POS</span>}
-                <span>PLAYER 1</span>
+                <span className={styles.rankName}>PLAYER 1</span>
                 <span className={styles.vsLabel}></span>
-                <span>PLAYER 2</span>
+                <span className={styles.rankName}>PLAYER 2</span>
                 <span>RESULT</span>
                 <span>TIME</span>
                 {onReplay && <span className={styles.replayColHeader}></span>}

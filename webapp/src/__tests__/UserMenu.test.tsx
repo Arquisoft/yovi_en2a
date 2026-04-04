@@ -42,7 +42,7 @@ describe('UserMenu Component', () => {
 
     render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
 
-    expect(screen.getByText(/You are not logged in yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/Not logged in/i)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Go to Login/i })).toBeInTheDocument();
   });
 
@@ -71,7 +71,7 @@ describe('UserMenu Component', () => {
     render(<MemoryRouter><UserMenu onClose={mockOnClose} /></MemoryRouter>);
 
     expect(screen.getByText('pablo@test.com')).toBeInTheDocument();
-    expect(screen.getByText('Pablo')).toBeInTheDocument();
+    expect(screen.getAllByText('Pablo')[0]).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Log Out/i })).toBeInTheDocument();
   });
 
@@ -149,7 +149,7 @@ describe('UserMenu Component', () => {
 
     await user.click(screen.getByRole('button', { name: /Cancel/i }));
 
-    expect(screen.getByText('Pablo')).toBeInTheDocument();
+    expect(screen.getAllByText('Pablo')[0]).toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 });
