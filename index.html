@@ -479,44 +479,54 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_level_3">5.3. Level 3</a></li>
 </ul>
 </li>
-<li><a href="#section-runtime-view">6. Runtime View</a>
+<li><a href="#_whitebox_game_manager_rust">6. Whitebox Game Manager (Rust)</a></li>
+<li><a href="#_whitebox_gamey_engine_rust">7. Whitebox Gamey Engine (Rust)</a></li>
+<li><a href="#section-runtime-view">8. Runtime View</a>
 <ul class="sectlevel2">
-<li><a href="#_runtime_scenario_1">6.1. &lt;Runtime Scenario 1&gt;</a></li>
-<li><a href="#_runtime_scenario_2">6.2. &lt;Runtime Scenario 2&gt;</a></li>
-<li><a href="#">6.3. &#8230;&#8203;</a></li>
-<li><a href="#_runtime_scenario_n">6.4. &lt;Runtime Scenario n&gt;</a></li>
+<li><a href="#_user_creation">8.1. User Creation</a></li>
+<li><a href="#_user_login">8.2. User Login</a></li>
+<li><a href="#_match_creation">8.3. Match Creation</a></li>
+<li><a href="#_player_move">8.4. Player Move</a></li>
+<li><a href="#_bot_move">8.5. Bot Move</a></li>
 </ul>
 </li>
-<li><a href="#section-deployment-view">7. Deployment View</a>
+<li><a href="#section-deployment-view">9. Deployment View</a>
 <ul class="sectlevel2">
-<li><a href="#_infrastructure_level_1">7.1. Infrastructure Level 1</a></li>
-<li><a href="#_infrastructure_level_2">7.2. Infrastructure Level 2</a></li>
+<li><a href="#_infrastructure_level_1">9.1. Infrastructure Level 1</a></li>
+<li><a href="#_infrastructure_level_2">9.2. Infrastructure Level 2</a></li>
 </ul>
 </li>
-<li><a href="#section-concepts">8. Cross-cutting Concepts</a>
+<li><a href="#section-concepts">10. Cross-cutting Concepts</a>
 <ul class="sectlevel2">
-<li><a href="#_concept_1">8.1. <em>&lt;Concept 1&gt;</em></a></li>
-<li><a href="#_concept_2">8.2. <em>&lt;Concept 2&gt;</em></a></li>
-<li><a href="#_concept_n">8.3. <em>&lt;Concept n&gt;</em></a></li>
+<li><a href="#_domain_model_yen_notation">10.1. Domain Model: YEN Notation</a></li>
+<li><a href="#_security_layered_authentication_and_csrf">10.2. Security: Layered Authentication and CSRF</a></li>
+<li><a href="#_persistency_hybrid_state_management">10.3. Persistency: Hybrid State Management</a></li>
+<li><a href="#_deterministic_logic_rust_engine">10.4. Deterministic Logic (Rust Engine)</a></li>
+<li><a href="#_deployment_containerization_docker">10.5. Deployment: Containerization (Docker)</a></li>
 </ul>
 </li>
-<li><a href="#section-design-decisions">9. Architecture Decisions</a>
+<li><a href="#section-design-decisions">11. Architecture Decisions</a>
 <ul class="sectlevel2">
-<li><a href="#_adr_001_separation_into_web_application_and_rust_game_engine">9.1. ADR-001: Separation into Web Application and Rust Game Engine</a></li>
-<li><a href="#_adr_002_communication_via_json_using_yen_notation">9.2. ADR-002: Communication via JSON using YEN Notation</a></li>
-<li><a href="#_adr_003_use_of_firebase_as_the_database">9.3. ADR-003: Use of Firebase as the Database</a></li>
-<li><a href="#_adr_004_cloud_deployment_of_the_application">9.4. ADR-004: Cloud Deployment of the Application</a></li>
-<li><a href="#_adr_005_external_rest_api_for_bots">9.5. ADR-005: External REST API for Bots</a></li>
+<li><a href="#_adr_001_separation_into_web_application_and_rust_game_engine">11.1. ADR-001: Separation into Web Application and Rust Game Engine</a></li>
+<li><a href="#_adr_002_communication_via_json_using_yen_notation">11.2. ADR-002: Communication via JSON using YEN Notation</a></li>
+<li><a href="#_adr_003_use_of_firebase_as_the_database">11.3. ADR-003: Use of Firebase as the Database</a></li>
+<li><a href="#_adr_004_cloud_deployment_of_the_application">11.4. ADR-004: Cloud Deployment of the Application</a></li>
+<li><a href="#_adr_005_external_rest_api_for_bots">11.5. ADR-005: External REST API for Bots</a></li>
 </ul>
 </li>
-<li><a href="#section-quality-scenarios">10. Quality Requirements</a>
+<li><a href="#section-quality-scenarios">12. Quality Requirements</a>
 <ul class="sectlevel2">
-<li><a href="#_quality_tree">10.1. Quality Tree</a></li>
-<li><a href="#_quality_scenarios">10.2. Quality Scenarios</a></li>
+<li><a href="#_quality_tree">12.1. Quality Tree</a></li>
+<li><a href="#_quality_scenarios">12.2. Quality Scenarios</a></li>
 </ul>
 </li>
-<li><a href="#section-technical-risks">11. Risks and Technical Debts</a></li>
-<li><a href="#section-glossary">12. Glossary</a></li>
+<li><a href="#section-technical-risks">13. Risks and Technical Debts</a>
+<ul class="sectlevel2">
+<li><a href="#_technical_risks">13.1. Technical Risks</a></li>
+<li><a href="#_technical_debts">13.2. Technical Debts</a></li>
+</ul>
+</li>
+<li><a href="#section-glossary">14. Glossary</a></li>
 </ul>
 </div>
 </div>
@@ -809,33 +819,28 @@ These stakeholders determine the extent and the level of detail of your work and
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Dev Team</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em><a href="mailto:UO294024@uniovi.es">Jaime Alonso</a>, <a href="mailto:UO295426@uniovi.es">Pelayo Pérez</a>, <a href="mailto:UO300568@uniovi.es">Ana Calleja</a>, <a href="mailto:UO289899@uniovi.es">David García</a>, <a href="mailto:UO300652@uniovi.es">Matías Valle</a></em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em><a href="mailto:UO294024@uniovi.es">Jaime Alonso</a>, <a href="mailto:UO295426@uniovi.es">Pelayo Pérez</a>, <a href="mailto:UO300568@uniovi.es">Ana Calleja</a>, <a href="mailto:UO300652@uniovi.es">Matías Valle</a></em></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>They are the ones that implement and determine whether a problem may be solved given the constraints, being able to discuss with the client (Labra).</em></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Game Y rules</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://en.wikipedia.org/wiki/Y_(game)">Official Wiki - Game  Y</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Inmutable statement that define de rules for playing the vanilla version of the game. Shall be followed.</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="https://en.wikipedia.org/wiki/Y_(game)">Official Wiki - Game Y</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Immutable rules that define the rules for playing the vanilla version of the game. Shall be followed.</em></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Final users</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">There is no direct communication though social media or polls may be useful</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>They will be the main enjoyers of the system, they shall communicate errors and tell thing they are not really keen on or improvements. The system shall be design expecting them to use it.</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">There is no direct communication, though social media or polls may be useful</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>They will be the main users of the system, they shall communicate errors and suggest improvements. The system shall be designed expecting them to use it.</em></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Server</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">???</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">It will include all of the different parts of the game dockerized allowing acccess to all users.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Server (Azure VM)</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20.250.145.156</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Hosts all Dockerized services, providing public access to all users.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Google Workspace DDBB</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Firebase</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">It is a no relational DDBB that will store all the persistent information regarding the users and the games.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&#8230;&#8203;</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&#8230;&#8203;</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&#8230;&#8203;</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Firebase (Google Cloud)</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Firestore + Firebase Auth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A non-relational cloud database that stores all persistent information regarding users and games, and handles authentication.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1058,7 +1063,7 @@ The title of the table is the name of your system, the three columns contain the
 </div>
 </div>
 <div class="paragraph">
-<p>The folloing table includes the different bussines components of the application, ecxplaining for each their points of interaction with the rest of the system.</p>
+<p>The following table includes the different business components of the application, explaining for each their points of interaction with the rest of the system.</p>
 </div>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
@@ -1096,9 +1101,9 @@ The title of the table is the name of your system, the three columns contain the
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Database</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">stores infromation about past matches</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">stores information about past matches</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">the data from played games</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">information requested by the player to be displayed by the ui</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">information requested by the player to be displayed by the UI</p></td>
 </tr>
 </tbody>
 </table>
@@ -1139,27 +1144,43 @@ together with a mapping table showing the relationships between channels and inp
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>User Device</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Computer, laptop, or mobile device used to access the system via a secure HTTPS connection.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Computer, laptop, or mobile device used to access the system via a secure HTTPS connection on port 80.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Web Application (Frontend)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Developed in TypeScript. Manages matches, communicates with the Rust module, and interacts with Firebase and the Bot API.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Webapp (Frontend)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">React/TypeScript SPA built with Vite. Renders the game UI and communicates exclusively with the Users API gateway via HTTP/JSON.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Rust Game Logic Module</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Component responsible for match outcomes and bot moves. Exposes a web service endpoint for the Frontend.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Users API (Gateway)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Node.js/Express service acting as the single entry point for all client requests. Handles CSRF protection and proxies traffic to Auth Engine, Game Manager, and Gamey Engine.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Firebase Database</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Cloud persistence layer for user information and statistics via Firebase SDK.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Auth Engine</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rust/Axum microservice handling user registration, login, and token validation. Communicates with Firebase Auth via the Firebase Admin SDK.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Game Manager</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rust/Axum microservice managing match lifecycle: creation, move processing, and result persistence. Reads and writes active game state to Redis and persists final results to Firestore.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Gamey Engine</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rust/Axum microservice implementing game rules, win detection, and AI move generation. Called by the Game Manager to validate moves and compute bot responses.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Redis</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">In-memory data store used by the Game Manager for low-latency caching of active match state.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Firebase (Auth + Firestore)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Google Cloud managed platform. Firebase Auth handles identity; Firestore stores user profiles, match history, and global rankings.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Public API for Bots</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Interface for external bots to interact with the system over HTTPS.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">External REST interface exposed by the Users API for automated agents to interact with the game over HTTPS using YEN notation.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Deployment Platform (Azure)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Cloud infrastructure hosting the Rust backend and WebApp, ensuring HTTPS and availability.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Deployment Platform (Azure VM)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Single Azure virtual machine (20.250.145.156) hosting all Docker containers orchestrated via <code>docker-compose.yml</code>.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1188,24 +1209,49 @@ together with a mapping table showing the relationships between channels and inp
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>HTTPS (Browser → WebApp)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">User moves, bot strategy selection, login registration info.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Board updates, results, statistics.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>HTTPS (Browser → Webapp)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User interactions: login, registration, move submissions, game start.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Board state, game results, statistics, UI updates.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>HTTP JSON/YEN (WebApp → Rust)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Board state (YEN), active player, strategy.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Match outcome, bot move.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>HTTP/JSON (Webapp → Users API :3000)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All API requests from the frontend (auth, game, moves).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Responses proxied from the appropriate backend service.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Firebase SDK (WebApp ↔ Firebase)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">User registration, results, statistics.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Data persistence and retrieval.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>HTTP/JSON (Users API → Auth Engine :4001)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Registration and login requests with user credentials.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Session token, authentication result.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>HTTPS (API → Bot)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Board state (YEN), strategy parameters.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Bot move response.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>HTTP/JSON (Users API → Game Manager :5000)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Game creation requests, player move submissions.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Match ID, updated board state, game outcome.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>HTTP/JSON (Game Manager → Gamey Engine :4000)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current board state (YEN notation), player move.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Validated new state, win detection result, bot move.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Redis Protocol (Game Manager → Redis :6379)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Active match state writes on every move.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Current match state reads for move processing.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Firebase SDK (Auth Engine ↔ Firebase Auth)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User credentials for registration and login.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">JWT token, user profile.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Firestore SDK (Game Manager ↔ Firestore)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Match results and player statistics on game end.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Historical match data and global rankings.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>HTTPS (External Bot → Public API)</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Board state (YEN notation), strategy parameters.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bot move response in YEN notation.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1224,21 +1270,76 @@ together with a mapping table showing the relationships between channels and inp
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_technical_decisions">4.1. Technical Decisions</h3>
+<div class="sect3">
+<h4 id="_frontend">4.1.1. Frontend</h4>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Firebase</strong> is the chosen data base management tool for our project.</p>
-</li>
-<li>
-<p>All of the bot logic will be implemented in <strong>rust</strong>.</p>
-</li>
-<li>
-<p>We will implement our user interface using the <strong>react</strong> javaScript library because it allows us to organize and reuse our ui components easily.</p>
-</li>
-<li>
-<p><strong>Docker</strong> will be used to launch the project in the same way regardless of hardware.</p>
+<p>The user interface is implemented using <strong>React</strong> with <strong>TypeScript</strong>, built with <strong>Vite</strong>. React&#8217;s component model allows us to organize and reuse UI elements efficiently, while TypeScript enforces type safety across the codebase.</p>
 </li>
 </ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_backend_services">4.1.2. Backend Services</h4>
+<div class="paragraph">
+<p>The backend follows a <strong>microservices architecture</strong> with the following services:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Users Service (Node.js/Express):</strong> Acts as the central API gateway. All client requests go through this service, which proxies to the appropriate internal service. It also handles CSRF protection.</p>
+</li>
+<li>
+<p><strong>Auth Engine (Rust/Axum):</strong> A dedicated Rust microservice responsible for user registration, login, and token validation, backed by Firebase Auth.</p>
+</li>
+<li>
+<p><strong>Game Manager (Rust/Axum):</strong> Manages match lifecycle — game creation, move processing, and result persistence. Bridges Redis for active game state and Firestore for long-term storage.</p>
+</li>
+<li>
+<p><strong>Gamey Engine (Rust/Axum):</strong> The computational core. Implements game rules, win detection, and AI move generation. Written in Rust for maximum performance and determinism.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_data_storage">4.1.3. Data Storage</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Firebase (Firestore + Auth):</strong> Chosen as the primary persistent data store for user accounts, match history, and global rankings. Fully managed with built-in authentication.</p>
+</li>
+<li>
+<p><strong>Redis:</strong> Used as an in-memory cache for active match state, providing low-latency reads and writes during gameplay.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_infrastructure">4.1.4. Infrastructure</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Docker &amp; Docker Compose:</strong> Every service is containerized to ensure environment parity between development and production. A single <code>docker-compose.yml</code> orchestrates all services.</p>
+</li>
+<li>
+<p><strong>Azure VM:</strong> The production deployment target. All containers run on a single Azure virtual machine at <code>20.250.145.156</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_monitoring_quality">4.1.5. Monitoring &amp; Quality</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Prometheus + Grafana:</strong> The Users Service exposes metrics collected by Prometheus and visualized through Grafana dashboards for operational monitoring.</p>
+</li>
+<li>
+<p><strong>SonarCloud:</strong> Integrated into the CI/CD pipeline for static analysis, code quality gates, and coverage reporting.</p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -1246,7 +1347,13 @@ together with a mapping table showing the relationships between channels and inp
 <div class="ulist">
 <ul>
 <li>
-<p>We are using github to organize the project&#8217;s developement, using the wiki to document our meetings and using the branch protection features to avoid mistakes and make sure every push to a main brach is reviewed by another team member.</p>
+<p><strong>GitHub</strong> is used to manage the project, with branch protection rules ensuring every push to a main branch is reviewed by at least one other team member.</p>
+</li>
+<li>
+<p><strong>GitHub Actions</strong> automates the CI/CD pipeline: unit tests, E2E tests, Docker image builds, and deployment to Azure on each release.</p>
+</li>
+<li>
+<p><strong>GitHub Wiki</strong> is used to document team meetings and decisions.</p>
 </li>
 </ul>
 </div>
@@ -1306,14 +1413,14 @@ Refer to details in the following sections.</p>
 <h3 id="_whitebox_overall_system">5.1. Whitebox Overall System</h3>
 <div class="imageblock">
 <div class="content">
-<img src="./images/level1-overall.png" alt="level1 overall" width="612" height="977">
+<img src="./images/level1.png" alt="level1" width="513" height="132">
 </div>
 </div>
 <div class="dlist">
 <dl>
 <dt class="hdlist1">Motivation</dt>
 <dd>
-<p>The system uses a hybrid backend approach. <strong>Firebase</strong> is used as a Third-Party Building Block to offload identity management and real-time state persistence. This allows the <strong>Users Service</strong> to focus on custom business logic and the <strong>Game Engine</strong> (Rust) to handle CPU-intensive game mechanics without managing user sessions directly.</p>
+<p>The system uses a hybrid backend approach. <strong>Firebase</strong> is used as a Third-Party Building Block to offload identity management and persistence. This allows the <strong>Gamey system</strong> to focus on custom business logic and the handle CPU-intensive game mechanics without managing user sessions directly.</p>
 </dd>
 <dt class="hdlist1">Contained Building Blocks</dt>
 </dl>
@@ -1331,16 +1438,8 @@ Refer to details in the following sections.</p>
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Webapp</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Frontend SPA that coordinates User-Firebase-Engine interactions.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Users Service</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Backend orchestration, monitoring, and providing an OpenAPI-compliant gateway for administrative tasks.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Game Engine</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">High-speed game processing, bot AI management, and move validation.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Gamey System</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Custom and developed layers of the application with orchestrated services.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Firebase</strong></p></td>
@@ -1348,57 +1447,24 @@ Refer to details in the following sections.</p>
 </tr>
 </tbody>
 </table>
-<div class="dlist">
-<dl>
-<dt class="hdlist1">Important Interfaces</dt>
-<dd>
-<div class="ulist">
-<ul>
-<li>
-<p><strong>Firebase SDK Interface:</strong> Client-side link for Auth and Realtime updates.</p>
-</li>
-<li>
-<p><strong>Gamey WebSocket/gRPC:</strong> Low-latency interface for game move submission to the Rust engine.</p>
-</li>
-</ul>
-</div>
-</dd>
-</dl>
-</div>
 <div class="sect3">
-<h4 id="_webapp">5.1.1. Webapp</h4>
+<h4 id="_gamey_system">5.1.1. Gamey System</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1">Purpose/Responsibility</dt>
 <dd>
-<p>Coordinates the user experience. It uses Firebase for Authentication and the Game Engine for the actual gaming logic.</p>
-</dd>
-<dt class="hdlist1">Interface(s)</dt>
-<dd>
-<p>React Hooks for Firebase; REST client for Users Service.</p>
-</dd>
-<dt class="hdlist1">Directory/File Location</dt>
-<dd>
-<p><code>/webapp</code></p>
+<p>Coordinates the user experience and provides a single gateway that communicates the backend and frontend interfaces.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_users_service">5.1.2. Users Service</h4>
+<h4 id="_firebase">5.1.2. Firebase</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1">Purpose/Responsibility</dt>
 <dd>
-<p>Provides a secure layer for user-related logic that shouldn&#8217;t live on the client. It uses the Firebase Admin SDK to verify identities.</p>
-</dd>
-<dt class="hdlist1">Interface(s)</dt>
-<dd>
-<p>Exposes endpoints defined in <code>openapi.yaml</code>.</p>
-</dd>
-<dt class="hdlist1">Directory/File Location</dt>
-<dd>
-<p><code>/users</code></p>
+<p>Provides a secure and external layer for handling the Data Base.</p>
 </dd>
 </dl>
 </div>
@@ -1411,10 +1477,6 @@ Refer to details in the following sections.</p>
 <dd>
 <p>The computational core. It is agnostic of user identity (delegated to other blocks) and focuses on the game rules.</p>
 </dd>
-<dt class="hdlist1">Directory/File Location</dt>
-<dd>
-<p><code>/gamey</code></p>
-</dd>
 </dl>
 </div>
 </div>
@@ -1425,145 +1487,269 @@ Refer to details in the following sections.</p>
 <h4 id="_white_box_game_engine_rust">5.2.1. White Box <em>Game Engine (Rust)</em></h4>
 <div class="imageblock">
 <div class="content">
-<img src="./images/level2-gamey.png" alt="level2 gamey" width="433" height="528">
+<img src="./images/level2.png" alt="level2" width="581" height="535">
 </div>
 </div>
-<div class="paragraph">
-<p>The <strong>Game Engine</strong> is organized as a modular Rust crate. The <code>core</code> module is strictly separated from the <code>bot_server</code> to allow for local CLI usage or networked server usage.</p>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Motivation</dt>
+<dd>
+<p>The Gamey System is decomposed into specialized services to ensure a clear separation of concerns. By utilizing a central Gateway (Users), the system provides a single entry point for the Webapp and API requests. This architecture isolates the Gamey Engine from session management, while Auth and Game Manager handle microservice-specific tasks, using Redis for high-speed state caching and Firebase for long-term persistence.</p>
+</dd>
+<dt class="hdlist1">Contained Building Blocks</dt>
+</dl>
 </div>
-</div>
-<div class="sect3">
-<h4 id="_white_box_users_service_node_js">5.2.2. White Box <em>Users Service (Node.js)</em></h4>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><strong>users-service.js</strong>: Main entry point using Express.</p>
-</li>
-<li>
-<p><strong>Firebase Admin Logic</strong>: Middleware to intercept requests and validate Firebase JWT tokens.</p>
-</li>
-<li>
-<p><strong>monitoring/</strong>: Dedicated module for service health and logging.</p>
-</li>
-</ol>
-</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Users</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The central API Gateway that orchestrates and routes all incoming traffic to the appropriate internal services.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Webapp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The frontend user interface providing the visual representation of the game and user dashboard.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auth Engine</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Dedicated microservice that interacts with Firebase to manage user identity, tokens, and authentication flows.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Game Manager</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Orchestration service responsible for handling match state, player matchmaking, and synchronizing data with Firebase.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gamey</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The core game engine service that executes game rules and handles CPU-intensive mechanics.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Redis</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">In-memory data store used for low-latency caching of active game states and temporary session data.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Firebase</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Third-party platform providing robust authentication and cloud-hosted NoSQL data storage.</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_level_3">5.3. Level 3</h3>
-<div class="paragraph">
-<p>(Not really sure if it is even detailed)</p>
+<div class="imageblock">
+<div class="content">
+<img src="./images/level3.png" alt="level3" width="837" height="455">
 </div>
-<div style="page-break-after: always;"></div>
+</div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-runtime-view">6. Runtime View</h2>
+<h2 id="_whitebox_game_manager_rust">6. Whitebox Game Manager (Rust)</h2>
 <div class="sectionbody">
-<div class="sidebarblock arc42help">
-<div class="content">
-<div class="paragraph">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Purpose/Responsibility</dt>
+<dd>
+<p>The Game Manager acts as the bridge between the high-level game requests and the data persistence layers. It translates business logic into actionable data operations across NoSQL and cache environments.</p>
+</dd>
+<dt class="hdlist1">Contained Building Blocks (Components)</dt>
+</dl>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">REST API (api_rest.rs)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exposes endpoints for match management and receives commands from the Gateway.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data Layer (data.rs)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contains the core business logic and decides whether to fetch data from cache or primary storage.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Firebase Client (firebase.rs)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Handles the low-level communication and serialization for Firebase Firestore and Auth.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Redis Client (redis_client.rs)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Manages the connection pool and CRUD operations for the volatile Redis cache.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_whitebox_gamey_engine_rust">7. Whitebox Gamey Engine (Rust)</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Purpose/Responsibility</dt>
+<dd>
+<p>This is the computational heart of the ecosystem. It is designed to be highly modular, allowing for different interfaces (CLI or Bot Server) to interact with the same deterministic game logic.</p>
+</dd>
+<dt class="hdlist1">Contained Building Blocks (Components)</dt>
+</dl>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Responsibility</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Core Engine (core/)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Implements the fundamental rules, state machine, and move validation of the game.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bot Server (bot_server/)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A wrapper that allows the engine to be played against or by automated agents over a network.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bot Logic (bot/)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contains the algorithms and decision-making heuristics for AI players.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Notation (notation/)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Handles the parsing and generation of game-specific notation (e.g., FEN or PGN equivalents).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CLI (cli.rs)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Provides a command-line interface for direct interaction with the engine for debugging or standalone play.</p></td>
+</tr>
+</tbody>
+</table>
+<div style="page-break-after: always;"></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="section-runtime-view">8. Runtime View</h2>
+<div class="sectionbody">
+<div class="paragraph arc42help">
 <div class="title">Contents</div>
-<p>The runtime view describes concrete behavior and interactions of the system’s building blocks in form of scenarios from the following areas:</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>important use cases or features: how do building blocks execute them?</p>
-</li>
-<li>
-<p>interactions at critical external interfaces: how do building blocks cooperate with users and neighboring systems?</p>
-</li>
-<li>
-<p>operation and administration: launch, start-up, stop</p>
-</li>
-<li>
-<p>error and exception scenarios</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<p>Remark: The main criterion for the choice of possible scenarios (sequences, workflows) is their <strong>architectural relevance</strong>. It is <strong>not</strong> important to describe a large number of scenarios. You should rather document a representative selection.</p>
+<p>The runtime view describes concrete behavior and interactions of the system’s building blocks in form of scenarios.</p>
 </div>
 <div class="paragraph">
 <div class="title">Motivation</div>
-<p>You should understand how (instances of) building blocks of your system perform their job and communicate at runtime.
-You will mainly capture scenarios in your documentation to communicate your architecture to stakeholders that are less willing or able to read and understand the static models (building block view, deployment view).</p>
-</div>
-<div class="paragraph">
-<div class="title">Form</div>
-<p>There are many notations for describing scenarios, e.g.</p>
-</div>
-<div class="ulist">
-<ul>
-<li>
-<p>numbered list of steps (in natural language)</p>
-</li>
-<li>
-<p>activity diagrams or flow charts</p>
-</li>
-<li>
-<p>sequence diagrams</p>
-</li>
-<li>
-<p>BPMN or EPCs (event process chains)</p>
-</li>
-<li>
-<p>state machines</p>
-</li>
-<li>
-<p>&#8230;&#8203;</p>
-</li>
-</ul>
-</div>
-<div class="paragraph">
-<div class="title">Further Information</div>
-<p>See <a href="https://docs.arc42.org/section-6/">Runtime View</a> in the arc42 documentation.</p>
-</div>
-</div>
+<p>You should understand how building blocks of your system perform their job and communicate at runtime.</p>
 </div>
 <div class="sect2">
-<h3 id="_runtime_scenario_1">6.1. &lt;Runtime Scenario 1&gt;</h3>
-<div class="ulist">
-<ul>
-<li>
-<p><em>&lt;insert runtime diagram or textual description of the scenario&gt;</em></p>
-</li>
-<li>
-<p><em>&lt;insert description of the notable aspects of the interactions between the
-building block instances depicted in this diagram.&gt;</em></p>
-</li>
-</ul>
-</div>
+<h3 id="_user_creation">8.1. User Creation</h3>
 <div class="paragraph">
-<p>It is possible to use a sequence diagram:</p>
+<p>This scenario describes the registration of a new player. The Users Gateway receives the initial request and delegates the registration logic to the Auth Engine, which ensures the user is correctly persisted in the Firebase database.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/Sequence%20diagram.png" alt="Sequence diagram" width="332" height="335">
+<img src="./images/runtime_create_user.png" alt="runtime create user" width="656" height="418">
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_runtime_scenario_2">6.2. &lt;Runtime Scenario 2&gt;</h3>
-
+<h3 id="_user_login">8.2. User Login</h3>
+<div class="paragraph">
+<p>The login process emphasizes security by requiring a CSRF token validation at the Gateway level before any authentication logic is processed by the Auth Engine.</p>
+</div>
+<div class="paragraph">
+<p>CSRF Check: The Gateway compares the X-CSRF-Token header against the secure csrf_token cookie.</p>
+</div>
+<div class="paragraph">
+<p>Proxying: Upon validation, the request is proxied to the Auth service using fixRequestBody to maintain data integrity.</p>
+</div>
+<div class="paragraph">
+<p>External Auth: The Auth Engine verifies the credentials against Firebase to grant access.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/runtime_login.png" alt="runtime login" width="595" height="425">
+</div>
+</div>
 </div>
 <div class="sect2">
-<h3 id="">6.3. &#8230;&#8203;</h3>
-
+<h3 id="_match_creation">8.3. Match Creation</h3>
+<div class="paragraph">
+<p>This view illustrates how the system initializes a game session. The Users Gateway routes the request to the Game Manager, which prepares the environment for a new match.</p>
+</div>
+<div class="paragraph">
+<p>Resource Allocation: The Game Manager creates a unique match ID.</p>
+</div>
+<div class="paragraph">
+<p>Fast Persistence: The initial state is stored in Redis to allow for high-frequency updates during gameplay.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/runtime_create_game.png" alt="runtime create game" width="532" height="335">
+</div>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_runtime_scenario_n">6.4. &lt;Runtime Scenario n&gt;</h3>
+<h3 id="_player_move">8.4. Player Move</h3>
+<div class="paragraph">
+<p>The player move scenario represents the core interactive loop of the application. It involves real-time validation and state synchronization across the engine and the cache.</p>
+</div>
+<div class="paragraph">
+<p>State Retrieval: The Game Manager pulls the current board status from Redis.</p>
+</div>
+<div class="paragraph">
+<p>Engine Validation: The Gamey Engine processes the move logic to ensure it follows game rules.</p>
+</div>
+<div class="paragraph">
+<p>Cache Update: The new state is pushed back to Redis for immediate availability.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/runtime_player_move.png" alt="runtime player move" width="612" height="426">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bot_move">8.5. Bot Move</h3>
+<div class="paragraph">
+<p>This scenario covers automated gameplay. It is typically triggered internally by the Game Manager once a player&#8217;s turn is completed.</p>
+</div>
+<div class="paragraph">
+<p>Decision Making: The Bot Logic within the Engine calculates the optimal response.</p>
+</div>
+<div class="paragraph">
+<p>Asynchronous Sync: The resulting state is synchronized with the Redis cache so the player sees the bot&#8217;s reaction upon their next refresh or through a socket.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/runtime_bot_move.png" alt="runtime bot move" width="532" height="398">
+</div>
+</div>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-deployment-view">7. Deployment View</h2>
+<h2 id="section-deployment-view">9. Deployment View</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_infrastructure_level_1">7.1. Infrastructure Level 1</h3>
+<h3 id="_infrastructure_level_1">9.1. Infrastructure Level 1</h3>
 <div class="imageblock">
 <div class="content">
 <img src="./images/deployment-lvl1.png" alt="deployment lvl1" width="504" height="707">
@@ -1573,20 +1759,23 @@ building block instances depicted in this diagram.&gt;</em></p>
 <dl>
 <dt class="hdlist1">Motivation</dt>
 <dd>
-<p>The system is containerized to ensure environment parity between development and production. Since the <strong>Gamey Engine</strong> is built in Rust, it requires a high-performance runtime environment, while the <strong>Users Service</strong> and <strong>Webapp</strong> benefit from the managed scalability of Firebase and standard Node.js container hosting.</p>
+<p>The system is fully containerized using Docker, orchestrated via <code>docker-compose.yml</code>. All backend services run on a single <strong>Azure VM</strong> (20.250.145.156). Firebase is used as a managed external platform for authentication and persistence, reducing infrastructure overhead.</p>
 </dd>
 <dt class="hdlist1">Quality and/or Performance Features</dt>
 <dd>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Scalability:</strong> The Rust Game Engine can be scaled vertically or horizontally depending on the number of active game sessions.</p>
+<p><strong>Containerization:</strong> Every service runs in an isolated Docker container, ensuring consistent behavior across development and production.</p>
 </li>
 <li>
-<p><strong>Latency:</strong> WebSockets are used for the Game Engine to minimize overhead during competitive play.</p>
+<p><strong>Separation of concerns:</strong> The Users API acts as a single entry point, hiding the internal service topology from external clients.</p>
 </li>
 <li>
-<p><strong>Security:</strong> Sensitive user data is offloaded to Firebase, reducing the attack surface of the self-hosted infrastructure.</p>
+<p><strong>Low-latency state management:</strong> Redis caches active game states, enabling fast move validation without hitting Firebase on every request.</p>
+</li>
+<li>
+<p><strong>Managed auth and persistence:</strong> Firebase offloads identity management and long-term data storage, reducing the attack surface of the self-hosted infrastructure.</p>
 </li>
 </ul>
 </div>
@@ -1608,59 +1797,135 @@ building block instances depicted in this diagram.&gt;</em></p>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Webapp</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Distributed via Content Delivery Network (CDN) for low-latency frontend delivery.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker container serving the compiled React/Vite SPA on port 80.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Users Service</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Deployed as a Docker container (referencing <code>/users/Dockerfile</code>).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Users API</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker container running the Node.js/Express gateway on port 3000.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Auth Engine</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker container running the Rust/Axum authentication service on port 4001.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Game Manager</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker container running the Rust/Axum game state manager on port 5000.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Gamey Engine</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Deployed as a high-performance Docker container (referencing <code>/gamey/Dockerfile</code>).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker container running the Rust/Axum game engine and bot service on port 4000.</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Database/Auth</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Managed by Firebase (Google Cloud Infrastructure).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Redis</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker container running Redis for in-memory game state caching on port 6379.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Firebase Auth + Firestore</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Fully managed by Google Cloud (Firebase Platform). No self-hosted component.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <div class="sect2">
-<h3 id="_infrastructure_level_2">7.2. Infrastructure Level 2</h3>
+<h3 id="_infrastructure_level_2">9.2. Infrastructure Level 2</h3>
 <div class="sect3">
-<h4 id="_docker_environment_internal_node">7.2.1. Docker Environment (Internal Node)</h4>
+<h4 id="_docker_environment">9.2.1. Docker Environment</h4>
 <div class="paragraph">
-<p>Each service (Users and Gamey) is encapsulated in a Docker image to isolate dependencies.</p>
+<p>Each service is defined as a container in <code>docker-compose.yml</code> and shares a common internal Docker network, allowing inter-service communication by service name.</p>
 </div>
 <div class="paragraph">
-<p><strong>Users Service Node:</strong></p>
+<p><strong>Webapp:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Runtime:</strong> Node.js 20+.</p>
+<p><strong>Runtime:</strong> Node.js (build stage), Nginx or static file server for the compiled output.</p>
 </li>
 <li>
-<p><strong>Config:</strong> Environment variables for Firebase Admin credentials.</p>
+<p><strong>Build Args:</strong> <code>VITE_API_URL</code> and <code>VITE_GAMEMANAGER_URL</code> are injected at build time.</p>
 </li>
 <li>
-<p><strong>Port:</strong> Exposes 3000 (REST API).</p>
+<p><strong>Port:</strong> Exposes 80 (HTTPS via reverse proxy in production).</p>
 </li>
 </ul>
 </div>
 <div class="paragraph">
-<p><strong>Game Engine Node:</strong></p>
+<p><strong>Users API:</strong></p>
 </div>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Runtime:</strong> Scratch or Debian-slim (for the compiled Rust binary).</p>
+<p><strong>Runtime:</strong> Node.js 22.</p>
 </li>
 <li>
-<p><strong>Performance:</strong> Optimized with LTO (Link Time Optimization) during the build stage.</p>
+<p><strong>Config:</strong> Environment variables for Firebase Admin credentials and internal service URLs (<code>AUTH_URL</code>, <code>GAMEMANAGER_URL</code>, <code>GAMEY_URL</code>).</p>
 </li>
 <li>
-<p><strong>Port:</strong> Exposes 8080 (WebSockets/gRPC).</p>
+<p><strong>Port:</strong> Exposes 3000 (REST API gateway).</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Auth Engine:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Runtime:</strong> Compiled Rust binary on a minimal base image.</p>
+</li>
+<li>
+<p><strong>Config:</strong> <code>FIREBASE_PROJECT_ID</code> and <code>FIREBASE_CREDENTIALS_B64</code> for Firebase Admin SDK.</p>
+</li>
+<li>
+<p><strong>Port:</strong> Exposes 4001.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Game Manager:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Runtime:</strong> Compiled Rust binary on a minimal base image.</p>
+</li>
+<li>
+<p><strong>Config:</strong> Firebase credentials and <code>REDIS_HOST</code> for Redis connectivity.</p>
+</li>
+<li>
+<p><strong>Port:</strong> Exposes 5000.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Gamey Engine:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Runtime:</strong> Compiled Rust binary on a minimal base image.</p>
+</li>
+<li>
+<p><strong>Performance:</strong> Built with release optimizations (LTO) for maximum throughput.</p>
+</li>
+<li>
+<p><strong>Port:</strong> Exposes 4000.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Redis:</strong></p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Runtime:</strong> Official Redis image.</p>
+</li>
+<li>
+<p><strong>Persistence:</strong> Volume-mounted data directory to survive container restarts.</p>
+</li>
+<li>
+<p><strong>Port:</strong> Exposes 6379 (internal network only).</p>
 </li>
 </ul>
 </div>
@@ -1670,7 +1935,7 @@ building block instances depicted in this diagram.&gt;</em></p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-concepts">8. Cross-cutting Concepts</h2>
+<h2 id="section-concepts">10. Cross-cutting Concepts</h2>
 <div class="sectionbody">
 <div class="sidebarblock arc42help">
 <div class="content">
@@ -1772,31 +2037,44 @@ on this list.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_concept_1">8.1. <em>&lt;Concept 1&gt;</em></h3>
+<h3 id="_domain_model_yen_notation">10.1. Domain Model: YEN Notation</h3>
 <div class="paragraph">
-<p><em>&lt;explanation&gt;</em></p>
+<p>The core domain concept is the <strong>YEN Notation</strong>. To ensure all components (Frontend, Gateway, and Engine) communicate seamlessly, a standardized JSON format has been established. This format describes the hexagonal board, edge connections, and the current turn, preventing logical interpretation errors when passing data between JavaScript and Rust environments.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_concept_2">8.2. <em>&lt;Concept 2&gt;</em></h3>
+<h3 id="_security_layered_authentication_and_csrf">10.2. Security: Layered Authentication and CSRF</h3>
 <div class="paragraph">
-<p><em>&lt;explanation&gt;</em></p>
-</div>
-<div class="paragraph">
-<p>&#8230;&#8203;</p>
+<p>Security is implemented across two main layers:
+* <strong>Identity:</strong> Delegated to <strong>Firebase Auth</strong> for robust JWT token management.
+* <strong>Session Integrity:</strong> The <strong>Users Gateway</strong> enforces <strong>Cross-Site Request Forgery</strong> (CSRF) protection using validated tokens for every state-changing request, securing player actions and statistics.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_concept_n">8.3. <em>&lt;Concept n&gt;</em></h3>
+<h3 id="_persistency_hybrid_state_management">10.3. Persistency: Hybrid State Management</h3>
 <div class="paragraph">
-<p><em>&lt;explanation&gt;</em></p>
+<p>The system distinguishes between two data lifecycles:
+* <strong>Volatile State (Real-time):</strong> Managed by <strong>Redis</strong> for active matches where low latency is critical.
+* <strong>Persistent State:</strong> Managed by <strong>Firebase/Firestore</strong> for long-term storage of user profiles, match history, and global rankings.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_deterministic_logic_rust_engine">10.4. Deterministic Logic (Rust Engine)</h3>
+<div class="paragraph">
+<p>Since Game Y requires complex graph pathfinding to detect wins, all computational logic is centralized in <strong>Rust</strong>. This ensures that rules are applied deterministically and with maximum CPU efficiency, regardless of whether the move comes from the Web UI or the Bot API.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_deployment_containerization_docker">10.5. Deployment: Containerization (Docker)</h3>
+<div class="paragraph">
+<p>To ensure "it works on my machine" consistency, every sub-service is encapsulated in a <strong>Docker</strong> container. This cross-cutting concept simplifies local development and cloud deployment, ensuring identical runtimes for the Node.js gateway and the compiled Rust binary.</p>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-design-decisions">9. Architecture Decisions</h2>
+<h2 id="section-design-decisions">11. Architecture Decisions</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>This section documents the most important architectural decisions made during the development of the system.
@@ -1804,7 +2082,7 @@ Each decision includes its context, the chosen option, and the rationale.</p>
 </div>
 <hr>
 <div class="sect2">
-<h3 id="_adr_001_separation_into_web_application_and_rust_game_engine">9.1. ADR-001: Separation into Web Application and Rust Game Engine</h3>
+<h3 id="_adr_001_separation_into_web_application_and_rust_game_engine">11.1. ADR-001: Separation into Web Application and Rust Game Engine</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -1834,7 +2112,7 @@ The system will follow a <strong>service-oriented architecture</strong> where:
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_adr_002_communication_via_json_using_yen_notation">9.2. ADR-002: Communication via JSON using YEN Notation</h3>
+<h3 id="_adr_002_communication_via_json_using_yen_notation">11.2. ADR-002: Communication via JSON using YEN Notation</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -1862,7 +2140,7 @@ All communication between the web application and the Rust service will use:
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_adr_003_use_of_firebase_as_the_database">9.3. ADR-003: Use of Firebase as the Database</h3>
+<h3 id="_adr_003_use_of_firebase_as_the_database">11.3. ADR-003: Use of Firebase as the Database</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -1896,7 +2174,7 @@ Use <strong>Firebase</strong> as the main data storage solution.</p>
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_adr_004_cloud_deployment_of_the_application">9.4. ADR-004: Cloud Deployment of the Application</h3>
+<h3 id="_adr_004_cloud_deployment_of_the_application">11.4. ADR-004: Cloud Deployment of the Application</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -1912,27 +2190,25 @@ The assignment requires the system to be publicly accessible via the web.</p>
 </div>
 <div class="paragraph">
 <p><strong>Decision:</strong>
-Deploy the system on a cloud platform, with the final choice between:
-- Vercel
-- Railway
-- Azure</p>
+Deploy all services on an <strong>Azure Virtual Machine</strong> (20.250.145.156), running the full <code>docker-compose.yml</code> stack.</p>
 </div>
 <div class="paragraph">
 <p><strong>Rationale:</strong>
-- Meets the public deployment requirement.
-- Simplifies infrastructure management.
-- Enables CI/CD and easy scaling.</p>
+- Azure provides a reliable, always-on VM suitable for running multiple Docker containers simultaneously.
+- A single VM with Docker Compose is simpler to manage for a university project than a managed container orchestration platform.
+- Meets the public deployment and accessibility requirements.
+- Enables CI/CD with automated deployment via GitHub Actions SSH.</p>
 </div>
 <div class="paragraph">
 <p><strong>Consequences:</strong>
-- Requires configuration for cloud environments.
-- Possible cost considerations.
-- Platform-specific deployment setups.</p>
+- All services share the resources of a single VM (no auto-scaling).
+- Deployment is triggered automatically on each GitHub release via an SSH deploy step in the CI pipeline.
+- Firebase credentials and other secrets are managed through GitHub Actions secrets and passed as environment variables at runtime.</p>
 </div>
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_adr_005_external_rest_api_for_bots">9.5. ADR-005: External REST API for Bots</h3>
+<h3 id="_adr_005_external_rest_api_for_bots">11.5. ADR-005: External REST API for Bots</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -2007,12 +2283,14 @@ There you will find links and examples about ADR.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-quality-scenarios">10. Quality Requirements</h2>
+<h2 id="section-quality-scenarios">12. Quality Requirements</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_quality_tree">10.1. Quality Tree</h3>
-<div class="paragraph">
-<p><span class="image"><img src="./images/10_quality_tree.png" alt="Quality Tree"></span></p>
+<h3 id="_quality_tree">12.1. Quality Tree</h3>
+<div class="imageblock">
+<div class="content">
+<img src="./images/quality_tree.png" alt="quality tree" width="2250" height="269">
+</div>
 </div>
 <div class="paragraph">
 <p><strong>Explanation:</strong>
@@ -2021,7 +2299,7 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_quality_scenarios">10.2. Quality Scenarios</h3>
+<h3 id="_quality_scenarios">12.2. Quality Scenarios</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 16.6666%;">
@@ -2145,7 +2423,7 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-technical-risks">11. Risks and Technical Debts</h2>
+<h2 id="section-technical-risks">13. Risks and Technical Debts</h2>
 <div class="sectionbody">
 <div class="sidebarblock arc42help">
 <div class="content">
@@ -2170,11 +2448,84 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_technical_risks">13.1. Technical Risks</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Risk</th>
+<th class="tableblock halign-left valign-top">Impact</th>
+<th class="tableblock halign-left valign-top">Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Data Consistency</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Potential desync between Redis (volatile) and Firebase (persistent).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Implement robust write-behind patterns and retry logic.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">JS Performance</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Real-time processing lag in the browser client.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Optimize event loop and use Web Workers for networking.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rust Complexity</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Steep learning curve affecting development velocity.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Peer programming and strict linting (clippy).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_technical_debts">13.2. Technical Debts</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 50%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Technical Debt</th>
+<th class="tableblock halign-left valign-top">Status/Context</th>
+<th class="tableblock halign-left valign-top">Priority</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Session Reload</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Currently marked as invalid; needs architectural fix.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">High</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">End-to-End (e2e)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Missing automated test suite for game flows.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Medium</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Code Duplication</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Identified logic redundancy across modules.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Deployment Structure</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Incomplete definition of the production pipeline.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">High</p></td>
+</tr>
+</tbody>
+</table>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
+</div>
 <div class="sect1">
-<h2 id="section-glossary">12. Glossary</h2>
+<h2 id="section-glossary">14. Glossary</h2>
 <div class="sectionbody">
 <div class="sidebarblock arc42help">
 <div class="content">
@@ -2225,12 +2576,36 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 </thead>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;Term-1&gt;</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;definition-1&gt;</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Bot API</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Public interface allowing external automated agents to interact with the game, request moves, and query game states over HTTPS.</em></p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;Term-2&gt;</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>&lt;definition-2&gt;</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Docker</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Containerization platform used to package services (Users Service, Gamey Engine) ensuring consistent execution across different hardware and environments.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Firebase</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Cloud platform providing Authentication and NoSQL persistence (Firestore) for user profiles, match history, and global statistics.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Gamey Engine</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>The core computational module written in Rust, responsible for deterministic game logic, win detection, and AI move generation.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Gateway</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Node.js service acting as the primary entry point for user-related requests, handling authentication and CSRF protection.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Redis</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>In-memory data store used as a high-performance cache to manage active game states and reduce latency.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Rust</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>High-performance systems programming language used for the game&#8217;s core logic and AI algorithms to ensure computational efficiency.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>YEN Notation</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Project-specific JSON-based format used for serializing board states and moves between the frontend and backend subsystems.</em></p></td>
 </tr>
 </tbody>
 </table>
@@ -2254,7 +2629,7 @@ See <a href="https://arc42.org" class="bare">https://arc42.org</a>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 8.2 EN<br>
-Last updated 2026-02-16 22:55:10 +0100
+Last updated 2026-03-10 01:13:31 +0100
 </div>
 </div>
 </body>
