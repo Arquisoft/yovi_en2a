@@ -32,3 +32,9 @@ pub struct LoginResponse {
     pub email: String,
     pub message: String,
 }
+
+#[derive(Deserialize)]
+pub struct UpdateUsernameRequest {
+    pub email: String,
+    pub new_username: String,
+}

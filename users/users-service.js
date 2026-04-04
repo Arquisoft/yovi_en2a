@@ -187,25 +187,46 @@ app.post('/api/login', verifyCsrf, (req, res) =>
 app.post('/api/register', verifyCsrf, (req, res) =>
   handleAuthRequest(req, res, 'REGISTER', '/register',
     'Registration succeeded but session could not be created. Please try again.',
-    (_response, data) => data.error?.toLowerCase().includes('already exists')
-      ? 'An account with this email already exists.'
-      : 'Registration failed. Please try again.'
+    (_response, data) => {
+      const errLower = data.error?.toLowerCase() || '';
+      if (errLower.includes('email already exists')) return 'An account with this email already exists.';
+      if (errLower.includes('username already in use')) return 'This username is already taken.';
+      return 'Registration failed. Please try again.';
+    }
   )
 );
 
-// UPDATE USERNAME — updates the session data in Redis with the new username
+// UPDATE USERNAME — persists the new username via Auth service and updates the Redis session
 app.post('/api/update-username', verifyCsrf, async (req, res) => {
   const sessionId = req.cookies.sessionId;
   if (!sessionId) return res.status(401).json({ error: 'Not authenticated' });
+  
   try {
     const user = await getSession(sessionId);
     if (!user) return res.status(401).json({ error: 'Session expired or invalid' });
+    
     const { username } = req.body;
     if (!username) return res.status(400).json({ error: 'Username is required' });
+    
+    // Call the Auth service to persist the change in Firebase
+    const response = await fetch(`${AUTH_URL}/update-username`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: user.email, new_username: username })
+    });
+    
+    const data = await response.json().catch(() => ({}));
+    
+    if (!response.ok) {
+      return res.status(response.status).json({ error: data.error || 'Failed to update username' });
+    }
+    
+    // Update the session state in Redis mapping
     await redisClient.setex(`session:${sessionId}`, SESSION_TTL_SECONDS, JSON.stringify({ ...user, username }));
     res.json({ username });
-  } catch {
-    res.status(500).json({ error: 'Session store unavailable' });
+  } catch (err) {
+    console.error('[UPDATE-USERNAME] Error:', err.message);
+    res.status(500).json({ error: 'Internal server error while updating username' });
   }
 });
 

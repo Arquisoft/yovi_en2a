@@ -1,5 +1,5 @@
 use std::error::Error;
-use crate::firebase::{read_db, insert_db, delete_db};
+use crate::firebase::{read_db, insert_db, delete_db, update_db, check_username_exists};
 use crate::user_data::User;
 use crate::auth_utils::{hash_password, verify_password};
 
@@ -24,7 +24,12 @@ pub async fn register_user(
     // If it exists, registration should fail.
     if let Ok(_) = read_db::<User>("Users", email).await {
         println!("[AUTH] Registration failed for [{}]: email already in use", email);
-        return Err("User already exists".into());
+        return Err("Email already exists".into());
+    }
+
+    if check_username_exists(username).await.unwrap_or(false) {
+        println!("[AUTH] Registration failed for [{}]: username already in use", email);
+        return Err("Username already in use".into());
     }
 
     // Securely hash the password before storing it
@@ -84,5 +89,31 @@ pub async fn delete_user(email: &str) -> Result<(), Box<dyn Error>> {
     delete_db("Users", email).await?;
 
     println!("User [{}] successfully removed from the system.", email);
+    Ok(())
+}
+
+pub async fn update_username(email: &str, new_username: &str) -> Result<(), Box<dyn Error>> {
+    // Fetch the user from Firestore.
+    let mut user = match read_db::<User>("Users", email).await {
+        Ok(u) => u,
+        Err(e) => {
+            println!("[AUTH] Update username failed for [{}]: user not found ({})", email, e);
+            return Err("User not found".into());
+        }
+    };
+
+    if check_username_exists(new_username).await.unwrap_or(false) {
+        println!("[AUTH] Update username failed for [{}]: username already in use", email);
+        return Err("Username already in use".into());
+    }
+
+    // Update the username
+    user.username = new_username.to_string();
+
+    // Insert the updated user object back into Firestore using update to preserve other fields if any
+    update_db("Users", email, &user).await?;
+
+    println!("User [{}] updated username to [{}] successfully.", email, new_username);
+
     Ok(())
 }

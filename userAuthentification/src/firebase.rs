@@ -111,6 +111,34 @@
         Ok(())
     }
 
+    /// Updates an existing document in Firestore.
+    ///
+    /// # Type Parameters
+    /// * `T`: The struct to update. Needs to be serializable for Firestore.
+    ///
+    /// # Arguments
+    /// * `table_name` - Target collection.
+    /// * `id` - The ID of the document.
+    /// * `data` - Reference to the object with updated data.
+    pub async fn update_db<T>(table_name: &str, id: &str, data: &T) -> Result<(), Box<dyn Error>>
+    where
+            for<'de> T: DBData,
+    {
+        let db = get_connection().await?;
+
+        db.fluent()
+            .update()
+            .in_col(table_name)
+            .document_id(id)
+            .object(data)
+            .execute::<()>()
+            .await?;
+
+        println!("Document [{}] updated correctly in {}.", id, table_name);
+
+        Ok(())
+    }
+
     /// Shorthand to get a User struct directly from the "Users" collection.
     pub async fn get_user_by_id(id: &str) -> Result<User, Box<dyn Error>> {
         let user_data: User = read_db("Users", id).await?;
@@ -153,5 +181,19 @@
     /// Shorthand to delete a User directly from the "Users" collection.
     pub async fn delete_user_by_id(id: &str) -> Result<(), Box<dyn Error>> {
         delete_db("Users", id).await
+    }
+
+    /// Checks if a username is already in use in the Users collection
+    pub async fn check_username_exists(username: &str) -> Result<bool, Box<dyn Error>> {
+        let db = get_connection().await?;
+        let users: Vec<User> = db.fluent()
+            .select()
+            .from("Users")
+            .filter(|q| q.for_all([q.field("username").eq(username)]))
+            .obj()
+            .query()
+            .await?;
+        
+        Ok(!users.is_empty())
     }
 
