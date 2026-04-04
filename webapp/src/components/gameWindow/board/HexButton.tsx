@@ -11,7 +11,7 @@ export default function HexButton({ onClick, isDisabled, owner }: Props) {
   const ownerClass = 
     owner === 0 ? "hex--player1" : 
     owner === 1 ? "hex--player2" : 
-    "hex--empty";
+    "";
     
   return (
     <button
