@@ -187,9 +187,9 @@ app.post('/api/login', verifyCsrf, (req, res) =>
 app.post('/api/register', verifyCsrf, (req, res) =>
   handleAuthRequest(req, res, 'REGISTER', '/register',
     'Registration succeeded but session could not be created. Please try again.',
-    (_response, data) => {
+    (response, data) => {
+      if (response.status === 409) return data.error || 'An account with this email already exists.';
       const errLower = data.error?.toLowerCase() || '';
-      if (errLower.includes('email already exists')) return 'An account with this email already exists.';
       if (errLower.includes('username already in use')) return 'This username is already taken.';
       return 'Registration failed. Please try again.';
     }
