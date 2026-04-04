@@ -1,22 +1,71 @@
+//! Minimax bot implementation with alpha-beta pruning.
+//!
+//! This module provides [`MinimaxBot`], a bot that uses the
+//! minimax algorithm to select moves in the Game of Y.
+//!
+//! # Algorithm Overview
+//!
+//! Minimax is a decision-making algorithm for two-player zero-sum games. It
+//! builds a game tree up to a given `depth`, assuming the opponent always plays
+//! optimally. The bot maximises its own score while the opponent minimises it.
+//!
+//! Alpha-beta pruning is applied to skip branches of the tree that cannot
+//! possibly affect the final decision, significantly reducing the number of
+//! nodes evaluated without changing the result.
+//!
+//! # Depth and Difficulty
+//!
+//! The search depth controls the look-ahead horizon and directly determines
+//! playing strength and computation time:
+//!
+//! Terminal nodes are evaluated as:
+//! - **Win** (`+1 000 000`): the bot reached a winning position.
+//! - **Loss** (`-1 000 000`): the opponent reached a winning position.
+//! - **Draw / depth limit** (`0`): no winner within the search horizon.
+
 use crate::{Coordinates, GameStatus, GameY, Movement, PlayerId, YBot};
 
+/// Search depth used for easy difficulty.
 pub const MINIMAX_DEPTH_EASY:   u32 = 2;
+/// Search depth used for medium difficulty.
 pub const MINIMAX_DEPTH_MEDIUM: u32 = 4;
+/// Search depth used for hard difficulty.
 pub const MINIMAX_DEPTH_HARD:   u32 = 6;
 
+/// Score assigned to a terminal winning position for the bot.
 const WIN_SCORE:  i32 = 1_000_000;
+/// Score assigned to a terminal losing position for the bot.
 const LOSS_SCORE: i32 = -1_000_000;
 
+/// A bot that uses minimax search with alpha-beta pruning.
+///
+/// Strength is controlled by the `depth` parameter: higher depth means
+/// stronger play at the cost of more computation time.
 pub struct MinimaxBot { depth: u32 }
 
 impl MinimaxBot {
+    /// Creates a new [`MinimaxBot`] with the given search depth.
+    ///
+    /// A depth of `0` degenerates to returning the first available cell
+    /// with no look-ahead. Prefer the named depth constants for standard
+    /// difficulty levels.
     pub fn new(depth: u32) -> Self { Self { depth } }
+
+    /// Returns the configured search depth.
     pub fn depth(&self) -> u32 { self.depth }
 }
 
 impl YBot for MinimaxBot {
     fn name(&self) -> &str { "minimax_bot" }
 
+    /// Selects the best move for the current player using minimax search.
+    ///
+    /// Iterates over all available cells, simulates each move, and evaluates
+    /// the resulting position with [`minimax`]. Returns the cell with the
+    /// highest score. Alpha-beta bounds are updated at the root to allow
+    /// early pruning in deeper branches.
+    ///
+    /// Returns `None` if the board is full or the game is already finished.
     fn choose_move(&self, board: &GameY) -> Option<Coordinates> {
         if board.available_cells().is_empty() { return None; }
         let bot = board.next_player()?;
@@ -31,9 +80,9 @@ impl YBot for MinimaxBot {
             let mut child: GameY = board.clone();
             let _ = child.add_move(Movement::Placement { player: bot, coords });
             let score: i32 = minimax(&child, self.depth - 1, i32::MIN, i32::MAX, false, bot);
-            if score > best_score { 
-                best_score = score; 
-                best_move = Some(coords); 
+            if score > best_score {
+                best_score = score;
+                best_move = Some(coords);
             }
             alpha = alpha.max(best_score);
         }
@@ -41,6 +90,22 @@ impl YBot for MinimaxBot {
     }
 }
 
+/// Recursive minimax with alpha-beta pruning.
+///
+/// # Parameters
+/// - `board`: the current game state.
+/// - `depth`: remaining search depth. Returns `0` when exhausted.
+/// - `alpha`: best score the maximising player can already guarantee.
+/// - `beta`: best score the minimising player can already guarantee.
+/// - `maximizing`: `true` when it is the bot's turn, `false` for the opponent.
+/// - `bot`: the [`PlayerId`] of the bot, used to determine win/loss at terminal nodes.
+///
+/// # Returns
+/// The heuristic value of `board` from the bot's perspective:
+/// - [`WIN_SCORE`] if the bot has won.
+/// - [`LOSS_SCORE`] if the opponent has won.
+/// - `0` when the depth limit is reached or no moves remain.
+/// - An intermediate value otherwise, propagated from child nodes.
 fn minimax(board: &GameY, depth: u32, mut alpha: i32, mut beta: i32, maximizing: bool, bot: PlayerId) -> i32 {
     if board.check_game_over() {
         return match board.status() {
@@ -62,7 +127,7 @@ fn minimax(board: &GameY, depth: u32, mut alpha: i32, mut beta: i32, maximizing:
         if maximizing {
             if score > best { best = score; }
             alpha = alpha.max(best);
-        } 
+        }
         else {
             if score < best { best = score; }
             beta = beta.min(best);
@@ -85,7 +150,7 @@ mod tests {
         }
     }
 
-    // Bot identity 
+    // Bot identity
 
     #[test]
     fn test_name() { assert_eq!(MinimaxBot::new(2).name(), "minimax_bot"); }
@@ -93,7 +158,7 @@ mod tests {
     #[test]
     fn test_depth_getter() { assert_eq!(MinimaxBot::new(4).depth(), 4); }
 
-    // Basic move selection 
+    // Basic move selection
     #[test]
     fn test_returns_move_on_empty_board() {
         assert!(MinimaxBot::new(MINIMAX_DEPTH_EASY).choose_move(&GameY::new(4)).is_some());
@@ -164,7 +229,7 @@ mod tests {
     #[test]
     fn test_win_loss_symmetric()  { assert_eq!(WIN_SCORE, -LOSS_SCORE); }
 
-    // minimax internals 
+    // minimax internals
 
     #[test]
     fn test_minimax_finished_board_win() {

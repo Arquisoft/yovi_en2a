@@ -3,9 +3,44 @@ ifndef::imagesdir[:imagesdir: ../images]
 == Quality Requirements
 
 === Quality Tree
-image:10_quality_tree.png[Quality Tree]
 
-*Explanation:*  
+[plantuml, target=quality_tree, format=png]
+....
+@startuml
+skinparam shadowing false
+skinparam defaultTextAlignment center
+
+(*) --> "Quality Goals"
+
+"Quality Goals" --> "Functional Suitability"
+"Functional Suitability" --> "Correct game logic\n(win detection, move validation)"
+"Functional Suitability" --> "Valid bot moves\n(YEN notation compliance)"
+"Functional Suitability" --> "API operation correctness"
+
+"Quality Goals" --> "Performance Efficiency"
+"Performance Efficiency" --> "< 2s AI move response"
+"Performance Efficiency" --> "20 concurrent players\nwithout lag"
+
+"Quality Goals" --> "Reliability"
+"Reliability" --> "< 1% error rate\nin win detection"
+"Reliability" --> "No data loss\n(user stats & match history)"
+
+"Quality Goals" --> "Usability"
+"Usability" --> "<3 min to learn\nbasic gameplay"
+"Usability" --> "Clear board & status display"
+
+"Quality Goals" --> "Maintainability"
+"Maintainability" --> "Add new strategies\nwithout major refactoring"
+"Maintainability" --> "Documented module interfaces"
+
+"Quality Goals" --> "Security"
+"Security" --> "Authentication &\nAuthorization"
+"Security" --> "CSRF protection"
+"Security" --> "API access control"
+@enduml
+....
+
+*Explanation:*
 This quality tree is structured from ISO 25010-inspired categories. Each main branch (Functional, Performance, etc.) links to more concrete sub-goals, which are then detailed in the scenarios below.
 
 ---

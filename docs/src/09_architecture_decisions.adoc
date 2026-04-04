@@ -96,21 +96,19 @@ Possible hosting options:
 - Traditional VM hosting
 - Cloud platform (Vercel, Railway, Azure)
 
-*Decision:*  
-Deploy the system on a cloud platform, with the final choice between:
-- Vercel
-- Railway
-- Azure
+*Decision:*
+Deploy all services on an **Azure Virtual Machine** (20.250.145.156), running the full `docker-compose.yml` stack.
 
-*Rationale:*  
-- Meets the public deployment requirement.
-- Simplifies infrastructure management.
-- Enables CI/CD and easy scaling.
+*Rationale:*
+- Azure provides a reliable, always-on VM suitable for running multiple Docker containers simultaneously.
+- A single VM with Docker Compose is simpler to manage for a university project than a managed container orchestration platform.
+- Meets the public deployment and accessibility requirements.
+- Enables CI/CD with automated deployment via GitHub Actions SSH.
 
-*Consequences:*  
-- Requires configuration for cloud environments.
-- Possible cost considerations.
-- Platform-specific deployment setups.
+*Consequences:*
+- All services share the resources of a single VM (no auto-scaling).
+- Deployment is triggered automatically on each GitHub release via an SSH deploy step in the CI pipeline.
+- Firebase credentials and other secrets are managed through GitHub Actions secrets and passed as environment variables at runtime.
 
 ---
 
