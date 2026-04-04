@@ -1,4 +1,5 @@
 use bb8_redis::{bb8, RedisConnectionManager};
+use rand::Rng;
 use redis::AsyncCommands;
 use thiserror::Error;
 use crate::data::{YEN};
@@ -11,7 +12,7 @@ pub enum MatchError {
     Redis(#[from] redis::RedisError),
     #[error("Serialization error: {0}")]
     Serialization(#[from] serde_json::Error),
-    #[error("Connection pool error: {0}")]
+    #[error("Connection pool error:")]
     Pool,
     #[error("Redis lock timeout error")]
     LockTimeout,
@@ -121,10 +122,10 @@ pub async fn get_match_players(pool: &RedisPool, match_id: &str) -> Result<(Stri
 
 pub async fn create_match(
     pool: &RedisPool,
-    match_id: &String,
+    match_id: &str,
     size: &u32,
-    player1: &String,
-    player2: &String
+    player1: &str,
+    player2: &str
     ) -> Result<(), MatchError> {
 
     // 1. Crear el layout inicial (puntos '.')
@@ -231,7 +232,7 @@ pub async fn join_random_online_match(
     let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
 
     // Get oldest match in pool
-    let match_id: Option<String> = conn.lpop("pool:random")
+    let match_id: Option<String> = conn.lpop("pool:random", None)
         .await
         .map_err(MatchError::Redis)?;
 
@@ -253,7 +254,7 @@ pub async fn join_private_online_match(
     player2: &str,
     match_id: &str,
     password: &str,
-) -> Result<(), MatchError> {
+) -> Result<String, MatchError> {
     let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
 
     // Verificar contraseña
@@ -279,6 +280,6 @@ pub async fn join_private_online_match(
         .await
         .map_err(MatchError::Redis)?;
 
-    Ok(())
+    Ok(match_id.to_string())
 }
 

@@ -17,11 +17,11 @@ reqwest = { version = "0.12", default-features = false, features = ["rustls-tls"
 thiserror = "2.0.18"
 serde_json = "1.0.146"
 jsonwebtoken = { version = "10.3.0", features = ["rust_crypto"] }
+rand = "0.8"
 
 [dev-dependencies]
 serial_test = "3.0"
 ctor = "0.6.3"
-rand = "0.8"
 tokio = { version = "1", features = ["full"] }
 
 [[bin]]

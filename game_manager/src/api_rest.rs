@@ -287,10 +287,10 @@ async fn create_online_match(
 ) -> Result<Json<CreateOnlineMatchResponse>, (StatusCode, String)> {
 
     let match_id = if payload.match_id.is_empty() {
-        redis_client::create_random_online_match(&state.redis_pool, &payload.player1id, &payload.size).await
+        redis_client::create_random_online_match(&state.redis_pool, &payload.player1id, payload.size).await
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
     } else {
-        redis_client::create_private_online_match(&state.redis_pool, &payload.player1id, &payload.size, &payload.match_id, &payload.match_password).await
+        redis_client::create_private_online_match(&state.redis_pool, &payload.player1id, payload.size, &payload.match_id, &payload.match_password).await
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?
     };
 
@@ -329,8 +329,8 @@ async fn request_online_update(
             .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
         // If turn matches current, we return the board
-        if yen.turn == payload.player_id {
-            return Ok(Json(UpdateOnlineMatchResponse { board_status: yen }));
+        if yen.turn() == payload.turn_number {
+            return Ok(Json(UpdateOnlineMatchResponse { match_id: payload.match_id.clone(), board_status: yen }));
         }
 
         tokio::time::sleep(std::time::Duration::from_millis(500)).await;
