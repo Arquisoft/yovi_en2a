@@ -3,7 +3,7 @@ import assert from 'assert'
 
 Given('the register page is open', async function () {
   await this.page.goto('http://localhost:5173/register')
-  await this.page.waitForLoadState('networkidle')
+  await this.page.waitForLoadState('domcontentloaded')
 })
 
 Then('I should see the registration form', async function () {

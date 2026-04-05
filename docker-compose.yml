@@ -31,7 +31,7 @@ services:
       - "80:80"
       - "443:443"
     environment:
-      - CERTBOT_FLAGS=--register-unsafely-without-email
+      - CERTBOT_EMAIL=admin@yovi-en2a.com
     volumes:
       - letsencrypt:/etc/letsencrypt
     depends_on:

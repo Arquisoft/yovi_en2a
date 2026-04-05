@@ -3,7 +3,7 @@ import assert from 'assert'
 
 Given('the main menu is open', async function () {
   await this.page.goto('http://localhost:5173')
-  await this.page.waitForLoadState('networkidle')
+  await this.page.waitForLoadState('domcontentloaded')
 })
 
 When('I click the {string} button', async function (label) {
