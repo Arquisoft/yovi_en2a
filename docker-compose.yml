@@ -29,8 +29,11 @@ services:
     image: ghcr.io/arquisoft/yovi_en2a-webapp:latest
     ports:
       - "80:80"
+      - "443:443"
     environment:
-      - GAMEMANAGER_URL=http://game_manager:5000
+      - CERTBOT_EMAIL=admin@yovi-en2a.com
+    volumes:
+      - letsencrypt:/etc/letsencrypt
     depends_on:
       - users
       - game_manager
@@ -113,3 +116,4 @@ networks:
 
 volumes:
   redis_data:
+  letsencrypt:

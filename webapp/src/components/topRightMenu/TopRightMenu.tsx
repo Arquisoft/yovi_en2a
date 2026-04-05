@@ -15,6 +15,7 @@ import userIcon from '../../assets/user_icon.svg';
 import SettingsMenu from './settings/Settings.tsx';
 import Ranking from './ranking/Ranking.tsx';
 import UserMenu from './user/UserMenu.tsx';
+import HelpMenu from './help/HelpMenu';
 
 type MenuType = 'settings' | 'rankings' | 'help' | 'user' | null;
 
@@ -71,6 +72,10 @@ const TopRightMenu: React.FC = () => {
 
       {activeMenu === 'user' && (
         <UserMenu onClose={closeMenu} />
+      )}
+
+      {activeMenu === 'help' && (
+        <HelpMenu onClose={closeMenu} />
       )}
     </div>
   );
