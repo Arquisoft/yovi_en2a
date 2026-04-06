@@ -34,10 +34,14 @@ pub struct YEN {
     /// Rows are separated by '/', with cells represented by player symbols
     /// or '.' for empty cells. Example: "B/..R/.B.R"
     layout: String,
+    /// Game variant identifier. None means standard rules.
+    /// Currently supported: "why_not" (misère: connecting three sides loses).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    variant: Option<String>,
 }
 
 impl YEN {
-    /// Creates a new YEN representation.
+    /// Creates a new YEN representation with standard rules.
     ///
     /// # Arguments
     /// * `size` - The board size
@@ -50,6 +54,18 @@ impl YEN {
             turn,
             players,
             layout,
+            variant: None,
+        }
+    }
+
+    /// Creates a new YEN representation with a specific game variant.
+    pub fn new_with_variant(size: u32, turn: u32, players: Vec<char>, layout: String, variant: Option<String>) -> Self {
+        YEN {
+            size,
+            turn,
+            players,
+            layout,
+            variant,
         }
     }
 
@@ -71,6 +87,11 @@ impl YEN {
     /// Returns the player symbols.
     pub fn players(&self) -> &[char] {
         &self.players
+    }
+
+    /// Returns the game variant string, if any.
+    pub fn variant(&self) -> Option<&str> {
+        self.variant.as_deref()
     }
 
     pub fn change_turn(&mut self) {

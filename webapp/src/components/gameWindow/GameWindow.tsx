@@ -32,8 +32,9 @@ const GameWindow = () => {
 
   const size = urlSize ? Number.parseInt(urlSize, 10) : 8;
   const mode = urlMode;
+  const isMultiplayer = mode === "multi" || mode === "why_not";
   const player1 = currentUser ? currentUser.username : "Player 1";
-  const player2 = mode === "multi" ? "Player 2" : mode+"";
+  const player2 = isMultiplayer ? "Player 2" : mode+"";
 
   const [game, setGame] = useState<Game>(new Game(size, player1, player2));
   const [loading, setLoading] = useState(false);
@@ -60,7 +61,8 @@ const GameWindow = () => {
     setLoading(true);
     setModalMessage(null); // Ocultamos el modal al reiniciar
     try {
-      const data = await createMatch(player1, player2, size);
+      const variant = mode === "why_not" ? "why_not" : undefined;
+      const data = await createMatch(player1, player2, size, variant);
       if (data?.match_id) {
         const newGame = new Game(size, player1, player2);
         newGame.setMatchId(data.match_id);
@@ -111,12 +113,14 @@ const GameWindow = () => {
       setGame(updatedGame);
 
       if (data.game_over) {
-        // game.turn era 0 (Player 1) al hacer el movimiento que dio la victoria
-        handleGameOver(game.turn === 0, updatedGame.moves);
+        // In standard Y the mover wins; in WhY not the mover LOSES (opponent wins).
+        const moverIsP1 = game.turn === 0;
+        const isP1Winner = mode === "why_not" ? !moverIsP1 : moverIsP1;
+        handleGameOver(isP1Winner, updatedGame.moves);
         return;
       }
 
-      if (mode !== "multi" && updatedGame.matchId) {
+      if (!isMultiplayer && updatedGame.matchId) {
         await handleBotPlace(updatedGame);
       }
     } finally {
@@ -153,7 +157,7 @@ const GameWindow = () => {
     }
   }
 
-  const isBotTurn = mode === "bot" && game.turn !== 0;
+  const isBotTurn = !isMultiplayer && game.turn !== 0;
 
   return (
     <div className="game-window">

@@ -4,11 +4,13 @@ import { NormalMode } from '../gameModes/NormalMode';
 import { GameModeContainer } from '../gameModes/GameModeContainer';
 import styles from './SelectionPanel.module.css';
 import { LocalMode } from '../gameModes/LocalMode';
+import { WhyNotMode } from '../gameModes/WhyNotMode';
 
 const SelectionPanel: React.FC = () => {
   const gameModes = useMemo<GameMode[]>(() => [
     new NormalMode(),
     new LocalMode(),
+    new WhyNotMode(),
   ], []);
 
   const scrollRef = useRef<HTMLDivElement>(null);

@@ -119,7 +119,8 @@ pub async fn create_match(
     match_id: &String,
     size: &u32,
     player1: &String,
-    player2: &String
+    player2: &String,
+    variant: Option<String>,
     ) -> Result<(), MatchError> {
 
     // 1. Crear el layout inicial (puntos '.')
@@ -130,11 +131,12 @@ pub async fn create_match(
         .join("/");
 
     // 2. Crear el objeto YEN inicial
-    let initial_state = YEN::new(
+    let initial_state = YEN::new_with_variant(
         *size,
         0,
         vec!['B', 'R'],
-        layout
+        layout,
+        variant,
     );
 
     // 3. Convertir a JSON String

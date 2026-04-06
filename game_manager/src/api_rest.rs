@@ -32,7 +32,7 @@ async fn create_match(
     Json(payload): Json<NewMatchRequest>
     ) -> Json<NewMatchResponse> {
     let new_id = Uuid::new_v4().to_string();
-    let _ = redis_client::create_match(&state.redis_pool, &new_id,  &payload.size, &payload.player1, &payload.player2).await;
+    let _ = redis_client::create_match(&state.redis_pool, &new_id, &payload.size, &payload.player1, &payload.player2, payload.variant).await;
     Json(NewMatchResponse { match_id: new_id })
 }
 
