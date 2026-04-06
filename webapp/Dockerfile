@@ -2,11 +2,14 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 
+# Install deps
 COPY package.json package-lock.json ./
 RUN npm ci --silent
 
+# Copy sources
 COPY . .
 
+# Accept build-time API url (defaults to localhost:3000)
 ARG VITE_API_URL="http://localhost:3000"
 RUN export VITE_API_URL=${VITE_API_URL} && npm run build
 
@@ -22,3 +25,4 @@ RUN sed "s/DEPLOY_HOST_PLACEHOLDER/${DEPLOY_HOST}/g" /tmp/nginx.conf.template \
       > /etc/nginx/user_conf.d/app.conf
 
 EXPOSE 80 443
+CMD ["nginx", "-g", "daemon off;"]
