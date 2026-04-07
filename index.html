@@ -483,26 +483,29 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_whitebox_gamey_engine_rust">7. Whitebox Gamey Engine (Rust)</a></li>
 <li><a href="#section-runtime-view">8. Runtime View</a>
 <ul class="sectlevel2">
-<li><a href="#_user_creation">8.1. User Creation</a></li>
-<li><a href="#_user_login">8.2. User Login</a></li>
+<li><a href="#_user_registration_and_login">8.1. User Registration and Login</a></li>
+<li><a href="#_post_login_session_usage">8.2. Post-Login Session Usage</a></li>
 <li><a href="#_match_creation">8.3. Match Creation</a></li>
 <li><a href="#_player_move">8.4. Player Move</a></li>
 <li><a href="#_bot_move">8.5. Bot Move</a></li>
+<li><a href="#_game_end_and_result_persistence">8.6. Game End and Result Persistence</a></li>
 </ul>
 </li>
 <li><a href="#section-deployment-view">9. Deployment View</a>
 <ul class="sectlevel2">
 <li><a href="#_infrastructure_level_1">9.1. Infrastructure Level 1</a></li>
 <li><a href="#_infrastructure_level_2">9.2. Infrastructure Level 2</a></li>
+<li><a href="#_https_request_flow">9.3. HTTPS Request Flow</a></li>
 </ul>
 </li>
 <li><a href="#section-concepts">10. Cross-cutting Concepts</a>
 <ul class="sectlevel2">
 <li><a href="#_domain_model_yen_notation">10.1. Domain Model: YEN Notation</a></li>
-<li><a href="#_security_layered_authentication_and_csrf">10.2. Security: Layered Authentication and CSRF</a></li>
-<li><a href="#_persistency_hybrid_state_management">10.3. Persistency: Hybrid State Management</a></li>
-<li><a href="#_deterministic_logic_rust_engine">10.4. Deterministic Logic (Rust Engine)</a></li>
-<li><a href="#_deployment_containerization_docker">10.5. Deployment: Containerization (Docker)</a></li>
+<li><a href="#_security_layered_authentication_sessions_and_csrf">10.2. Security: Layered Authentication, Sessions, and CSRF</a></li>
+<li><a href="#_https_lets_encrypt_and_nginx_via_sslip_io">10.3. HTTPS: Let&#8217;s Encrypt and nginx via sslip.io</a></li>
+<li><a href="#_persistency_hybrid_state_management">10.4. Persistency: Hybrid State Management</a></li>
+<li><a href="#_deterministic_logic_rust_engine">10.5. Deterministic Logic (Rust Engine)</a></li>
+<li><a href="#_deployment_containerization_docker">10.6. Deployment: Containerization (Docker)</a></li>
 </ul>
 </li>
 <li><a href="#section-design-decisions">11. Architecture Decisions</a>
@@ -511,7 +514,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_adr_002_communication_via_json_using_yen_notation">11.2. ADR-002: Communication via JSON using YEN Notation</a></li>
 <li><a href="#_adr_003_use_of_firebase_as_the_database">11.3. ADR-003: Use of Firebase as the Database</a></li>
 <li><a href="#_adr_004_cloud_deployment_of_the_application">11.4. ADR-004: Cloud Deployment of the Application</a></li>
-<li><a href="#_adr_005_external_rest_api_for_bots">11.5. ADR-005: External REST API for Bots</a></li>
+<li><a href="#_adr_005_server_side_sessions_via_redis_with_cookie_based_identity">11.5. ADR-005: Server-side Sessions via Redis with Cookie-based Identity</a></li>
+<li><a href="#_adr_006_https_via_lets_encrypt_and_jonasalnginx_certbot">11.6. ADR-006: HTTPS via Let&#8217;s Encrypt and jonasal/nginx-certbot</a></li>
+<li><a href="#_adr_007_external_rest_api_for_bots">11.7. ADR-007: External REST API for Bots</a></li>
 </ul>
 </li>
 <li><a href="#section-quality-scenarios">12. Quality Requirements</a>
@@ -1144,23 +1149,23 @@ together with a mapping table showing the relationships between channels and inp
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>User Device</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Computer, laptop, or mobile device used to access the system via a secure HTTPS connection on port 80.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Computer, laptop, or mobile device used to access the system via HTTPS (port 443). HTTP on port 80 is automatically redirected to HTTPS by nginx.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Webapp (Frontend)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">React/TypeScript SPA built with Vite. Renders the game UI and communicates exclusively with the Users API gateway via HTTP/JSON.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">React/TypeScript SPA built with Vite, served by nginx. Renders the game UI and communicates exclusively with the Users API gateway via HTTP/JSON.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Users API (Gateway)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Node.js/Express service acting as the single entry point for all client requests. Handles CSRF protection and proxies traffic to Auth Engine, Game Manager, and Gamey Engine.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Node.js/Express service acting as the single entry point for all client requests. Manages server-side sessions in Redis, enforces CSRF protection, and proxies traffic to Auth Engine and Game Manager.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Auth Engine</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Rust/Axum microservice handling user registration, login, and token validation. Communicates with Firebase Auth via the Firebase Admin SDK.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rust/Axum microservice handling user registration and login. Communicates with Firebase Auth via the Firebase Admin SDK to verify and store credentials.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Game Manager</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Rust/Axum microservice managing match lifecycle: creation, move processing, and result persistence. Reads and writes active game state to Redis and persists final results to Firestore.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rust/Axum microservice managing match lifecycle: creation, move processing, and result persistence. Caches active game state in Redis and persists final results to Firestore.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Gamey Engine</strong></p></td>
@@ -1168,11 +1173,11 @@ together with a mapping table showing the relationships between channels and inp
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Redis</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">In-memory data store used by the Game Manager for low-latency caching of active match state.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">In-memory data store serving two roles: (1) server-side session storage for the Users API (TTL 30 min), and (2) active game state cache for the Game Manager.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Firebase (Auth + Firestore)</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Google Cloud managed platform. Firebase Auth handles identity; Firestore stores user profiles, match history, and global rankings.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Google Cloud managed platform. Firebase Auth handles identity verification; Firestore stores user profiles, match history, and global rankings.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Public API for Bots</strong></p></td>
@@ -1184,9 +1189,9 @@ together with a mapping table showing the relationships between channels and inp
 </tr>
 </tbody>
 </table>
-<div class="imageblock text-center">
+<div class="imageblock">
 <div class="content">
-<img src="./images/Technical_Context_Component_diagram.png" alt="Diagrama de Contexto" width="600">
+<img src="./images/context_component.png" alt="context component" width="629" height="497">
 </div>
 </div>
 <div class="sect3">
@@ -1241,7 +1246,7 @@ together with a mapping table showing the relationships between channels and inp
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Firebase SDK (Auth Engine ↔ Firebase Auth)</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">User credentials for registration and login.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">JWT token, user profile.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User profile (username, email); session is then stored in Redis by the Gateway.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Firestore SDK (Game Manager ↔ Firestore)</strong></p></td>
@@ -1255,9 +1260,9 @@ together with a mapping table showing the relationships between channels and inp
 </tr>
 </tbody>
 </table>
-<div class="imageblock text-center">
+<div class="imageblock">
 <div class="content">
-<img src="./images/Technical_Context_Sequence_diagram.png" alt="Diagrama de Secuencia" width="600">
+<img src="./images/context_sequence.png" alt="context sequence" width="1166" height="1335">
 </div>
 </div>
 <div style="page-break-after: always;"></div>
@@ -1420,7 +1425,7 @@ Refer to details in the following sections.</p>
 <dl>
 <dt class="hdlist1">Motivation</dt>
 <dd>
-<p>The system uses a hybrid backend approach. <strong>Firebase</strong> is used as a Third-Party Building Block to offload identity management and persistence. This allows the <strong>Gamey system</strong> to focus on custom business logic and the handle CPU-intensive game mechanics without managing user sessions directly.</p>
+<p>The system uses a hybrid backend approach. <strong>Firebase</strong> is used as a Third-Party Building Block to offload identity management and long-term persistence. The <strong>Gamey system</strong> handles its own server-side session management via Redis, while delegating identity verification and data storage to Firebase.</p>
 </dd>
 <dt class="hdlist1">Contained Building Blocks</dt>
 </dl>
@@ -1487,7 +1492,7 @@ Refer to details in the following sections.</p>
 <h4 id="_white_box_game_engine_rust">5.2.1. White Box <em>Game Engine (Rust)</em></h4>
 <div class="imageblock">
 <div class="content">
-<img src="./images/level2.png" alt="level2" width="581" height="535">
+<img src="./images/level2.png" alt="level2" width="717" height="403">
 </div>
 </div>
 <div class="dlist">
@@ -1547,7 +1552,7 @@ Refer to details in the following sections.</p>
 <h3 id="_level_3">5.3. Level 3</h3>
 <div class="imageblock">
 <div class="content">
-<img src="./images/level3.png" alt="level3" width="837" height="455">
+<img src="./images/level3.png" alt="level3" width="515" height="687">
 </div>
 </div>
 </div>
@@ -1658,33 +1663,24 @@ Refer to details in the following sections.</p>
 <p>You should understand how building blocks of your system perform their job and communicate at runtime.</p>
 </div>
 <div class="sect2">
-<h3 id="_user_creation">8.1. User Creation</h3>
+<h3 id="_user_registration_and_login">8.1. User Registration and Login</h3>
 <div class="paragraph">
-<p>This scenario describes the registration of a new player. The Users Gateway receives the initial request and delegates the registration logic to the Auth Engine, which ensures the user is correctly persisted in the Firebase database.</p>
+<p>Both flows follow the same pattern: the client first fetches a CSRF token, then submits credentials. The Gateway validates the CSRF token, forwards the request to the Auth Engine, and on success creates a server-side session in Redis, returning an httpOnly session cookie. The only difference is what the Auth Engine does with Firebase.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/runtime_create_user.png" alt="runtime create user" width="656" height="418">
+<img src="./images/runtime_auth.png" alt="runtime auth" width="1016" height="767">
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_user_login">8.2. User Login</h3>
+<h3 id="_post_login_session_usage">8.2. Post-Login Session Usage</h3>
 <div class="paragraph">
-<p>The login process emphasizes security by requiring a CSRF token validation at the Gateway level before any authentication logic is processed by the Auth Engine.</p>
-</div>
-<div class="paragraph">
-<p>CSRF Check: The Gateway compares the X-CSRF-Token header against the secure csrf_token cookie.</p>
-</div>
-<div class="paragraph">
-<p>Proxying: Upon validation, the request is proxied to the Auth service using fixRequestBody to maintain data integrity.</p>
-</div>
-<div class="paragraph">
-<p>External Auth: The Auth Engine verifies the credentials against Firebase to grant access.</p>
+<p>After login, every request that reads or mutates user state goes through the session stored in Redis. Read requests only need the <code>sessionId</code> cookie; state-changing requests additionally require the <code>X-CSRF-Token</code> header to match the <code>csrf_token</code> cookie.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/runtime_login.png" alt="runtime login" width="595" height="425">
+<img src="./images/runtime_session_lifecycle.png" alt="runtime session lifecycle" width="687" height="858">
 </div>
 </div>
 </div>
@@ -1738,7 +1734,18 @@ Refer to details in the following sections.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/runtime_bot_move.png" alt="runtime bot move" width="532" height="398">
+<img src="./images/runtime_bot_move.png" alt="runtime bot move" width="532" height="355">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_game_end_and_result_persistence">8.6. Game End and Result Persistence</h3>
+<div class="paragraph">
+<p>This scenario describes what happens when the final move of a match is played. The Gamey Engine detects the win condition, and the Game Manager persists the result to Firebase Firestore before clearing the now-finished match from Redis.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/runtime_game_end.png" alt="runtime game end" width="797" height="522">
 </div>
 </div>
 <div style="page-break-after: always;"></div>
@@ -1752,7 +1759,7 @@ Refer to details in the following sections.</p>
 <h3 id="_infrastructure_level_1">9.1. Infrastructure Level 1</h3>
 <div class="imageblock">
 <div class="content">
-<img src="./images/deployment-lvl1.png" alt="deployment lvl1" width="504" height="707">
+<img src="./images/deployment-lvl1.png" alt="deployment lvl1" width="655" height="716">
 </div>
 </div>
 <div class="dlist">
@@ -1839,13 +1846,19 @@ Refer to details in the following sections.</p>
 <div class="ulist">
 <ul>
 <li>
-<p><strong>Runtime:</strong> Node.js (build stage), Nginx or static file server for the compiled output.</p>
+<p><strong>Runtime:</strong> Multi-stage build — Node.js (build stage) compiles the React/Vite SPA; the output is served by <code>jonasal/nginx-certbot</code> (production) or <code>nginx:alpine</code> (local).</p>
 </li>
 <li>
-<p><strong>Build Args:</strong> <code>VITE_API_URL</code> and <code>VITE_GAMEMANAGER_URL</code> are injected at build time.</p>
+<p><strong>TLS:</strong> In production, the <code>jonasal/nginx-certbot</code> image automatically obtains and renews a Let&#8217;s Encrypt certificate for the domain resolved via <code>sslip.io</code> (e.g. <code>20-250-145-156.sslip.io</code>). All HTTP traffic on port 80 is automatically redirected to HTTPS on port 443 by the certbot image&#8217;s built-in redirect block.</p>
 </li>
 <li>
-<p><strong>Port:</strong> Exposes 80 (HTTPS via reverse proxy in production).</p>
+<p><strong>nginx config:</strong> Only the HTTPS server block is defined in <code>nginx.conf</code>. It terminates TLS, serves the SPA static files, and reverse-proxies <code>/api/</code> and <code>/game/</code> to the Users API on port 3000.</p>
+</li>
+<li>
+<p><strong>Build Args:</strong> <code>VITE_API_URL</code> is injected at build time to configure the frontend&#8217;s API base URL.</p>
+</li>
+<li>
+<p><strong>Ports:</strong> Exposes 80 (HTTP → HTTPS redirect) and 443 (HTTPS, TLS termination).</p>
 </li>
 </ul>
 </div>
@@ -1929,8 +1942,19 @@ Refer to details in the following sections.</p>
 </li>
 </ul>
 </div>
-<div style="page-break-after: always;"></div>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_https_request_flow">9.3. HTTPS Request Flow</h3>
+<div class="paragraph">
+<p>This sequence shows how a browser request travels through the TLS termination layer and the internal Docker network. All external traffic enters exclusively through nginx on port 443; no backend port is exposed to the public internet.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="./images/deployment-https-flow.png" alt="deployment https flow" width="983" height="629">
+</div>
+</div>
+<div style="page-break-after: always;"></div>
 </div>
 </div>
 </div>
@@ -2043,29 +2067,97 @@ on this list.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_security_layered_authentication_and_csrf">10.2. Security: Layered Authentication and CSRF</h3>
+<h3 id="_security_layered_authentication_sessions_and_csrf">10.2. Security: Layered Authentication, Sessions, and CSRF</h3>
 <div class="paragraph">
-<p>Security is implemented across two main layers:
-* <strong>Identity:</strong> Delegated to <strong>Firebase Auth</strong> for robust JWT token management.
-* <strong>Session Integrity:</strong> The <strong>Users Gateway</strong> enforces <strong>Cross-Site Request Forgery</strong> (CSRF) protection using validated tokens for every state-changing request, securing player actions and statistics.</p>
+<p>Security is implemented across several layers:</p>
+</div>
+<div class="sect3">
+<h4 id="_identity_firebase_auth">10.2.1. Identity — Firebase Auth</h4>
+<div class="paragraph">
+<p>User registration and login are handled by the dedicated <strong>Auth Engine</strong> (Rust/Axum), which communicates with <strong>Firebase Auth</strong>. The Auth Engine validates credentials and returns the authenticated user&#8217;s profile to the Gateway. The browser never interacts with Firebase directly.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_server_side_sessions_redis">10.2.2. Server-side Sessions — Redis</h4>
+<div class="paragraph">
+<p>After a successful login or registration, the <strong>Users Gateway</strong> creates a server-side session in <strong>Redis</strong> using a cryptographically random 64-character hex session ID. The session record (<code>session:{id}</code>) stores the user&#8217;s username and email with a 30-minute TTL (<code>setex</code>). Only the opaque session ID is sent to the browser as an <code>httpOnly</code>, <code>SameSite=Lax</code> cookie named <code>sessionId</code>. Because the cookie is <code>httpOnly</code>, JavaScript cannot read it, which prevents session hijacking via XSS. In production the cookie is also marked <code>Secure</code> so it is only transmitted over HTTPS.</p>
+</div>
+<div class="paragraph">
+<p>The <code>GET /api/me</code> endpoint reads the session from Redis on each request. The <code>POST /api/logout</code> endpoint deletes the Redis key and clears the cookie.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_csrf_protection_double_submit_cookie_pattern">10.2.3. CSRF Protection — Double-Submit Cookie Pattern</h4>
+<div class="paragraph">
+<p>All state-changing requests (<code>POST</code>, <code>PUT</code>, <code>DELETE</code>) are protected against Cross-Site Request Forgery using the <strong>double-submit cookie</strong> pattern:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The client calls <code>GET /api/csrf-token</code>. The Gateway generates a random token, stores it in an <code>httpOnly</code> cookie (<code>csrf_token</code>), and also returns it in the JSON response body.</p>
+</li>
+<li>
+<p>The client includes the token value in the <code>X-CSRF-Token</code> request header on every subsequent state-changing call.</p>
+</li>
+<li>
+<p>The <code>verifyCsrf</code> middleware in the Gateway compares the cookie value with the header value. If they do not match the request is rejected with HTTP 403.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Because a cross-origin attacker cannot read the <code>httpOnly</code> cookie from a foreign origin, they cannot replicate the header value, so the check blocks CSRF attacks without requiring a server-side token store.</p>
+</div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_persistency_hybrid_state_management">10.3. Persistency: Hybrid State Management</h3>
+<h3 id="_https_lets_encrypt_and_nginx_via_sslip_io">10.3. HTTPS: Let&#8217;s Encrypt and nginx via sslip.io</h3>
 <div class="paragraph">
-<p>The system distinguishes between two data lifecycles:
-* <strong>Volatile State (Real-time):</strong> Managed by <strong>Redis</strong> for active matches where low latency is critical.
-* <strong>Persistent State:</strong> Managed by <strong>Firebase/Firestore</strong> for long-term storage of user profiles, match history, and global rankings.</p>
+<p>In production, TLS is handled entirely by the <strong>Webapp</strong> container using the <code>jonasal/nginx-certbot</code> Docker image:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>sslip.io:</strong> The Azure VM&#8217;s public IP (<code>20.250.145.156</code>) is mapped to the domain <code>20-250-145-156.sslip.io</code> using the wildcard DNS service sslip.io. This gives the VM a stable, publicly resolvable domain name without purchasing a custom domain, which is a requirement for Let&#8217;s Encrypt.</p>
+</li>
+<li>
+<p><strong>Let&#8217;s Encrypt:</strong> On first startup, the <code>nginx-certbot</code> image automatically issues a free TLS certificate for the sslip.io domain using the ACME HTTP-01 challenge. It stores the certificates in a Docker volume (<code>letsencrypt</code>) and renews them automatically before expiry.</p>
+</li>
+<li>
+<p><strong>nginx:</strong> The <code>nginx.conf</code> defines only the HTTPS server block (port 443). The certbot image automatically adds a port 80 server block that redirects all plain HTTP traffic to HTTPS. nginx terminates TLS, serves the compiled React SPA from <code>/usr/share/nginx/html</code>, and reverse-proxies <code>/api/</code> and <code>/game/</code> to the Users API container at <code><a href="http://users:3000" class="bare">http://users:3000</a></code>.</p>
+</li>
+<li>
+<p><strong>Local development:</strong> For local development, <code>nginx:alpine</code> is used instead of the certbot image (swap two comment pairs in the <code>Dockerfile</code>). A plain HTTP server block defined in <code>nginx.local.conf</code> is used, so no certificates are needed.</p>
+</li>
+</ul>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_deterministic_logic_rust_engine">10.4. Deterministic Logic (Rust Engine)</h3>
+<h3 id="_persistency_hybrid_state_management">10.4. Persistency: Hybrid State Management</h3>
+<div class="paragraph">
+<p>The system distinguishes between two data lifecycles:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Session State:</strong> Managed by <strong>Redis</strong> in the Users Gateway. Active user sessions are stored with a 30-minute TTL. Redis is also used by the Game Manager to cache active match state.</p>
+</li>
+<li>
+<p><strong>Volatile Game State (Real-time):</strong> Managed by <strong>Redis</strong> in the Game Manager for active matches where low latency is critical.</p>
+</li>
+<li>
+<p><strong>Persistent State:</strong> Managed by <strong>Firebase/Firestore</strong> for long-term storage of user profiles, match history, and global rankings.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_deterministic_logic_rust_engine">10.5. Deterministic Logic (Rust Engine)</h3>
 <div class="paragraph">
 <p>Since Game Y requires complex graph pathfinding to detect wins, all computational logic is centralized in <strong>Rust</strong>. This ensures that rules are applied deterministically and with maximum CPU efficiency, regardless of whether the move comes from the Web UI or the Bot API.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_deployment_containerization_docker">10.5. Deployment: Containerization (Docker)</h3>
+<h3 id="_deployment_containerization_docker">10.6. Deployment: Containerization (Docker)</h3>
 <div class="paragraph">
 <p>To ensure "it works on my machine" consistency, every sub-service is encapsulated in a <strong>Docker</strong> container. This cross-cutting concept simplifies local development and cloud deployment, ensuring identical runtimes for the Node.js gateway and the compiled Rust binary.</p>
 </div>
@@ -2208,7 +2300,68 @@ Deploy all services on an <strong>Azure Virtual Machine</strong> (20.250.145.156
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_adr_005_external_rest_api_for_bots">11.5. ADR-005: External REST API for Bots</h3>
+<h3 id="_adr_005_server_side_sessions_via_redis_with_cookie_based_identity">11.5. ADR-005: Server-side Sessions via Redis with Cookie-based Identity</h3>
+<div class="paragraph">
+<p><strong>Status:</strong> Accepted</p>
+</div>
+<div class="paragraph">
+<p><strong>Context:</strong>
+The system needs to maintain authenticated user state across requests. The main options were:
+- Stateless JWT tokens returned to and stored by the client.
+- Server-side sessions stored in Redis with an opaque session ID sent as a cookie.</p>
+</div>
+<div class="paragraph">
+<p><strong>Decision:</strong>
+Use <strong>server-side sessions stored in Redis</strong>. After a successful login or registration, the Users Gateway creates a Redis key (<code>session:{randomId}</code>) containing the user&#8217;s profile with a 30-minute TTL. The opaque session ID is delivered to the browser as an <code>httpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code> cookie.</p>
+</div>
+<div class="paragraph">
+<p><strong>Rationale:</strong>
+- <code>httpOnly</code> cookies are inaccessible to JavaScript, eliminating XSS-based token theft.
+- Server-side sessions can be invalidated instantly (logout deletes the Redis key), whereas JWTs remain valid until expiry.
+- Redis provides sub-millisecond session lookups with negligible overhead.
+- No sensitive user data is stored client-side.</p>
+</div>
+<div class="paragraph">
+<p><strong>Consequences:</strong>
+- Redis becomes a required infrastructure dependency for the Users Gateway.
+- Session state is lost if Redis is restarted without persistence (mitigated by the Redis volume mount).
+- Horizontal scaling of the Users Gateway requires a shared Redis instance (acceptable given single-VM deployment).</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="_adr_006_https_via_lets_encrypt_and_jonasalnginx_certbot">11.6. ADR-006: HTTPS via Let&#8217;s Encrypt and jonasal/nginx-certbot</h3>
+<div class="paragraph">
+<p><strong>Status:</strong> Accepted</p>
+</div>
+<div class="paragraph">
+<p><strong>Context:</strong>
+The system must be accessible over HTTPS in production. Options considered:
+- Self-signed certificate.
+- Manual Let&#8217;s Encrypt certificate management.
+- Automated certificate management via a purpose-built Docker image.</p>
+</div>
+<div class="paragraph">
+<p><strong>Decision:</strong>
+Use the <strong><code>jonasal/nginx-certbot</code></strong> Docker image for the Webapp container. The VM&#8217;s public IP is exposed as a domain via <strong>sslip.io</strong> (e.g. <code>20-250-145-156.sslip.io</code>), which Let&#8217;s Encrypt can validate via the ACME HTTP-01 challenge.</p>
+</div>
+<div class="paragraph">
+<p><strong>Rationale:</strong>
+- sslip.io provides a free, always-valid domain from a bare IP address, satisfying Let&#8217;s Encrypt&#8217;s domain requirement without buying a custom domain.
+- <code>jonasal/nginx-certbot</code> handles certificate issuance and renewal automatically, with zero manual intervention.
+- The image also adds an HTTP→HTTPS redirect block on port 80 automatically, enforcing HTTPS for all traffic.
+- Certificates are persisted in a Docker named volume, surviving container restarts.</p>
+</div>
+<div class="paragraph">
+<p><strong>Consequences:</strong>
+- The Webapp container requires internet access on port 80 for the ACME challenge during certificate issuance.
+- A <code>CERTBOT_EMAIL</code> environment variable must be set for Let&#8217;s Encrypt account registration.
+- Local development requires swapping to <code>nginx:alpine</code> with a plain HTTP config (two comment pairs in the Dockerfile).</p>
+</div>
+<hr>
+</div>
+<div class="sect2">
+<h3 id="_adr_007_external_rest_api_for_bots">11.7. ADR-007: External REST API for Bots</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -2500,12 +2653,7 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Session Reload</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Currently marked as invalid; needs architectural fix.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">High</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">End-to-End (e2e)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Missing automated test suite for game flows.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">On page reload the frontend must call <code>GET /api/me</code> to re-hydrate auth state; if this call is slow or fails the UI briefly shows an unauthenticated state. Needs a loading state or optimistic restore.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Medium</p></td>
 </tr>
 <tr>
@@ -2514,9 +2662,9 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Deployment Structure</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Incomplete definition of the production pipeline.</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">High</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Redis single point of failure</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The Users Gateway&#8217;s session store is a single Redis container with no replica. A Redis crash invalidates all active sessions. A replica or persistence strategy should be evaluated.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Medium</p></td>
 </tr>
 </tbody>
 </table>
@@ -2580,8 +2728,16 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Public interface allowing external automated agents to interact with the game, request moves, and query game states over HTTPS.</em></p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>CSRF (Cross-Site Request Forgery)</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>An attack where a malicious site tricks a logged-in user&#8217;s browser into making an unwanted request to the application. Mitigated in this system using the double-submit cookie pattern: the client must include a secret token in both a cookie and a request header; the Gateway rejects requests where they do not match.</em></p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Docker</em></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Containerization platform used to package services (Users Service, Gamey Engine) ensuring consistent execution across different hardware and environments.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Double-Submit Cookie</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>The CSRF mitigation strategy used in this system. A random token is set in an <code>httpOnly</code> cookie and also returned in the response body. The client must echo it in the <code>X-CSRF-Token</code> header; the server compares the two values before processing any state-changing request.</em></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Firebase</em></p></td>
@@ -2593,15 +2749,35 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Gateway</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Node.js service acting as the primary entry point for user-related requests, handling authentication and CSRF protection.</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Node.js service acting as the primary entry point for user-related requests, handling session management, CSRF protection, and proxying to internal services.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>httpOnly Cookie</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A browser cookie flag that prevents JavaScript from reading the cookie value, protecting it from XSS attacks. Used for both the <code>sessionId</code> and <code>csrf_token</code> cookies in this system.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Let&#8217;s Encrypt</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A free, automated, and open Certificate Authority (CA) that issues TLS certificates via the ACME protocol. Used in production to provide HTTPS for the sslip.io domain.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>nginx</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>High-performance web server and reverse proxy. Used in the Webapp container to serve the React SPA and proxy <code>/api/</code> and <code>/game/</code> traffic to the Users API.</em></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Redis</em></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><em>In-memory data store used as a high-performance cache to manage active game states and reduce latency.</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>In-memory data store used for two purposes: (1) server-side session storage in the Users Gateway (session TTL 30 min), and (2) active game state caching in the Game Manager.</em></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Rust</em></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>High-performance systems programming language used for the game&#8217;s core logic and AI algorithms to ensure computational efficiency.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Session Cookie</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>An <code>httpOnly</code>, <code>Secure</code>, <code>SameSite=Lax</code> cookie named <code>sessionId</code> set by the Users Gateway after a successful login or registration. Its value is an opaque random ID pointing to the user&#8217;s session record in Redis.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>sslip.io</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A wildcard DNS service that maps IP-based subdomains (e.g. <code>20-250-145-156.sslip.io</code>) to their embedded IP address. Used to give the Azure VM a resolvable domain name so Let&#8217;s Encrypt can issue a certificate without a custom domain purchase.</em></p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>YEN Notation</em></p></td>
@@ -2629,7 +2805,7 @@ See <a href="https://arc42.org" class="bare">https://arc42.org</a>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 8.2 EN<br>
-Last updated 2026-03-10 01:13:31 +0100
+Last updated 2026-04-07 11:14:46 +0200
 </div>
 </div>
 </body>
