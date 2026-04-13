@@ -16,16 +16,13 @@ import SettingsMenu from './settings/Settings.tsx';
 import Ranking from './ranking/Ranking.tsx';
 import UserMenu from './user/UserMenu.tsx';
 import HelpMenu from './help/HelpMenu';
+import { useAudio } from '../../contexts/AudioContext';
 
 type MenuType = 'settings' | 'rankings' | 'help' | 'user' | null;
 
 const TopRightMenu: React.FC = () => {
-  const [isMuted, setIsMuted] = useState(false);
+  const { isMuted, toggleMute } = useAudio();
   const [activeMenu, setActiveMenu] = useState<MenuType>(null);
-
-  const handleVolumeClick = () => {
-    setIsMuted(!isMuted);
-  };
 
   const closeMenu = () => setActiveMenu(null);
 
@@ -46,7 +43,7 @@ const TopRightMenu: React.FC = () => {
       
       <MenuButtons
         label="Volume"
-        onClick={handleVolumeClick}
+        onClick={toggleMute}
         img={isMuted ? volumeMuteIcon : volumeUnmuteIcon}
       />
       

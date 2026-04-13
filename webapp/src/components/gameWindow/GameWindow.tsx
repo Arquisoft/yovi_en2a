@@ -10,6 +10,7 @@ import { Game, toXYZ, fromXYZ } from "./Game";
 import { useTimer } from "./rightPanel/Timer";
 import modalStyles from "./GameModal.module.css";
 import { useUser } from "../../contexts/UserContext";
+import { useAudio } from "../../contexts/AudioContext";
 
 export type Move = {
   row: number;
@@ -29,6 +30,7 @@ const GameWindow = () => {
   const { size: urlSize, mode: urlMode } = useParams();
   const navigate = useNavigate();
   const { user: currentUser } = useUser();
+  const { playMoveSound, playGameOverSound, playGameStartSound, playGameVictorySound } = useAudio();
 
   const size = urlSize ? Number.parseInt(urlSize, 10) : 8;
   const mode = urlMode;
@@ -69,6 +71,7 @@ const GameWindow = () => {
         setGame(newGame);
         setPaused(false);
         resetTimer();
+        playGameStartSound();
       }
     } finally {
       setLoading(false);
@@ -81,6 +84,11 @@ const GameWindow = () => {
   const handleGameOver = (isPlayer1Winner: boolean, finishedMoves: Move[]) => {
     const winnerName = isPlayer1Winner ? player1 : player2;
     setModalMessage(`Game finished! ${winnerName} won.`);
+    if (isPlayer1Winner) {
+      playGameVictorySound();
+    } else {
+      playGameOverSound();
+    }
 
     // Solo guardamos datos si hay un usuario logueado
     if (currentUser && game.matchId) {
@@ -111,6 +119,7 @@ const GameWindow = () => {
       updatedGame.addMove(row, col);
       updatedGame.setGameOver(data.game_over);
       setGame(updatedGame);
+      playMoveSound();
 
       if (data.game_over) {
         // In standard Y the mover wins; in WhY not the mover LOSES (opponent wins).

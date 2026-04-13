@@ -8,10 +8,12 @@ import RegisterForm from './components/auth/RegisterForm';
 import GameWindow from './components/gameWindow/GameWindow';
 import ProtectedRoute from './components/ProtectedRoute';
 import { UserProvider } from './contexts/UserContext';
+import { AudioProvider } from './contexts/AudioContext';
 
 
 function App() {
   return (
+    <AudioProvider>
     <UserProvider>
       <Router>
         <Routes>
@@ -23,6 +25,7 @@ function App() {
         </Routes>
       </Router>
     </UserProvider>
+    </AudioProvider>
   );
 }
 

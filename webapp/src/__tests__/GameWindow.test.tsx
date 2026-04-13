@@ -26,6 +26,22 @@ vi.mock('../contexts/UserContext', () => ({
   useUser: () => mockUseUser(),
 }));
 
+// Mock Audio Context
+vi.mock('../contexts/AudioContext', () => ({
+  useAudio: () => ({
+    masterVolume: 80,
+    musicVolume: 50,
+    isMuted: false,
+    setMasterVolume: vi.fn(),
+    setMusicVolume: vi.fn(),
+    toggleMute: vi.fn(),
+    playMoveSound: vi.fn(),
+    playGameOverSound: vi.fn(),
+        playGameStartSound: vi.fn(),
+        playGameVictorySound: vi.fn(),
+  }),
+}));
+
 // Mock visual components
 vi.mock('../components/topLeftHeader/TopLeftHeader', () => ({
   default: () => <div>TopLeftHeader</div>,

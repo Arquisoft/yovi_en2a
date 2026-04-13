@@ -12,6 +12,23 @@ vi.mock('../contexts/UserContext', () => ({
   }))
 }))
 
+const mockToggleMute = vi.fn();
+
+vi.mock('../contexts/AudioContext', () => ({
+  useAudio: () => ({
+    masterVolume: 80,
+    musicVolume: 50,
+    isMuted: false,
+    setMasterVolume: vi.fn(),
+    setMusicVolume: vi.fn(),
+    toggleMute: mockToggleMute,
+    playMoveSound: vi.fn(),
+    playGameOverSound: vi.fn(),
+        playGameStartSound: vi.fn(),
+        playGameVictorySound: vi.fn(),
+  }),
+}))
+
 describe('TopRightMenu Component', () => {
   
   test('renders all navigation buttons', () => {
@@ -24,16 +41,14 @@ describe('TopRightMenu Component', () => {
     expect(screen.getByRole('button', { name: /user/i })).toBeInTheDocument()
   })
 
-  test('toggles volume icon when clicked', async () => {
+  test('calls toggleMute when volume button is clicked', async () => {
     const user = userEvent.setup()
     render(<MemoryRouter><TopRightMenu /></MemoryRouter>)
-    
+
     const volumeBtn = screen.getByRole('button', { name: /volume/i })
-    const img = volumeBtn.querySelector('img')
-    const initialSrc = img?.getAttribute('src')
-    
     await user.click(volumeBtn)
-    expect(img?.getAttribute('src')).not.toBe(initialSrc)
+
+    expect(mockToggleMute).toHaveBeenCalledOnce()
   })
 
   test('opens and closes the Settings menu', async () => {
