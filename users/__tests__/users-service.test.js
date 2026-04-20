@@ -7,6 +7,7 @@ const redisMock = vi.hoisted(() => ({
   setex: vi.fn().mockResolvedValue('OK'),
   get: vi.fn().mockResolvedValue(null),
   del: vi.fn().mockResolvedValue(1),
+  expire: vi.fn().mockResolvedValue(1),
 }))
 
 // vi.mock is hoisted above static imports — when users-service.js imports ./redis-client.js,

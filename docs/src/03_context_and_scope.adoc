@@ -85,19 +85,63 @@ The following table describes the technical interfaces and the channels used to 
 [cols="1,3", options="header"]
 |===
 |Component / Channel |Description
-|**User Device** |Computer, laptop, or mobile device used to access the system via a secure HTTPS connection on port 80.
-|**Webapp (Frontend)** |React/TypeScript SPA built with Vite. Renders the game UI and communicates exclusively with the Users API gateway via HTTP/JSON.
-|**Users API (Gateway)** |Node.js/Express service acting as the single entry point for all client requests. Handles CSRF protection and proxies traffic to Auth Engine, Game Manager, and Gamey Engine.
-|**Auth Engine** |Rust/Axum microservice handling user registration, login, and token validation. Communicates with Firebase Auth via the Firebase Admin SDK.
-|**Game Manager** |Rust/Axum microservice managing match lifecycle: creation, move processing, and result persistence. Reads and writes active game state to Redis and persists final results to Firestore.
+|**User Device** |Computer, laptop, or mobile device used to access the system via HTTPS (port 443). HTTP on port 80 is automatically redirected to HTTPS by nginx.
+|**Webapp (Frontend)** |React/TypeScript SPA built with Vite, served by nginx. Renders the game UI and communicates exclusively with the Users API gateway via HTTP/JSON.
+|**Users API (Gateway)** |Node.js/Express service acting as the single entry point for all client requests. Manages server-side sessions in Redis, enforces CSRF protection, and proxies traffic to Auth Engine and Game Manager.
+|**Auth Engine** |Rust/Axum microservice handling user registration and login. Communicates with Firebase Auth via the Firebase Admin SDK to verify and store credentials.
+|**Game Manager** |Rust/Axum microservice managing match lifecycle: creation, move processing, and result persistence. Caches active game state in Redis and persists final results to Firestore.
 |**Gamey Engine** |Rust/Axum microservice implementing game rules, win detection, and AI move generation. Called by the Game Manager to validate moves and compute bot responses.
-|**Redis** |In-memory data store used by the Game Manager for low-latency caching of active match state.
-|**Firebase (Auth + Firestore)** |Google Cloud managed platform. Firebase Auth handles identity; Firestore stores user profiles, match history, and global rankings.
+|**Redis** |In-memory data store serving two roles: (1) server-side session storage for the Users API (TTL 30 min), and (2) active game state cache for the Game Manager.
+|**Firebase (Auth + Firestore)** |Google Cloud managed platform. Firebase Auth handles identity verification; Firestore stores user profiles, match history, and global rankings.
 |**Public API for Bots** |External REST interface exposed by the Users API for automated agents to interact with the game over HTTPS using YEN notation.
 |**Deployment Platform (Azure VM)** |Single Azure virtual machine (20.250.145.156) hosting all Docker containers orchestrated via `docker-compose.yml`.
 |===
 
-image::Technical_Context_Component_diagram.png[Diagrama de Contexto, width=600, align="center"]
+[plantuml, target=context_component, format=png]
+....
+@startuml
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #424242
+}
+skinparam database {
+    BackgroundColor #F5F5F5
+    BorderColor #424242
+}
+
+actor "User / Player" as User
+actor "External Bot" as Bot
+
+rectangle "Azure VM" as Azure #F0F0F0 {
+    rectangle "Webapp\n(nginx + React SPA)" as Webapp #FFFFFF
+    rectangle "Users API\n(Gateway)" as Gateway #BDBDBD
+    rectangle "Auth Engine\n(Rust/Axum)" as Auth #FFFFFF
+    rectangle "Game Manager\n(Rust/Axum)" as GM #FFFFFF
+    rectangle "Gamey Engine\n(Rust/Axum)" as Gamey #FFFFFF
+    database "Redis" as Redis #F5F5F5
+}
+
+rectangle "Google Cloud" as GCP #E8F4FD {
+    database "Firebase Auth\n+ Firestore" as Firebase #FFF3E0
+}
+
+User -right-> Webapp : HTTPS (443)
+Bot -right-> Gateway : HTTPS / YEN
+
+Webapp -down-> Gateway : HTTP/JSON
+Gateway -right-> Auth : /api (proxy)
+Gateway -down-> GM : /game (proxy)
+Gateway -right-> Redis : session storage
+Auth -right-> Firebase : credentials
+GM -down-> Gamey : game logic
+GM -right-> Redis : game state cache
+GM -down-> Firebase : match persistence
+@enduml
+....
 
 ==== Mapping Input/Output to Channels
 
@@ -112,9 +156,70 @@ The following table maps the domain-specific inputs and outputs to their respect
 |**HTTP/JSON (Users API → Game Manager :5000)** |Game creation requests, player move submissions. |Match ID, updated board state, game outcome.
 |**HTTP/JSON (Game Manager → Gamey Engine :4000)** |Current board state (YEN notation), player move. |Validated new state, win detection result, bot move.
 |**Redis Protocol (Game Manager → Redis :6379)** |Active match state writes on every move. |Current match state reads for move processing.
-|**Firebase SDK (Auth Engine ↔ Firebase Auth)** |User credentials for registration and login. |JWT token, user profile.
+|**Firebase SDK (Auth Engine ↔ Firebase Auth)** |User credentials for registration and login. |User profile (username, email); session is then stored in Redis by the Gateway.
 |**Firestore SDK (Game Manager ↔ Firestore)** |Match results and player statistics on game end. |Historical match data and global rankings.
 |**HTTPS (External Bot → Public API)** |Board state (YEN notation), strategy parameters. |Bot move response in YEN notation.
 |===
 
-image::Technical_Context_Sequence_diagram.png[Diagrama de Secuencia, width=600, align="center"]
+[plantuml, target=context_sequence, format=png]
+....
+@startuml
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F5F5F5
+skinparam ParticipantBorderColor #424242
+skinparam DatabaseBackgroundColor #EEEEEE
+skinparam DatabaseBorderColor #424242
+skinparam SequenceArrowColor #424242
+skinparam ActorBorderColor #424242
+autonumber
+
+actor User
+participant "Webapp\n(Frontend)" as WebApp
+participant "Users API\n(Gateway)" as Gateway
+participant "Auth Engine" as Auth
+participant "Game Manager" as GM
+participant "Gamey Engine" as Gamey
+database "Redis" as Redis
+database "Firebase" as Firebase
+
+== Login ==
+User -> WebApp : enter credentials
+WebApp -> Gateway : GET /api/csrf-token
+Gateway --> WebApp : csrf_token cookie + token body
+WebApp -> Gateway : POST /api/login\n+ X-CSRF-Token header
+Gateway -> Gateway : verifyCsrf()
+Gateway -> Auth : POST /login
+Auth -> Firebase : verify credentials
+Firebase --> Auth : user profile
+Auth --> Gateway : 200 OK (username, email)
+Gateway -> Redis : SETEX session:{id} (TTL 30 min)
+Gateway --> WebApp : 200 OK + sessionId cookie (httpOnly)
+
+== Start Match ==
+User -> WebApp : select board size and mode
+WebApp -> Gateway : POST /game/create\n+ sessionId cookie
+Gateway -> GM : /create
+GM -> Redis : initialize match state
+GM --> Gateway : match ID
+Gateway --> WebApp : match ID
+
+== Match Turns ==
+loop until game ends
+  User -> WebApp : make move
+  WebApp -> Gateway : POST /game/move
+  Gateway -> GM : /move
+  GM -> Redis : get current state
+  GM -> Gamey : validate & execute move
+  Gamey --> GM : new board state
+  GM -> Redis : update state
+  GM --> Gateway : updated board
+  Gateway --> WebApp : new board state
+end
+
+== End of Match ==
+GM -> Firebase : persist match result\n(winner, duration, moves)
+GM -> Redis : DEL game:{matchId}
+WebApp --> User : show final result
+@enduml
+....

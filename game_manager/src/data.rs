@@ -17,6 +17,9 @@
         /// Rows are separated by '/', with cells represented by player symbols
         /// or '.' for empty cells. Example: "B/..R/.B.R"
         layout: String,
+        /// Game variant. None means standard rules. "why_not" means misère.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        variant: Option<String>,
     }
 
     impl YEN {
@@ -33,6 +36,17 @@
                 turn,
                 players,
                 layout,
+                variant: None,
+            }
+        }
+
+        pub fn new_with_variant(size: u32, turn: u32, players: Vec<char>, layout: String, variant: Option<String>) -> Self {
+            YEN {
+                size,
+                turn,
+                players,
+                layout,
+                variant,
             }
         }
 
@@ -93,6 +107,8 @@
         pub player1: String,
         pub player2: String,
         pub size: u32,
+        #[serde(default)]
+        pub variant: Option<String>,
     }
 
     #[derive(Serialize)]

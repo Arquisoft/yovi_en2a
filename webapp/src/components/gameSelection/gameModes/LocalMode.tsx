@@ -2,6 +2,7 @@
 import React from "react";
 import type { GameMode } from "./GameMode";
 import { Difficulty } from "./GameMode";
+import p1vsp2 from "../../../assets/p1vsp2.webp";
 
 export class LocalMode implements GameMode {
   showDifficulty = false;
@@ -11,6 +12,8 @@ export class LocalMode implements GameMode {
   id = "local";
 
   label = "Local Mode";
+
+  image = p1vsp2;
 
   currentLevel = Difficulty.Normal;
 

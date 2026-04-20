@@ -2,6 +2,7 @@
 import React from "react";
 import type { GameMode } from "./GameMode";
 import { Difficulty } from "./GameMode";
+import normal from "../../../assets/normal.png";
 
 export class NormalMode implements GameMode {
   showDifficulty = true;
@@ -11,6 +12,8 @@ export class NormalMode implements GameMode {
   id = "normal";
 
   label = "Normal Mode";
+
+  image = normal;
 
   size = 8;
 

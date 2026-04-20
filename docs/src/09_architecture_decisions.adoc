@@ -112,25 +112,76 @@ Deploy all services on an **Azure Virtual Machine** (20.250.145.156), running th
 
 ---
 
-=== ADR-005: External REST API for Bots
+=== ADR-005: Server-side Sessions via Redis with Cookie-based Identity
 
 *Status:* Accepted
 
-*Context:*  
+*Context:*
+The system needs to maintain authenticated user state across requests. The main options were:
+- Stateless JWT tokens returned to and stored by the client.
+- Server-side sessions stored in Redis with an opaque session ID sent as a cookie.
+
+*Decision:*
+Use **server-side sessions stored in Redis**. After a successful login or registration, the Users Gateway creates a Redis key (`session:{randomId}`) containing the user's profile with a 30-minute TTL. The opaque session ID is delivered to the browser as an `httpOnly`, `Secure`, `SameSite=Lax` cookie.
+
+*Rationale:*
+- `httpOnly` cookies are inaccessible to JavaScript, eliminating XSS-based token theft.
+- Server-side sessions can be invalidated instantly (logout deletes the Redis key), whereas JWTs remain valid until expiry.
+- Redis provides sub-millisecond session lookups with negligible overhead.
+- No sensitive user data is stored client-side.
+
+*Consequences:*
+- Redis becomes a required infrastructure dependency for the Users Gateway.
+- Session state is lost if Redis is restarted without persistence (mitigated by the Redis volume mount).
+- Horizontal scaling of the Users Gateway requires a shared Redis instance (acceptable given single-VM deployment).
+
+---
+
+=== ADR-006: HTTPS via Let's Encrypt and jonasal/nginx-certbot
+
+*Status:* Accepted
+
+*Context:*
+The system must be accessible over HTTPS in production. Options considered:
+- Self-signed certificate.
+- Manual Let's Encrypt certificate management.
+- Automated certificate management via a purpose-built Docker image.
+
+*Decision:*
+Use the **`jonasal/nginx-certbot`** Docker image for the Webapp container. The VM's public IP is exposed as a domain via **sslip.io** (e.g. `20-250-145-156.sslip.io`), which Let's Encrypt can validate via the ACME HTTP-01 challenge.
+
+*Rationale:*
+- sslip.io provides a free, always-valid domain from a bare IP address, satisfying Let's Encrypt's domain requirement without buying a custom domain.
+- `jonasal/nginx-certbot` handles certificate issuance and renewal automatically, with zero manual intervention.
+- The image also adds an HTTP→HTTPS redirect block on port 80 automatically, enforcing HTTPS for all traffic.
+- Certificates are persisted in a Docker named volume, surviving container restarts.
+
+*Consequences:*
+- The Webapp container requires internet access on port 80 for the ACME challenge during certificate issuance.
+- A `CERTBOT_EMAIL` environment variable must be set for Let's Encrypt account registration.
+- Local development requires swapping to `nginx:alpine` with a plain HTTP config (two comment pairs in the Dockerfile).
+
+---
+
+=== ADR-007: External REST API for Bots
+
+*Status:* Accepted
+
+*Context:*
 The assignment requires an API that allows external bots to interact with the system and play games.
 
-*Decision:*  
+*Decision:*
 Expose a REST-style HTTP API that:
 - Accepts JSON requests.
 - Uses YEN notation for game state.
 - Provides endpoints for game interaction.
 
-*Rationale:*  
+*Rationale:*
 - REST is simple and widely supported.
 - Easy integration with external bots.
 - Matches the JSON communication requirement.
 
-*Consequences:*  
+*Consequences:*
 - Requires proper authentication and validation.
 - Must be fully documented.
 

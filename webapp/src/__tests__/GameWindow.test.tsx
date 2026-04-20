@@ -81,7 +81,7 @@ describe('GameWindow component', () => {
     render(<GameWindow />);
 
     await waitFor(() => {
-      expect(createMatchSpy).toHaveBeenCalledWith('Player 1', 'bot', 3);
+      expect(createMatchSpy).toHaveBeenCalledWith('Player 1', 'bot', 3, undefined);
     });
   });
 

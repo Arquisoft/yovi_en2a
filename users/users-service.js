@@ -129,6 +129,7 @@ app.get('/api/me', async (req, res) => {
   try {
     const user = await getSession(sessionId);
     if (!user) return res.status(401).json({ error: 'Session expired or invalid' });
+    await redisClient.expire(`session:${sessionId}`, SESSION_TTL_SECONDS);
     res.json(user);
   } catch {
     res.status(500).json({ error: 'Session store unavailable' });

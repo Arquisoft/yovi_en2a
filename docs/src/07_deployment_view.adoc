@@ -8,33 +8,54 @@ ifndef::imagesdir[:imagesdir: ../images]
 [plantuml, target=deployment-lvl1, format=png]
 ....
 @startuml
-!includeurl https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Deployment.puml
+skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #424242
+}
+skinparam database {
+    BackgroundColor #F5F5F5
+    BorderColor #424242
+}
+skinparam node {
+    BackgroundColor #F0F0F0
+    BorderColor #424242
+}
 
 title Deployment View - Cloud Infrastructure (Production)
 
-Deployment_Node(browser, "User's Device", "Web Browser"){
-    Container(ui, "Webapp (Static Assets)", "React/Vite", "Delivered via CDN")
+actor "User" as User
+actor "External Bot" as Bot
+
+node "User's Device\n(Web Browser)" as Browser #F0F0F0
+
+node "Azure VM\n(Docker Compose)" as Azure #F0F0F0 {
+    rectangle "nginx\n(jonasal/nginx-certbot\n:80, :443)" as Nginx #BDBDBD
+    rectangle "Users API\n(Node.js :3000)" as UsersAPI #FFFFFF
+    rectangle "Auth Engine\n(Rust/Axum :4001)" as AuthEng #FFFFFF
+    rectangle "Game Manager\n(Rust/Axum :5000)" as GM #FFFFFF
+    rectangle "Gamey Engine\n(Rust/Axum :4000)" as Gamey #FFFFFF
+    database "Redis\n(:6379)" as Redis #F5F5F5
 }
 
-Deployment_Node(firebase_cloud, "Firebase Platform", "Managed Services"){
-    Deployment_Node(auth, "Firebase Auth", "Identity Provider")
-    Deployment_Node(db, "Firestore", "NoSQL Database")
+node "Google Cloud\n(Firebase Platform)" as GCP #E8F4FD {
+    database "Firebase Auth\n+ Firestore" as Firebase #FFF3E0
 }
 
-Deployment_Node(cloud, "Cloud Provider", "Container Service"){
-    Deployment_Node(node_pod, "Users Service Node", "Docker Container"){
-        Container(users_app, "Users API", "Node.js", "Handles business logic")
-    }
-    Deployment_Node(rust_pod, "Game Engine Node", "Docker Container"){
-        Container(game_app, "Game Engine", "Rust Binary", "Handles game logic")
-    }
-}
+User --> Nginx : HTTPS (443)
+Bot --> UsersAPI : HTTPS / YEN
 
-Rel(ui, auth, "Authenticates via", "HTTPS/SDK")
-Rel(ui, users_app, "API calls", "HTTPS/JSON")
-Rel(ui, game_app, "Game moves", "WebSockets")
-Rel(users_app, auth, "Verifies tokens", "Admin SDK")
-Rel(users_app, db, "Reads/Writes", "Admin SDK")
+Nginx --> UsersAPI : HTTP proxy\n(/api, /game)
+UsersAPI --> Redis : session r/w
+UsersAPI --> AuthEng : /api
+UsersAPI --> GM : /game
+AuthEng --> Firebase : credentials
+GM --> Gamey : game logic
+GM --> Redis : game state
+GM --> Firebase : match persistence
 @enduml
 ....
 
@@ -70,9 +91,11 @@ Each service is defined as a container in `docker-compose.yml` and shares a comm
 
 **Webapp:**
 
-- **Runtime:** Node.js (build stage), Nginx or static file server for the compiled output.
-- **Build Args:** `VITE_API_URL` and `VITE_GAMEMANAGER_URL` are injected at build time.
-- **Port:** Exposes 80 (HTTPS via reverse proxy in production).
+- **Runtime:** Multi-stage build — Node.js (build stage) compiles the React/Vite SPA; the output is served by `jonasal/nginx-certbot` (production) or `nginx:alpine` (local).
+- **TLS:** In production, the `jonasal/nginx-certbot` image automatically obtains and renews a Let's Encrypt certificate for the domain resolved via `sslip.io` (e.g. `20-250-145-156.sslip.io`). All HTTP traffic on port 80 is automatically redirected to HTTPS on port 443 by the certbot image's built-in redirect block.
+- **nginx config:** Only the HTTPS server block is defined in `nginx.conf`. It terminates TLS, serves the SPA static files, and reverse-proxies `/api/` and `/game/` to the Users API on port 3000.
+- **Build Args:** `VITE_API_URL` is injected at build time to configure the frontend's API base URL.
+- **Ports:** Exposes 80 (HTTP → HTTPS redirect) and 443 (HTTPS, TLS termination).
 
 **Users API:**
 
@@ -103,3 +126,43 @@ Each service is defined as a container in `docker-compose.yml` and shares a comm
 - **Runtime:** Official Redis image.
 - **Persistence:** Volume-mounted data directory to survive container restarts.
 - **Port:** Exposes 6379 (internal network only).
+
+=== HTTPS Request Flow
+
+This sequence shows how a browser request travels through the TLS termination layer and the internal Docker network. All external traffic enters exclusively through nginx on port 443; no backend port is exposed to the public internet.
+
+[plantuml, target=deployment-https-flow, format=png]
+....
+@startuml
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F5F5F5
+skinparam ParticipantBorderColor #424242
+skinparam DatabaseBackgroundColor #EEEEEE
+skinparam DatabaseBorderColor #424242
+skinparam SequenceArrowColor #424242
+skinparam ActorBorderColor #424242
+
+actor "Browser" as Browser
+participant "nginx\n(Webapp :443)" as Nginx
+participant "Users API\n(:3000)" as Users
+participant "Auth Engine\n(:4001) or\nGame Manager\n(:5000)" as Backend
+database "Redis\n(:6379)" as Redis
+
+Browser -> Nginx : HTTPS request (TLS 1.2/1.3, port 443)
+note right of Nginx: TLS termination\nLet's Encrypt cert\nfor sslip.io domain
+
+alt Static asset (/, /assets/*)
+    Nginx --> Browser : SPA files (HTML / JS / CSS)\nfrom /usr/share/nginx/html
+else API or game request (/api/* or /game/*)
+    Nginx -> Users : HTTP proxy on internal Docker network\n(plain HTTP, never leaves the VM)
+    Users -> Redis : Session lookup (GET session:{id})
+    Redis --> Users : User data or null
+    Users -> Backend : Forward to Auth Engine or Game Manager
+    Backend --> Users : Service response
+    Users --> Nginx : Response
+    Nginx --> Browser : HTTPS response (encrypted)
+end
+@enduml
+....

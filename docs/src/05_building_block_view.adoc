@@ -10,16 +10,20 @@ ifndef::imagesdir[:imagesdir: ../images]
 [plantuml, target=level1, format=png]
 ....
 @startuml
-!define RECTANGLE_STYLE
-skinparam linetype ortho
 skinparam shadowing false
-skinparam roundcorner 5
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #424242
+}
 
 title Gamey Ecosystem - Context (Level 1)
 
 actor "Client / Player" as Client
-rectangle "Gamey System" as System #D3D3D3
-rectangle "Firebase" as Firebase #F2F2F2
+rectangle "Gamey System" as System #F0F0F0
+rectangle "Firebase" as Firebase #FFF3E0
 
 Client -right-> System : Uses / Plays
 System -right-> Firebase : Auth & Persistence
@@ -27,7 +31,7 @@ System -right-> Firebase : Auth & Persistence
 ....
 
 Motivation::
-The system uses a hybrid backend approach. **Firebase** is used as a Third-Party Building Block to offload identity management and persistence. This allows the **Gamey system** to focus on custom business logic and the handle CPU-intensive game mechanics without managing user sessions directly.
+The system uses a hybrid backend approach. **Firebase** is used as a Third-Party Building Block to offload identity management and long-term persistence. The **Gamey system** handles its own server-side session management via Redis, while delegating identity verification and data storage to Firebase.
 
 Contained Building Blocks::
 [cols="1,2" options="header"]
@@ -57,39 +61,43 @@ The computational core. It is agnostic of user identity (delegated to other bloc
 [plantuml, target=level2, format=png]
 ....
 @startuml
-skinparam linetype ortho
 skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
 skinparam rectangle {
-    BackgroundColor<<Internal>> #F9F9F9
-    BorderColor #333333
+    BackgroundColor #FFFFFF
+    BorderColor #424242
+}
+skinparam component {
+    BackgroundColor #FFFFFF
+    BorderColor #424242
+}
+skinparam database {
+    BackgroundColor #F5F5F5
+    BorderColor #424242
 }
 
 title Building Block View - Services (Level 2)
 
-rectangle "Whitebox Gamey Ecosystem" <<Internal>> {
-    ' Central Gateway
+rectangle "Whitebox Gamey Ecosystem" #F0F0F0 {
     component [**Users**\n(API Gateway)] as Users #BDBDBD
-
-    ' Internal Services "Behind" the Gateway
     component [**Webapp**\n(Frontend)] as Webapp #FFFFFF
     component [**Auth Engine**] as Auth #FFFFFF
     component [**Game Manager**] as GameMgr #FFFFFF
     component [**Gamey**\n(Engine)] as Gamey #FFFFFF
-    database "Redis" as Redis #FFFFFF
+    database "Redis" as Redis #F5F5F5
 }
-database "Firebase" as Firebase #FFFFFF
+database "Firebase" as Firebase #FFF3E0
 
-
-' Internal Routing (Behind Gateway)
-Users -up-> Webapp : Routes UI
+Webapp -right-> Users : All API & game requests
 Users -left-> Auth : /api (Proxy)
-Users -right-> Gamey : Engine Tasks
 Users -down-> GameMgr : /game (Proxy)
-
-' Backend dependencies
-Auth -left-> Firebase : User
-GameMgr -right-> Firebase : Sync
-GameMgr -down-> Redis : Cache State
+Users -right-> Redis : Session storage
+Auth -down-> Firebase : User auth
+GameMgr -right-> Gamey : Game logic
+GameMgr -down-> Firebase : Match persistence
+GameMgr -up-> Redis : Game state cache
 @enduml
 ....
 Motivation::
@@ -113,18 +121,25 @@ Contained Building Blocks::
 [plantuml, target=level3, format=png]
 ....
 @startuml
-skinparam linetype ortho
 skinparam shadowing false
+skinparam linetype ortho
+skinparam nodesep 60
+skinparam ranksep 60
+skinparam rectangle {
+    BackgroundColor #FFFFFF
+    BorderColor #424242
+}
 skinparam component {
     BackgroundColor #FFFFFF
-    BorderColor #666666
+    BorderColor #424242
 }
 
 title Whitebox Detail - Components (Level 3)
 
 rectangle "Users (Gateway)" as Gateway #BDBDBD
+component [**Auth Engine**] as Auth #BDBDBD
 
-rectangle "Whitebox Game Manager" #E0E0E0 {
+rectangle "Whitebox Game Manager" #F0F0F0 {
     component [REST API\n(api_rest.rs)] as GM_API
     component [Data Layer\n(data.rs)] as GM_Data
     component [Firebase Client\n(firebase.rs)] as GM_Fire
@@ -135,7 +150,7 @@ rectangle "Whitebox Game Manager" #E0E0E0 {
     GM_Data -left-> GM_Redis
 }
 
-rectangle "Whitebox Gamey (Engine)" #E0E0E0 {
+rectangle "Whitebox Gamey (Engine)" #F0F0F0 {
     component [Core Engine\n(core/)] as G_Core
     component [Bot Server\n(bot_server/)] as G_BotSrv
     component [Bot Logic\n(bot/)] as G_Bot
@@ -148,10 +163,9 @@ rectangle "Whitebox Gamey (Engine)" #E0E0E0 {
     G_CLI -up-> G_Core
 }
 
-' Connections from Gateway
-Gateway -down-> GM_API : Match Management
-Gateway -down-> G_BotSrv : Session Start
-Gateway -down-> G_CLI : Direct Commands
+Gateway -down-> GM_API : /game requests
+Gateway -right-> Auth : /api requests
+GM_Data -down-> G_BotSrv : Bot move request
 @enduml
 ....
 == Whitebox Game Manager (Rust)

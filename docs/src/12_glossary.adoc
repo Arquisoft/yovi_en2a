@@ -37,11 +37,18 @@ endif::arc42help[]
 |Term |Definition
 
 |Bot API |Public interface allowing external automated agents to interact with the game, request moves, and query game states over HTTPS.
+|CSRF (Cross-Site Request Forgery) |An attack where a malicious site tricks a logged-in user's browser into making an unwanted request to the application. Mitigated in this system using the double-submit cookie pattern: the client must include a secret token in both a cookie and a request header; the Gateway rejects requests where they do not match.
 |Docker |Containerization platform used to package services (Users Service, Gamey Engine) ensuring consistent execution across different hardware and environments.
+|Double-Submit Cookie |The CSRF mitigation strategy used in this system. A random token is set in an `httpOnly` cookie and also returned in the response body. The client must echo it in the `X-CSRF-Token` header; the server compares the two values before processing any state-changing request.
 |Firebase |Cloud platform providing Authentication and NoSQL persistence (Firestore) for user profiles, match history, and global statistics.
 |Gamey Engine |The core computational module written in Rust, responsible for deterministic game logic, win detection, and AI move generation.
-|Gateway |Node.js service acting as the primary entry point for user-related requests, handling authentication and CSRF protection.
-|Redis |In-memory data store used as a high-performance cache to manage active game states and reduce latency.
+|Gateway |Node.js service acting as the primary entry point for user-related requests, handling session management, CSRF protection, and proxying to internal services.
+|httpOnly Cookie |A browser cookie flag that prevents JavaScript from reading the cookie value, protecting it from XSS attacks. Used for both the `sessionId` and `csrf_token` cookies in this system.
+|Let's Encrypt |A free, automated, and open Certificate Authority (CA) that issues TLS certificates via the ACME protocol. Used in production to provide HTTPS for the sslip.io domain.
+|nginx |High-performance web server and reverse proxy. Used in the Webapp container to serve the React SPA and proxy `/api/` and `/game/` traffic to the Users API.
+|Redis |In-memory data store used for two purposes: (1) server-side session storage in the Users Gateway (session TTL 30 min), and (2) active game state caching in the Game Manager.
 |Rust |High-performance systems programming language used for the game's core logic and AI algorithms to ensure computational efficiency.
+|Session Cookie |An `httpOnly`, `Secure`, `SameSite=Lax` cookie named `sessionId` set by the Users Gateway after a successful login or registration. Its value is an opaque random ID pointing to the user's session record in Redis.
+|sslip.io |A wildcard DNS service that maps IP-based subdomains (e.g. `20-250-145-156.sslip.io`) to their embedded IP address. Used to give the Azure VM a resolvable domain name so Let's Encrypt can issue a certificate without a custom domain purchase.
 |YEN Notation |Project-specific JSON-based format used for serializing board states and moves between the frontend and backend subsystems.
 |===

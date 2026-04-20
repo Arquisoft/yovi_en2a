@@ -9,7 +9,7 @@
 use crate::{
     Coordinates, GameAction, Movement, RandomBot, GreedyBot, MinimaxBot, RenderOptions, YBot, YBotRegistry, game,
 };
-use crate::{GameStatus, GameY, PlayerId};
+use crate::{GameStatus, GameVariant, GameY, PlayerId};
 use anyhow::Result;
 use clap::{Parser, ValueEnum};
 use rustyline::DefaultEditor;
@@ -37,6 +37,10 @@ pub struct CliArgs {
     /// Port to run the server on (only used with --mode=server)
     #[arg(short, long, default_value_t = 3000)]
     pub port: u16,
+
+    /// Game variant: "standard" or "why_not" (misère: connecting all three sides loses)
+    #[arg(long, default_value = "standard")]
+    pub variant: String,
 }
 
 /// The game mode determining how the game is played.
@@ -84,7 +88,14 @@ pub fn run_cli_game() -> Result<()> {
             return Ok(());
         }
     };
-    let mut game = game::GameY::new(args.size);
+    let variant = match args.variant.as_str() {
+        "why_not" => GameVariant::WhyNot,
+        _ => GameVariant::Standard,
+    };
+    if variant == GameVariant::WhyNot {
+        println!("Variant: WhY not — connecting all three sides LOSES!");
+    }
+    let mut game = game::GameY::new_with_variant(args.size, variant);
     loop {
         println!("{}", game.render(&render_options));
         let status = game.status();

@@ -6,20 +6,22 @@ import { OnlinePrivateMode } from '../gameModes/OnlinePrivateMode';
 import { GameModeContainer } from '../gameModes/GameModeContainer';
 import styles from './SelectionPanel.module.css';
 import { LocalMode } from '../gameModes/LocalMode';
+import { WhyNotMode } from '../gameModes/WhyNotMode';
 
 const SelectionPanel: React.FC = () => {
   const gameModes = useMemo<GameMode[]>(() => [
     new NormalMode(),
     new LocalMode(),
     new OnlineMode(),
-    new OnlinePrivateMode()
+    new OnlinePrivateMode(),
+    new WhyNotMode(),
   ], []);
 
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
-      const scrollAmount = 400;
+      const scrollAmount = 400; 
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'

@@ -2,20 +2,286 @@ openapi: 3.0.0
 info:
   title: User Service API
   version: 1.0.0
-  description: API for managing users
+  description: API Gateway — handles sessions, auth, and proxies game manager traffic.
+
+tags:
+  - name: Auth
+    description: Registration, login and logout
+  - name: Session
+    description: Session and CSRF token management
+  - name: User
+    description: User profile management
+  - name: Legacy
+    description: Legacy endpoints kept for backwards compatibility
+
+components:
+  schemas:
+    UserSession:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "johndoe"
+        email:
+          type: string
+          example: "johndoe@example.com"
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: "Error message"
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: sessionId
+    csrfHeader:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+
 paths:
-  /createuser:
+  /api/csrf-token:
+    get:
+      tags: [Session]
+      summary: Get a CSRF token
+      description: >
+        Generates a random CSRF token, sets it as an httpOnly cookie (`csrf_token`),
+        and returns it in the response body. The client must include this token in the
+        `X-CSRF-Token` header for all state-changing requests.
+      responses:
+        '200':
+          description: CSRF token generated
+          headers:
+            Set-Cookie:
+              description: csrf_token cookie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  csrfToken:
+                    type: string
+                    example: "a3f8...d9c2"
+
+  /api/me:
+    get:
+      tags: [Session]
+      summary: Get the current authenticated user
+      description: Returns the user data stored in the server-side Redis session.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Authenticated user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSession'
+        '401':
+          description: Not authenticated or session expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Session store unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/register:
     post:
-      summary: Creates a new user
-      description: Creates a new user with the given username.
+      tags: [Auth]
+      summary: Register a new user
+      description: >
+        Creates a new account via the Auth service. On success a server-side Redis
+        session is created and a `sessionId` cookie is set.
+      security:
+        - csrfHeader: []
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required:
-                - username
+              required: [username, email, password]
+              properties:
+                username:
+                  type: string
+                  example: "johndoe"
+                email:
+                  type: string
+                  example: "johndoe@example.com"
+                password:
+                  type: string
+                  example: "s3cr3tP@ss"
+      responses:
+        '200':
+          description: User registered and session created
+          headers:
+            Set-Cookie:
+              description: sessionId cookie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSession'
+        '409':
+          description: Email or username already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Auth service unreachable or session creation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/login:
+    post:
+      tags: [Auth]
+      summary: Log in with email and password
+      description: >
+        Authenticates the user via the Auth service. On success a server-side Redis
+        session is created and a `sessionId` cookie is set.
+      security:
+        - csrfHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  example: "johndoe@example.com"
+                password:
+                  type: string
+                  example: "s3cr3tP@ss"
+      responses:
+        '200':
+          description: Login successful, session created
+          headers:
+            Set-Cookie:
+              description: sessionId cookie
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserSession'
+        '401':
+          description: Invalid email or password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Auth service unreachable or session creation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/logout:
+    post:
+      tags: [Auth]
+      summary: Log out the current user
+      description: Deletes the Redis session and clears the `sessionId` cookie.
+      security:
+        - sessionCookie: []
+        - csrfHeader: []
+      responses:
+        '200':
+          description: Logged out successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logged out"
+        '403':
+          description: Invalid or missing CSRF token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /api/update-username:
+    post:
+      tags: [User]
+      summary: Update the current user's username
+      description: >
+        Persists the new username in the Auth service (Firebase) and updates the
+        Redis session so subsequent `/api/me` calls return the new value.
+      security:
+        - sessionCookie: []
+        - csrfHeader: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username]
+              properties:
+                username:
+                  type: string
+                  example: "newusername"
+      responses:
+        '200':
+          description: Username updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  username:
+                    type: string
+                    example: "newusername"
+        '400':
+          description: Username field missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Not authenticated or session expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal error while updating username
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /createuser:
+    post:
+      tags: [Legacy]
+      summary: Create a user (legacy endpoint)
+      description: Legacy endpoint kept for backwards compatibility.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username]
               properties:
                 username:
                   type: string
@@ -33,3 +299,7 @@ paths:
                     example: "Hello testuser! welcome to the course!"
         '400':
           description: Error creating user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'

@@ -8,6 +8,31 @@ use std::path::Path;
 /// A Result type alias for game operations that may fail with a `GameYError`.
 pub type Result<T> = std::result::Result<T, crate::GameYError>;
 
+/// Game variant that modifies the win condition.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GameVariant {
+    /// Standard rules: connecting all three sides wins.
+    Standard,
+    /// Misère rules: connecting all three sides loses (the opponent wins).
+    WhyNot,
+}
+
+impl GameVariant {
+    fn from_str(s: &str) -> Self {
+        match s {
+            "why_not" => GameVariant::WhyNot,
+            _ => GameVariant::Standard,
+        }
+    }
+
+    fn as_str(&self) -> Option<&'static str> {
+        match self {
+            GameVariant::Standard => None,
+            GameVariant::WhyNot => Some("why_not"),
+        }
+    }
+}
+
 /// The main game state for a Y game.
 ///
 /// Y is a connection game played on a triangular board where players
@@ -30,6 +55,9 @@ pub struct GameY {
     sets: Vec<PlayerSet>,
 
     available_cells: Vec<u32>,
+
+    // Game variant that modifies win conditions.
+    variant: GameVariant,
 }
 
 impl GameY {
@@ -37,6 +65,11 @@ impl GameY {
         if !self.check_game_over() {
             self.status = GameStatus::Ongoing { next_player: player };
         }
+    }
+
+    /// Returns the game variant.
+    pub fn variant(&self) -> GameVariant {
+        self.variant
     }
 }
 
@@ -50,8 +83,13 @@ pub enum Cell {
 }
 
 impl GameY {
-    /// Creates a new game with the specified board size and number of players.
+    /// Creates a new game with the specified board size and standard rules.
     pub fn new(board_size: u32) -> Self {
+        Self::new_with_variant(board_size, GameVariant::Standard)
+    }
+
+    /// Creates a new game with the specified board size and game variant.
+    pub fn new_with_variant(board_size: u32, variant: GameVariant) -> Self {
         let total_cells = (board_size * (board_size + 1)) / 2;
         Self {
             board_size,
@@ -62,6 +100,7 @@ impl GameY {
                 next_player: PlayerId::new(0),
             },
             available_cells: (0..total_cells).collect(),
+            variant,
         }
     }
 
@@ -206,10 +245,14 @@ impl GameY {
         if self.check_game_over() {
             tracing::info!("Game was already over. Move ignored for status update.");
         } else if won {
-            tracing::debug!("Player {} wins the game!", player);
-            self.status = GameStatus::Finished { winner: player };
+            // In WhyNot (misère) the player who connects all three sides LOSES.
+            let winner = match self.variant {
+                GameVariant::WhyNot => other_player(player),
+                GameVariant::Standard => player,
+            };
+            tracing::debug!("Player {} wins the game!", winner);
+            self.status = GameStatus::Finished { winner };
         } else {
-            // tracing::debug!("No win yet..."); // Optional debug
             self.status = GameStatus::Ongoing {
                 next_player: other_player(player),
             };
@@ -465,7 +508,10 @@ impl TryFrom<YEN> for GameY {
     type Error = GameYError;
 
     fn try_from(game: YEN) -> Result<Self> {
-        let mut ygame = GameY::new(game.size());
+        let variant = game.variant()
+            .map(GameVariant::from_str)
+            .unwrap_or(GameVariant::Standard);
+        let mut ygame = GameY::new_with_variant(game.size(), variant);
         let rows: Vec<&str> = game.layout().split('/').collect();
         if rows.len() as u32 != game.size() {
             return Err(GameYError::InvalidYENLayout {
@@ -537,7 +583,8 @@ impl From<&GameY> for YEN {
                 layout.push('/');
             }
         }
-        YEN::new(size, turn, players, layout)
+        let variant = game.variant.as_str().map(|s| s.to_string());
+        YEN::new_with_variant(size, turn, players, layout, variant)
     }
 }
 
@@ -774,6 +821,98 @@ mod tests {
             }
             other => panic!("Game should be finished with a winner. Found {:?}", other),
         }
+    }
+
+    // ── WhyNot variant ────────────────────────────────────────────────────────
+
+    // Reusable helper: plays the same 5-move sequence used in test_winning_condition
+    // but on a game created with the given variant.
+    fn play_standard_win_sequence(game: &mut GameY) {
+        let moves = vec![
+            Movement::Placement { player: PlayerId::new(0), coords: Coordinates::new(0, 2, 0) },
+            Movement::Placement { player: PlayerId::new(1), coords: Coordinates::new(2, 0, 0) },
+            Movement::Placement { player: PlayerId::new(0), coords: Coordinates::new(0, 1, 1) },
+            Movement::Placement { player: PlayerId::new(1), coords: Coordinates::new(1, 1, 0) },
+            Movement::Placement { player: PlayerId::new(0), coords: Coordinates::new(0, 0, 2) },
+        ];
+        for mv in moves { game.add_move(mv).unwrap(); }
+    }
+
+    #[test]
+    fn test_why_not_opponent_wins_when_connection_made() {
+        // P0 completes the 3-side connection, so in WhyNot P1 should win.
+        let mut game = GameY::new_with_variant(3, GameVariant::WhyNot);
+        play_standard_win_sequence(&mut game);
+        match game.status {
+            GameStatus::Finished { winner } => assert_eq!(winner, PlayerId::new(1)),
+            _ => panic!("Game should be finished"),
+        }
+    }
+
+    #[test]
+    fn test_standard_mover_wins_connection() {
+        // Sanity check: same sequence in Standard variant → P0 wins.
+        let mut game = GameY::new(3);
+        play_standard_win_sequence(&mut game);
+        match game.status {
+            GameStatus::Finished { winner } => assert_eq!(winner, PlayerId::new(0)),
+            _ => panic!("Game should be finished"),
+        }
+    }
+
+    #[test]
+    fn test_why_not_game_ongoing_before_connection() {
+        // No 3-side connection yet → game must remain Ongoing.
+        let mut game = GameY::new_with_variant(3, GameVariant::WhyNot);
+        game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(0, 2, 0),
+        }).unwrap();
+        assert!(!game.check_game_over());
+    }
+
+    #[test]
+    fn test_why_not_yen_roundtrip_preserves_variant() {
+        // Serialising a WhyNot game and deserialising it must keep WhyNot rules.
+        let mut game = GameY::new_with_variant(3, GameVariant::WhyNot);
+        game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(0, 2, 0),
+        }).unwrap();
+
+        let yen: YEN = (&game).into();
+        assert_eq!(yen.variant(), Some("why_not"));
+
+        let restored = GameY::try_from(yen).unwrap();
+        assert_eq!(restored.variant(), GameVariant::WhyNot);
+    }
+
+    #[test]
+    fn test_why_not_yen_json_applies_inverted_win() {
+        // Load a YEN that has "variant":"why_not" and a layout where P0 has
+        // already connected all three sides.  The engine should record P1 as winner.
+        let yen_str = r#"{
+            "size": 3,
+            "turn": 0,
+            "players": ["B","R"],
+            "layout": "B/BB/BBR",
+            "variant": "why_not"
+        }"#;
+        let yen: YEN = serde_json::from_str(yen_str).unwrap();
+        let game = GameY::try_from(yen).unwrap();
+        match game.status {
+            GameStatus::Finished { winner } => assert_eq!(winner, PlayerId::new(1)),
+            other => panic!("Expected Finished, got {:?}", other),
+        }
+    }
+
+    #[test]
+    fn test_standard_yen_has_no_variant_field() {
+        // Standard games must not include a "variant" key in their JSON output.
+        let game = GameY::new(3);
+        let yen: YEN = (&game).into();
+        let json = serde_json::to_string(&yen).unwrap();
+        assert!(!json.contains("variant"), "standard YEN should not contain a variant field");
     }
 
     // Test loading a YEN representation of a finished game

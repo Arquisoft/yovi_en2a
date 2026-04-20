@@ -1,5 +1,4 @@
 use bb8_redis::{bb8, RedisConnectionManager};
-use rand::Rng;
 use redis::AsyncCommands;
 use thiserror::Error;
 use crate::data::{YEN};
@@ -8,13 +7,16 @@ pub type RedisPool = bb8::Pool<RedisConnectionManager>;
 
 #[derive(Error, Debug)]
 pub enum MatchError {
-    #[error("Redis error: {0}")]
+    #[error("Error de Redis: {0}")]
     Redis(#[from] redis::RedisError),
-    #[error("Serialization error: {0}")]
+
+    #[error("Error de Serialización: {0}")]
     Serialization(#[from] serde_json::Error),
-    #[error("Connection pool error:")]
+
+    #[error("Error del pool de conexiones")]
     Pool,
-    #[error("Redis lock timeout error")]
+
+    #[error("Error del Timeout de Lock de Redis")]
     LockTimeout,
     #[error("No match available")]
     NoMatchesAvailable,
@@ -122,10 +124,10 @@ pub async fn get_match_players(pool: &RedisPool, match_id: &str) -> Result<(Stri
 
 pub async fn create_match(
     pool: &RedisPool,
-    match_id: &str,
+    match_id: &String,
     size: &u32,
-    player1: &str,
-    player2: &str
+    player1: &String,
+    player2: &String
     ) -> Result<(), MatchError> {
 
     // 1. Crear el layout inicial (puntos '.')
@@ -136,11 +138,12 @@ pub async fn create_match(
         .join("/");
 
     // 2. Crear el objeto YEN inicial
-    let initial_state = YEN::new(
+    let initial_state = YEN::new_with_variant(
         *size,
         0,
         vec!['B', 'R'],
-        layout
+        layout,
+        variant,
     );
 
     // 3. Convertir a JSON String

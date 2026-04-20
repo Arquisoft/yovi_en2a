@@ -120,110 +120,79 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
                 </div>
             </div>
 
-            <div className={styles.imageContainer}>
-                <img src={imagenGameY} alt={mode.label} />
+      {/* Center: Image */}
+      <div className={styles.imageContainer}>
+        <img src={imagenGameY} alt={mode.label} />
+      </div>
+
+      {/* Controls Wrapper: Side-by-side layout to save vertical space */}
+      <div className={styles.controlsWrapper}>
+        
+        {/* Difficulty Selector */}
+        {mode.showDifficulty && (
+          <div className={styles.difficultySection}>
+            <span className={styles.difficultyLabel}>Difficulty</span>
+            <div className={styles.difficultySelector}>
+              <button
+                className={styles.arrow}
+                onClick={decreaseDifficulty}
+                style={{ visibility: currentDifficultyIndex > 0 ? "visible" : "hidden" }}
+              >
+                ←
+              </button>
+              <div className={styles.difficultyBox}>{currentDifficulty[0]}</div>
+              <button
+                className={styles.arrow}
+                onClick={increaseDifficulty}
+                style={{
+                  visibility: currentDifficultyIndex < difficulties.length - 1 ? "visible" : "hidden",
+                }}
+              >
+                →
+              </button>
             </div>
+          </div>
+        )}
 
-            <div className={styles.controlsWrapper}>
-                {/* Selector de Dificultad */}
-                {mode.showDifficulty && (
-                    <div className={styles.difficultySection}>
-                        <span className={styles.difficultyLabel}>Difficulty</span>
-                        <div className={styles.difficultySelector}>
-                            <button className={styles.arrow} onClick={decreaseDifficulty} style={{ visibility: currentDifficultyIndex > 0 ? "visible" : "hidden" }}>←</button>
-                            <div className={styles.difficultyBox}>{currentDifficulty[0]}</div>
-                            <button className={styles.arrow} onClick={increaseDifficulty} style={{ visibility: currentDifficultyIndex < difficulties.length - 1 ? "visible" : "hidden" }}>→</button>
-                        </div>
-                    </div>
-                )}
-
-                {/* Selector de Tamaño */}
-                <div className={styles.sizeSection}>
-                    <span className={styles.difficultyLabel}>Size</span>
-                    <div className={styles.difficultySelector}>
-                        <button className={styles.arrow} onClick={decreaseSize} style={{ visibility: currentSize > minSize ? "visible" : "hidden" }}>←</button>
-                        <div className={styles.difficultyBox}>{currentSize}</div>
-                        <button className={styles.arrow} onClick={increaseSize} style={{ visibility: currentSize < maxSize ? "visible" : "hidden" }}>→</button>
-                    </div>
-                </div>
-
-                {/* Campo Match ID */}
-                {mode.showMatchId && (
-                    <div className={styles.difficultySection}>
-                        <span className={styles.difficultyLabel}>Match ID</span>
-                        <div className={styles.difficultySelector}>
-                            <input
-                                className={styles.inputField}
-                                type="text"
-                                value={matchId}
-                                onChange={(e) => setMatchId(e.target.value)}
-                                placeholder="ID..."
-                            />
-                        </div>
-                    </div>
-                )}
-
-                {/* Campo Password */}
-                {mode.showPassword && (
-                    <div className={styles.difficultySection}>
-                        <span className={styles.difficultyLabel}>Password</span>
-                        <div className={styles.difficultySelector}>
-                            <input
-                                className={styles.inputField}
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="****"
-                            />
-                        </div>
-                    </div>
-                )}
-            </div>
-
-            {/* Mensaje de error (breve) */}
-            {error && (
-                <div
-                    style={{
-                        color: "#fca5a5",
-                        fontSize: "0.75rem",
-                        textAlign: "center",
-                        padding: "0.25rem 0",
-                    }}
-                    role="alert"
-                >
-                    {error}
-                </div>
-            )}
-
-            {/* Botones */}
-            {mode.showJoinCreate ? (
-                <div style={{ display: "flex", gap: "0.5rem", width: "100%" }}>
-                    <button
-                        className={styles.playButton}
-                        onClick={handleCreate}
-                        disabled={busy !== null}
-                        style={{ flex: 1, opacity: busy !== null && busy !== "create" ? 0.6 : 1 }}
-                    >
-                        {busy === "create" ? "…" : "CREATE"}
-                    </button>
-                    <button
-                        className={styles.playButton}
-                        onClick={handleJoin}
-                        disabled={busy !== null}
-                        style={{ flex: 1, opacity: busy !== null && busy !== "join" ? 0.6 : 1 }}
-                    >
-                        {busy === "join" ? "…" : "JOIN"}
-                    </button>
-                </div>
-            ) : (
-                <button
-                    className={styles.playButton}
-                    onClick={handleLocalPlay}
-                    disabled={busy !== null}
-                >
-                    PLAY
-                </button>
-            )}
+        {/* Size Selector */}
+        <div className={styles.sizeSection}>
+          <span className={styles.difficultyLabel}>Size</span>
+          <div className={styles.difficultySelector}>
+            <button
+              className={styles.arrow}
+              onClick={decreaseSize}
+              style={{ visibility: currentSize > minSize ? "visible" : "hidden" }}
+            >
+              ←
+            </button>
+            <div className={styles.difficultyBox}>{currentSize}</div>
+            <button
+              className={styles.arrow}
+              onClick={increaseSize}
+              style={{ visibility: currentSize < maxSize ? "visible" : "hidden" }}
+            >
+              →
+            </button>
+          </div>
         </div>
-    );
+
+      </div>
+
+      {/* Bottom: Play Button */}
+      <button
+        className={styles.playButton}
+        onClick={() => {
+          // Actualizamos el modelo por si lo necesitas en otro lado
+          mode.currentLevel = currentDifficulty;
+          mode.size = currentSize;
+
+          const navState = isGuest ? { state: { guest: true } } : undefined;
+          if (mode.showDifficulty) { navigate(`/play/${currentSize}/${currentDifficulty[1]}`, navState); }
+          else { navigate(`/play/${currentSize}/multi`, navState); }
+        }}
+      >
+        PLAY
+      </button>
+    </div>
+  );
 };

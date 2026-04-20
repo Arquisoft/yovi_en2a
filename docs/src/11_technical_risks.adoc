@@ -41,8 +41,7 @@ endif::arc42help[]
 [cols="1,2,1", options="header"]
 |===
 | Technical Debt | Status/Context | Priority
-| Session Reload | Currently marked as invalid; needs architectural fix. | High
-| End-to-End (e2e) | Missing automated test suite for game flows. | Medium
+| Session Reload | On page reload the frontend must call `GET /api/me` to re-hydrate auth state; if this call is slow or fails the UI briefly shows an unauthenticated state. Needs a loading state or optimistic restore. | Medium
 | Code Duplication | Identified logic redundancy across modules. | Low
-| Deployment Structure | Incomplete definition of the production pipeline. | High
+| Redis single point of failure | The Users Gateway's session store is a single Redis container with no replica. A Redis crash invalidates all active sessions. A replica or persistence strategy should be evaluated. | Medium
 |===

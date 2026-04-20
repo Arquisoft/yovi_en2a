@@ -60,14 +60,41 @@ endif::arc42help[]
 === Domain Model: YEN Notation
 The core domain concept is the **YEN Notation**. To ensure all components (Frontend, Gateway, and Engine) communicate seamlessly, a standardized JSON format has been established. This format describes the hexagonal board, edge connections, and the current turn, preventing logical interpretation errors when passing data between JavaScript and Rust environments.
 
-=== Security: Layered Authentication and CSRF
-Security is implemented across two main layers:
-* **Identity:** Delegated to **Firebase Auth** for robust JWT token management.
-* **Session Integrity:** The **Users Gateway** enforces *Cross-Site Request Forgery* (CSRF) protection using validated tokens for every state-changing request, securing player actions and statistics.
+=== Security: Layered Authentication, Sessions, and CSRF
+
+Security is implemented across several layers:
+
+==== Identity — Firebase Auth
+User registration and login are handled by the dedicated **Auth Engine** (Rust/Axum), which communicates with **Firebase Auth**. The Auth Engine validates credentials and returns the authenticated user's profile to the Gateway. The browser never interacts with Firebase directly.
+
+==== Server-side Sessions — Redis
+After a successful login or registration, the **Users Gateway** creates a server-side session in **Redis** using a cryptographically random 64-character hex session ID. The session record (`session:{id}`) stores the user's username and email with a 30-minute TTL (`setex`). Only the opaque session ID is sent to the browser as an `httpOnly`, `SameSite=Lax` cookie named `sessionId`. Because the cookie is `httpOnly`, JavaScript cannot read it, which prevents session hijacking via XSS. In production the cookie is also marked `Secure` so it is only transmitted over HTTPS.
+
+The `GET /api/me` endpoint reads the session from Redis on each request. The `POST /api/logout` endpoint deletes the Redis key and clears the cookie.
+
+==== CSRF Protection — Double-Submit Cookie Pattern
+All state-changing requests (`POST`, `PUT`, `DELETE`) are protected against Cross-Site Request Forgery using the **double-submit cookie** pattern:
+
+1. The client calls `GET /api/csrf-token`. The Gateway generates a random token, stores it in an `httpOnly` cookie (`csrf_token`), and also returns it in the JSON response body.
+2. The client includes the token value in the `X-CSRF-Token` request header on every subsequent state-changing call.
+3. The `verifyCsrf` middleware in the Gateway compares the cookie value with the header value. If they do not match the request is rejected with HTTP 403.
+
+Because a cross-origin attacker cannot read the `httpOnly` cookie from a foreign origin, they cannot replicate the header value, so the check blocks CSRF attacks without requiring a server-side token store.
+
+=== HTTPS: Let's Encrypt and nginx via sslip.io
+
+In production, TLS is handled entirely by the **Webapp** container using the `jonasal/nginx-certbot` Docker image:
+
+* **sslip.io:** The Azure VM's public IP (`20.250.145.156`) is mapped to the domain `20-250-145-156.sslip.io` using the wildcard DNS service sslip.io. This gives the VM a stable, publicly resolvable domain name without purchasing a custom domain, which is a requirement for Let's Encrypt.
+* **Let's Encrypt:** On first startup, the `nginx-certbot` image automatically issues a free TLS certificate for the sslip.io domain using the ACME HTTP-01 challenge. It stores the certificates in a Docker volume (`letsencrypt`) and renews them automatically before expiry.
+* **nginx:** The `nginx.conf` defines only the HTTPS server block (port 443). The certbot image automatically adds a port 80 server block that redirects all plain HTTP traffic to HTTPS. nginx terminates TLS, serves the compiled React SPA from `/usr/share/nginx/html`, and reverse-proxies `/api/` and `/game/` to the Users API container at `http://users:3000`.
+* **Local development:** For local development, `nginx:alpine` is used instead of the certbot image (swap two comment pairs in the `Dockerfile`). A plain HTTP server block defined in `nginx.local.conf` is used, so no certificates are needed.
 
 === Persistency: Hybrid State Management
 The system distinguishes between two data lifecycles:
-* **Volatile State (Real-time):** Managed by **Redis** for active matches where low latency is critical.
+
+* **Session State:** Managed by **Redis** in the Users Gateway. Active user sessions are stored with a 30-minute TTL. Redis is also used by the Game Manager to cache active match state.
+* **Volatile Game State (Real-time):** Managed by **Redis** in the Game Manager for active matches where low latency is critical.
 * **Persistent State:** Managed by **Firebase/Firestore** for long-term storage of user profiles, match history, and global rankings.
 
 === Deterministic Logic (Rust Engine)

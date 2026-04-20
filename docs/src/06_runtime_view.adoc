@@ -14,59 +14,94 @@ You should understand how building blocks of your system perform their job and c
 
 endif::arc42help[]
 
-=== User Creation
-This scenario describes the registration of a new player. The Users Gateway receives the initial request and delegates the registration logic to the Auth Engine, which ensures the user is correctly persisted in the Firebase database.
+=== User Registration and Login
+Both flows follow the same pattern: the client first fetches a CSRF token, then submits credentials. The Gateway validates the CSRF token, forwards the request to the Auth Engine, and on success creates a server-side session in Redis, returning an httpOnly session cookie. The only difference is what the Auth Engine does with Firebase.
 
-[plantuml, target=runtime_create_user, format=png]
+[plantuml, target=runtime_auth, format=png]
 ....
 @startuml
 autonumber
 skinparam shadowing false
 skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F5F5F5
+skinparam ParticipantBorderColor #424242
+skinparam DatabaseBackgroundColor #EEEEEE
+skinparam DatabaseBorderColor #424242
+skinparam SequenceArrowColor #424242
+skinparam ActorBorderColor #424242
 
 actor "Player" as Client
 participant "Users\n(Gateway)" as Gateway
 participant "Auth Engine" as Auth
 database "Firebase" as Firebase
+database "Redis" as Redis
 
-Client -> Gateway : POST /createuser
-note right of Gateway: Local processing\n& proxy preparation
-Gateway -> Auth : Proxy: /register (fixRequestBody)
-Auth -> Firebase : Store User Credentials
-Firebase --> Auth : Success
-Auth --> Gateway : 201 Created
-Gateway --> Client : 200 OK (Welcome Message)
+Client -> Gateway : GET /api/csrf-token
+Gateway --> Client : csrf_token cookie + csrfToken body
+
+alt Registration
+    Client -> Gateway : POST /api/register\nHeader: X-CSRF-Token
+else Login
+    Client -> Gateway : POST /api/login\nHeader: X-CSRF-Token
+end
+
+Gateway -> Gateway : verifyCsrf()\n(cookie csrf_token == header X-CSRF-Token)
+
+alt Registration
+    Gateway -> Auth : POST /register
+    Auth -> Firebase : Store new user credentials
+    Firebase --> Auth : 201 Created + user profile
+else Login
+    Gateway -> Auth : POST /login
+    Auth -> Firebase : Verify credentials
+    Firebase --> Auth : 200 OK + user profile
+end
+
+Auth --> Gateway : username + email
+Gateway -> Redis : SETEX session:{id} → {username, email} (TTL 30 min)
+Gateway --> Client : 200 OK + sessionId cookie (httpOnly, Secure, SameSite=Lax)
 @enduml
 ....
 
-=== User Login
-The login process emphasizes security by requiring a CSRF token validation at the Gateway level before any authentication logic is processed by the Auth Engine.
+=== Post-Login Session Usage
+After login, every request that reads or mutates user state goes through the session stored in Redis. Read requests only need the `sessionId` cookie; state-changing requests additionally require the `X-CSRF-Token` header to match the `csrf_token` cookie.
 
-CSRF Check: The Gateway compares the X-CSRF-Token header against the secure csrf_token cookie.
-
-Proxying: Upon validation, the request is proxied to the Auth service using fixRequestBody to maintain data integrity.
-
-External Auth: The Auth Engine verifies the credentials against Firebase to grant access.
-
-[plantuml, target=runtime_login, format=png]
+[plantuml, target=runtime_session_lifecycle, format=png]
 ....
 @startuml
 autonumber
 skinparam shadowing false
 skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F5F5F5
+skinparam ParticipantBorderColor #424242
+skinparam DatabaseBackgroundColor #EEEEEE
+skinparam DatabaseBorderColor #424242
+skinparam SequenceArrowColor #424242
+skinparam ActorBorderColor #424242
 
 actor "Player" as Client
 participant "Users\n(Gateway)" as Gateway
-participant "Auth Engine" as Auth
-database "Firebase" as Firebase
+database "Redis" as Redis
 
-Client -> Gateway : POST /api/login\nHeader: X-CSRF-Token
+note over Client, Redis: 1 — Read current session (e.g. on page load after login)
+Client -> Gateway : GET /api/me\nCookie: sessionId
+Gateway -> Redis : GET session:{sessionId}
+Redis --> Gateway : { username, email }
+Gateway --> Client : 200 OK { username, email }
+
+note over Client, Redis: 2 — State-changing request (CSRF + session both required)
+Client -> Gateway : POST /api/update-username\nCookie: sessionId + csrf_token\nHeader: X-CSRF-Token
+Gateway -> Gateway : verifyCsrf()\n(cookie csrf_token == header value)
+Gateway -> Redis : GET session:{sessionId}
+Redis --> Gateway : { username, email }
+Gateway -> Redis : SETEX session:{sessionId} (TTL refreshed, username updated)
+Gateway --> Client : 200 OK { username }
+
+note over Client, Redis: 3 — Logout
+Client -> Gateway : POST /api/logout\nCookie: sessionId + csrf_token\nHeader: X-CSRF-Token
 Gateway -> Gateway : verifyCsrf()
-Gateway -> Auth : Proxy: /login (fixRequestBody)
-Auth -> Firebase : Verify Credentials
-Firebase --> Auth : User Profile / Token
-Auth --> Gateway : 200 OK (Session)
-Gateway --> Client : 200 OK
+Gateway -> Redis : DEL session:{sessionId}
+Gateway --> Client : 200 OK\nSet-Cookie: sessionId (cleared)
 @enduml
 ....
 
@@ -82,6 +117,13 @@ Fast Persistence: The initial state is stored in Redis to allow for high-frequen
 @startuml
 autonumber
 skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F5F5F5
+skinparam ParticipantBorderColor #424242
+skinparam DatabaseBackgroundColor #EEEEEE
+skinparam DatabaseBorderColor #424242
+skinparam SequenceArrowColor #424242
+skinparam ActorBorderColor #424242
 
 actor "Player" as Client
 participant "Users\n(Gateway)" as Gateway
@@ -110,6 +152,13 @@ Cache Update: The new state is pushed back to Redis for immediate availability.
 @startuml
 autonumber
 skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F5F5F5
+skinparam ParticipantBorderColor #424242
+skinparam DatabaseBackgroundColor #EEEEEE
+skinparam DatabaseBorderColor #424242
+skinparam SequenceArrowColor #424242
+skinparam ActorBorderColor #424242
 
 actor "Player" as Client
 participant "Users\n(Gateway)" as Gateway
@@ -140,6 +189,13 @@ Asynchronous Sync: The resulting state is synchronized with the Redis cache so t
 @startuml
 autonumber
 skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F5F5F5
+skinparam ParticipantBorderColor #424242
+skinparam DatabaseBackgroundColor #EEEEEE
+skinparam DatabaseBorderColor #424242
+skinparam SequenceArrowColor #424242
+skinparam ActorBorderColor #424242
 
 participant "Game Manager" as GM
 participant "Gamey\n(Engine)" as Engine
@@ -149,9 +205,44 @@ database "Redis" as Redis
 note over GM, Engine: Post-player move
 GM -> Engine : Request Bot Move (Bot Server)
 Engine -> Bot : Calculate Best Move
-Bot -> Engine : Return Move
-Engine -> Engine : Update Core State
+Bot --> Engine : Return Move
 Engine --> GM : Bot Move Result
 GM -> Redis : Sync Bot State
+@enduml
+....
+
+=== Game End and Result Persistence
+This scenario describes what happens when the final move of a match is played. The Gamey Engine detects the win condition, and the Game Manager persists the result to Firebase Firestore before clearing the now-finished match from Redis.
+
+[plantuml, target=runtime_game_end, format=png]
+....
+@startuml
+autonumber
+skinparam shadowing false
+skinparam sequenceMessageAlign center
+skinparam ParticipantBackgroundColor #F5F5F5
+skinparam ParticipantBorderColor #424242
+skinparam DatabaseBackgroundColor #EEEEEE
+skinparam DatabaseBorderColor #424242
+skinparam SequenceArrowColor #424242
+skinparam ActorBorderColor #424242
+
+actor "Player" as Client
+participant "Users\n(Gateway)" as Gateway
+participant "Game Manager" as GM
+participant "Gamey\n(Engine)" as Engine
+database "Redis" as Redis
+database "Firebase\n(Firestore)" as Firebase
+
+Client -> Gateway : POST /game/move (winning move)
+Gateway -> GM : Proxy: /move
+GM -> Redis : Get Current State
+GM -> Engine : Validate & Execute Move
+Engine --> GM : New State + WIN detected
+GM -> Firebase : Persist match result\n(winner, duration, moves, difficulty)
+Firebase --> GM : Saved
+GM -> Redis : DEL game:{matchId} (release active state)
+GM --> Gateway : 200 OK (final result)
+Gateway --> Client : Final Board State + Winner
 @enduml
 ....
