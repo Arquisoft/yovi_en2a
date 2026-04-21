@@ -6,7 +6,7 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use uuid::Uuid;
-use axum::extract::FromRef;
+use axum::extract::{FromRef, Path};
 use serde_json;
 use reqwest::Client;
 
@@ -33,7 +33,7 @@ async fn create_match(
     Json(payload): Json<NewMatchRequest>
     ) -> Json<NewMatchResponse> {
     let new_id = Uuid::new_v4().to_string();
-    let _ = redis_client::create_match(&state.redis_pool, &new_id, &payload.size, &payload.player1, &payload.player2, payload.variant).await;
+    let _ = redis_client::create_match(&state.redis_pool, &new_id, &payload.size, &payload.player1, &payload.player2).await;
     Json(NewMatchResponse { match_id: new_id })
 }
 
@@ -345,6 +345,51 @@ async fn request_online_update(
     Err((StatusCode::REQUEST_TIMEOUT, "Timeout waiting for your turn".to_string()))
 }
 
+// Read-only endpoint: tells the WaitingRoom whether both players are in.
+// `match:{id}:status`  is "waiting" until P2 joins, then "active".
+// `match:{id}:players` is "p1:p2" where p2 == "waiting" until someone joins.
+async fn match_status(
+    State(state): State<Arc<AppState>>,
+    Path(match_id): Path<String>,
+) -> Result<Json<serde_json::Value>, (StatusCode, String)> {
+    let mut conn = state.redis_pool.get().await
+        .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Pool error".to_string()))?;
+
+    let status: Option<String> = redis::cmd("GET")
+        .arg(format!("match:{}:status", match_id))
+        .query_async(&mut *conn)
+        .await
+        .unwrap_or(None);
+
+    let status = status.ok_or((StatusCode::NOT_FOUND, "Match not found".to_string()))?;
+
+    let players: Option<String> = redis::cmd("GET")
+        .arg(format!("match:{}:players", match_id))
+        .query_async(&mut *conn)
+        .await
+        .unwrap_or(None);
+
+    let (player1, player2) = match players {
+        Some(raw) => {
+            let mut parts = raw.splitn(2, ':');
+            let p1 = parts.next().unwrap_or("").to_string();
+            let p2 = parts.next().unwrap_or("").to_string();
+            (p1, p2)
+        }
+        None => ("".to_string(), "".to_string()),
+    };
+
+    let ready = status == "active" && !player2.is_empty() && player2 != "waiting";
+
+    Ok(Json(serde_json::json!({
+        "match_id": match_id,
+        "status": status,
+        "player1id": player1,
+        "player2id": player2,
+        "ready": ready,
+    })))
+}
+
 impl FromRef<Arc<AppState>> for AppState {
     fn from_ref(state: &Arc<AppState>) -> Self {
         state.as_ref().clone()
@@ -376,9 +421,10 @@ pub async fn run() {
         .route("/bestTimes", get(get_best_times))
         .route("/updateScore", post(update_user_score))
         .route("/saveMatch", post(save_match))
-        .route("/createMatch", post(create_online_match)) // We add creation and connection for matches
+        .route("/createMatch", post(create_online_match))
         .route("/joinMatch", post(join_online_match))
-        .route("/requestOnlineGameUpdate", post(request_online_update)) // Request update - send update as executeMove
+        .route("/requestOnlineGameUpdate", post(request_online_update))
+        .route("/matchStatus/{match_id}", get(match_status))
 
         .with_state(state);
 
@@ -388,4 +434,3 @@ pub async fn run() {
     let listener = TcpListener::bind(addr).await.unwrap();
     axum::serve(listener, app).await.unwrap();
 }
-

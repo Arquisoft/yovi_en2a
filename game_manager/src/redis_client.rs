@@ -1,4 +1,5 @@
 use bb8_redis::{bb8, RedisConnectionManager};
+use rand::Rng;
 use redis::AsyncCommands;
 use thiserror::Error;
 use crate::data::{YEN};
@@ -138,12 +139,11 @@ pub async fn create_match(
         .join("/");
 
     // 2. Crear el objeto YEN inicial
-    let initial_state = YEN::new_with_variant(
+    let initial_state = YEN::new(
         *size,
         0,
         vec!['B', 'R'],
-        layout,
-        variant,
+        layout
     );
 
     // 3. Convertir a JSON String
@@ -160,7 +160,7 @@ pub async fn create_match(
 
 pub async fn create_random_online_match(
     pool: &RedisPool,
-    player1: &str,
+    player1: &String,
     size: u32,
 ) -> Result<String, MatchError> {
 
@@ -180,9 +180,9 @@ pub async fn create_random_online_match(
 
         if !exists { break id; }
     };
-
+    
     // Crete match with 2nd player empty
-    create_match(pool, &match_id, &size, player1, "waiting").await?;
+    create_match(pool, &match_id, &size, player1, &"waiting".to_string()).await?;
 
     let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
     let _: () = conn
@@ -199,7 +199,7 @@ pub async fn create_random_online_match(
 
 pub async fn create_private_online_match(
     pool: &RedisPool,
-    player1: &str,
+    player1: &String,
     size: u32,
     match_id: &str,
     password: &str,
@@ -214,7 +214,7 @@ pub async fn create_private_online_match(
         return Err(MatchError::MatchIdAlreadyExists);
     }
 
-    create_match(pool, &match_id.to_string(), &size, player1, "waiting").await?;
+    create_match(pool, &match_id.to_string(), &size, player1, &"waiting".to_string()).await?;
 
     // Save password and status
     let _: () = conn.set_ex(format!("match:{}:password", match_id), password, 3600)

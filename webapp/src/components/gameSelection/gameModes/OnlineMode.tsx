@@ -5,8 +5,8 @@ import { Difficulty } from "./GameMode";
 
 export class OnlineMode implements GameMode {
   showDifficulty = false;
-  /** Render two buttons (CREATE / JOIN) instead of a single PLAY. */
-  showJoinCreate = false;
+  /** Public random match: matchmaking is automatic, only one button needed. */
+  showOnlyJoin = true;
 
   mode = "multi";
 
