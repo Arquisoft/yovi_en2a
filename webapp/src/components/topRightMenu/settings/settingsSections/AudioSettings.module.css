@@ -1,25 +1,60 @@
-/* --- TU CSS EXISTENTE --- */
-
-.accountInfo {
-  background: rgba(255, 255, 255, 0.05);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  border: 0.0625rem solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 1.5rem; /* Añadido para separar el recuadro del botón */
+.labelRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
 }
 
-.dangerBtn {
-  background: #da2626;
-  color: rgb(255, 255, 255);
-  border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 0.4rem;
-  font-weight: 700;
+.sliderContainer {
+  position: relative;
+  width: 100%;
+  padding-bottom: 1.5rem;
+}
+
+.volumeRange {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
   cursor: pointer;
-  width: fit-content;
-  transition: background-color 0.2s ease; /* Transición suave */
 }
 
-.dangerBtn:hover {
-  background: #b01e1e; /* Efecto hover para el logout */
+.volumeRange::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+}
+
+.volumeRange::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+  border: none;
+}
+
+.volumeTooltip {
+  position: absolute;
+  top: 1.4rem;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.visible {
+  opacity: 1;
 }

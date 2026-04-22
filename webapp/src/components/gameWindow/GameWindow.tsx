@@ -157,6 +157,7 @@ const GameWindow = () => {
       botGame.addMove(pos.row, pos.col);
       botGame.setGameOver(botData.game_over);
       setGame(botGame);
+      playMoveSound();
 
       if (botData.game_over) {
           handleGameOver(false, botGame.moves); // Falso porque ganó el Bot (Jugador 2)

@@ -7,6 +7,10 @@ import { useAudio } from '../../../../contexts/AudioContext';
 const VolumeSlider: React.FC<{ label: string; value: number; onChange: (v: number) => void }> = ({ label, value, onChange }) => {
   const [isActive, setIsActive] = useState(false);
 
+  // Correct tooltip position: a range thumb doesn't sit at exactly 0% or 100%,
+  // so we offset by half the thumb width (8px) scaled by the value.
+  const tooltipLeft = `calc(${value}% + ${8 - value * 0.16}px)`;
+
   return (
     <div className={baseStyles.controlGroup}>
       <div className={audioStyles.labelRow}>
@@ -31,7 +35,7 @@ const VolumeSlider: React.FC<{ label: string; value: number; onChange: (v: numbe
         />
         <div
           className={`${audioStyles.volumeTooltip} ${isActive ? audioStyles.visible : ''}`}
-          style={{ left: `${value}%` }}
+          style={{ left: tooltipLeft }}
         >
           {value}
         </div>
@@ -41,13 +45,12 @@ const VolumeSlider: React.FC<{ label: string; value: number; onChange: (v: numbe
 };
 
 const AudioSettingsPanel: React.FC = () => {
-  const { masterVolume, musicVolume, setMasterVolume, setMusicVolume } = useAudio();
+  const { masterVolume, setMasterVolume } = useAudio();
 
   return (
     <div className={baseStyles.tabPanel}>
       <h3>Sound Settings</h3>
       <VolumeSlider label="Master Volume" value={masterVolume} onChange={setMasterVolume} />
-      <VolumeSlider label="Music Volume"  value={musicVolume}  onChange={setMusicVolume}  />
     </div>
   );
 };
