@@ -3,18 +3,12 @@
 // Tests for the raw Firebase read/write helpers. These require valid Firebase
 // credentials in the environment — run them only when the stack is up.
 
-use game_manager::firebase::{insert_db, get_match_by_id};
+use game_manager::firebase::{insert_match_by_id, get_match_by_id, remove_match_by_id};
 use game_manager::data::{Match, Score, YEN};
 use serial_test::serial;
 use ctor::ctor;
 use rand::Rng;
 
-#[ctor]
-fn init_crypto() {
-    rustls::crypto::ring::default_provider()
-        .install_default()
-        .ok();
-}
 
 /// Round-trip a Match through Firebase and verify the fields we care about
 /// survive serialization. Uses a fresh id each run so re-runs don't collide
@@ -39,10 +33,10 @@ async fn test_full_match_cycle() {
         created_at: 0,
     };
 
-    let insert_result = insert_db("Match", &test_id, &match_data).await;
+    let insert_result = insert_match_by_id(&test_id, match_data).await;
 
     if let Err(ref e) = insert_result {
-        eprintln!("{}", e);
+        eprintln!("Error inserting: {}", e);
     }
 
     assert!(insert_result.is_ok(), "Inserting Error: {:?}", insert_result.err());
@@ -54,11 +48,15 @@ async fn test_full_match_cycle() {
     assert_eq!(fetched.player1id, "1");
     assert_eq!(fetched.player2id, "1");
     assert_eq!(fetched.result, "1 Win");
+
+    let remove_result: Result<Match, _> = remove_match_by_id(&test_id).await;
+    assert!(remove_result.is_ok(), "Removing Error: {:?}", remove_result.err());
 }
 
 /// Pure-arithmetic sanity check for the score update logic. No I/O.
-#[test]
-fn test_score_calculation_logic() {
+#[tokio::test]
+#[serial]
+async fn test_score_calculation_logic() {
     let mut score = Score {
         playerid: "test_user".to_string(),
         username: "Tester".to_string(),
@@ -88,8 +86,9 @@ fn test_score_calculation_logic() {
 
 /// A loss with a SLOWER time should not move `best_time`, and win_rate should
 /// go DOWN. Complements the happy-path test above.
-#[test]
-fn test_score_calculation_loss_keeps_best_time() {
+#[tokio::test]
+#[serial]
+async fn test_score_calculation_loss_keeps_best_time() {
     let mut score = Score {
         playerid: "test_user".to_string(),
         username: "Tester".to_string(),

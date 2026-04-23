@@ -1,7 +1,5 @@
-    use std::ffi::{c_double, c_float};
-    use jsonwebtoken::signature::digest::typenum::Integer;
+    use std::ffi::{c_float};
     use serde::{Deserialize, Serialize};
-    use crate::api_rest::get_gamey_url;
     pub trait DBData: Serialize + for<'de> Deserialize<'de> + std::fmt::Debug  + Send + Sync {}
 
     #[derive(Serialize, Deserialize, Debug, Clone)]
