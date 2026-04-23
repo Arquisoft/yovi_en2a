@@ -2,7 +2,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './RankingTableLocal.module.css';
 import type { RankingElementLocal } from "./rankingElements/RankingElementLocal";
-import Pagination, { usePagination } from './Pagination';
+import Pagination from './Pagination';
+import { usePagination } from './usePagination';
 
 const formatTime = (seconds: number): string => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');

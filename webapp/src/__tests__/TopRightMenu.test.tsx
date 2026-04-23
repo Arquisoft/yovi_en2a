@@ -17,15 +17,13 @@ const mockToggleMute = vi.fn();
 vi.mock('../contexts/AudioContext', () => ({
   useAudio: () => ({
     masterVolume: 80,
-    musicVolume: 50,
     isMuted: false,
     setMasterVolume: vi.fn(),
-    setMusicVolume: vi.fn(),
     toggleMute: mockToggleMute,
     playMoveSound: vi.fn(),
     playGameOverSound: vi.fn(),
-        playGameStartSound: vi.fn(),
-        playGameVictorySound: vi.fn(),
+    playGameStartSound: vi.fn(),
+    playGameVictorySound: vi.fn(),
   }),
 }))
 

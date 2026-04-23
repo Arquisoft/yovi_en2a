@@ -2,15 +2,13 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import moveSoundUrl     from '../assets/sounds/move.mp3';
 import gameOverSoundUrl from '../assets/sounds/game_over.mp3';
-import gameStart from '../assets/sounds/start.mp3';
+import gameStart        from '../assets/sounds/start.mp3';
 import gameVictorySound from '../assets/sounds/victory.mp3';
 
 interface AudioContextType {
   masterVolume: number;
-  musicVolume: number;
   isMuted: boolean;
   setMasterVolume: (v: number) => void;
-  setMusicVolume: (v: number) => void;
   toggleMute: () => void;
   playMoveSound: () => void;
   playGameOverSound: () => void;
@@ -21,7 +19,6 @@ interface AudioContextType {
 const AudioCtx = createContext<AudioContextType | null>(null);
 
 const LS_MASTER = 'audioMasterVolume';
-const LS_MUSIC  = 'audioMusicVolume';
 const LS_MUTED  = 'audioIsMuted';
 
 const readNumber = (key: string, fallback: number): number => {
@@ -39,11 +36,12 @@ const readBool = (key: string, fallback: boolean): boolean => {
 
 export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [masterVolume, setMasterVolumeState] = useState<number>(() => readNumber(LS_MASTER, 80));
-  const [musicVolume,  setMusicVolumeState]  = useState<number>(() => readNumber(LS_MUSIC,  50));
   const [isMuted,      setIsMuted]           = useState<boolean>(() => readBool(LS_MUTED, false));
 
   // Lazy Web Audio API context — created on first sound to respect browser autoplay policy
   const webAudioRef = useRef<globalThis.AudioContext | null>(null);
+  // Cache decoded AudioBuffers by URL so each file is fetched and decoded only once
+  const bufferCache = useRef<Map<string, Promise<AudioBuffer>>>(new Map());
 
   const getWebAudio = useCallback((): globalThis.AudioContext | null => {
     if (typeof window === 'undefined') return null;
@@ -59,23 +57,29 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Persist to localStorage whenever state changes
   useEffect(() => { localStorage.setItem(LS_MASTER, String(masterVolume)); }, [masterVolume]);
-  useEffect(() => { localStorage.setItem(LS_MUSIC,  String(musicVolume));  }, [musicVolume]);
   useEffect(() => { localStorage.setItem(LS_MUTED,  String(isMuted));      }, [isMuted]);
 
   const setMasterVolume = useCallback((v: number) => setMasterVolumeState(Math.max(0, Math.min(100, v))), []);
-  const setMusicVolume  = useCallback((v: number) => setMusicVolumeState( Math.max(0, Math.min(100, v))), []);
   const toggleMute      = useCallback(() => setIsMuted(prev => !prev), []);
 
   // effectiveGain: 0 when muted, otherwise masterVolume scaled to 0–1
   const effectiveGain = isMuted ? 0 : masterVolume / 100;
 
+  const getBuffer = useCallback((url: string, ctx: globalThis.AudioContext): Promise<AudioBuffer> => {
+    if (!bufferCache.current.has(url)) {
+      const p = fetch(url)
+        .then(r => r.arrayBuffer())
+        .then(buf => ctx.decodeAudioData(buf));
+      bufferCache.current.set(url, p);
+    }
+    return bufferCache.current.get(url)!;
+  }, []);
+
   const playFile = useCallback((url: string, gain: number) => {
     const ctx = getWebAudio();
     if (!ctx) return;
 
-    fetch(url)
-      .then(r => r.arrayBuffer())
-      .then(buf => ctx.decodeAudioData(buf))
+    getBuffer(url, ctx)
       .then(decoded => {
         const source   = ctx.createBufferSource();
         const gainNode = ctx.createGain();
@@ -84,8 +88,9 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         source.connect(gainNode);
         gainNode.connect(ctx.destination);
         source.start();
-      });
-  }, [getWebAudio]);
+      })
+      .catch(() => {});
+  }, [getWebAudio, getBuffer]);
 
   const playMoveSound = useCallback(() => {
     if (effectiveGain === 0) return;
@@ -98,29 +103,25 @@ export const AudioProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, [effectiveGain, playFile]);
 
   const playGameStartSound = useCallback(() => {
-      if (effectiveGain === 0) return;
-      playFile(gameStart, effectiveGain * 0.8);
-      }, [effectiveGain, playFile]);
+    if (effectiveGain === 0) return;
+    playFile(gameStart, effectiveGain * 0.8);
+  }, [effectiveGain, playFile]);
 
-    const playGameVictorySound = useCallback(() => {
-        if (effectiveGain === 0) return;
-        playFile(gameVictorySound, effectiveGain * 0.8);
-    }, [effectiveGain, playFile]);
-
-
+  const playGameVictorySound = useCallback(() => {
+    if (effectiveGain === 0) return;
+    playFile(gameVictorySound, effectiveGain * 0.8);
+  }, [effectiveGain, playFile]);
 
   const value = useMemo(() => ({
     masterVolume,
-    musicVolume,
     isMuted,
     setMasterVolume,
-    setMusicVolume,
     toggleMute,
     playMoveSound,
     playGameOverSound,
-      playGameStartSound,
-      playGameVictorySound,
-  }), [masterVolume, musicVolume, isMuted, setMasterVolume, setMusicVolume, toggleMute, playMoveSound, playGameOverSound, playGameStartSound, playGameVictorySound]);
+    playGameStartSound,
+    playGameVictorySound,
+  }), [masterVolume, isMuted, setMasterVolume, toggleMute, playMoveSound, playGameOverSound, playGameStartSound, playGameVictorySound]);
 
   return <AudioCtx.Provider value={value}>{children}</AudioCtx.Provider>;
 };

@@ -2,7 +2,8 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import styles from './RankingTableGlobal.module.css';
 import type { RankingElementGlobal } from "./rankingElements/RankingElementGlobal";
-import Pagination, { usePagination } from './Pagination';
+import Pagination from './Pagination';
+import { usePagination } from './usePagination';
 
 const RankingTableGlobal: React.FC<{ data: RankingElementGlobal[], title: string }> = ({ data, title }) => {
   const { t } = useTranslation();

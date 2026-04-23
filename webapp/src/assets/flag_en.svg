@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 30">
+  <!-- Blue field -->
+  <rect width="60" height="30" fill="#012169"/>
+  <!-- St Andrew white saltire -->
+  <line x1="0" y1="0" x2="60" y2="30" stroke="white" stroke-width="10"/>
+  <line x1="60" y1="0" x2="0" y2="30" stroke="white" stroke-width="10"/>
+  <!-- St George white cross -->
+  <rect x="0" y="10" width="60" height="10" fill="white"/>
+  <rect x="25" y="0" width="10" height="30" fill="white"/>
+  <!-- St Patrick red saltire (simplified, no counterchange) -->
+  <line x1="0" y1="0" x2="60" y2="30" stroke="#C8102E" stroke-width="4"/>
+  <line x1="60" y1="0" x2="0" y2="30" stroke="#C8102E" stroke-width="4"/>
+  <!-- St George red cross -->
+  <rect x="0" y="12" width="60" height="6" fill="#C8102E"/>
+  <rect x="27" y="0" width="6" height="30" fill="#C8102E"/>
+</svg>

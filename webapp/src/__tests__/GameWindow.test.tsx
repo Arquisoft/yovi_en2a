@@ -30,15 +30,13 @@ vi.mock('../contexts/UserContext', () => ({
 vi.mock('../contexts/AudioContext', () => ({
   useAudio: () => ({
     masterVolume: 80,
-    musicVolume: 50,
     isMuted: false,
     setMasterVolume: vi.fn(),
-    setMusicVolume: vi.fn(),
     toggleMute: vi.fn(),
     playMoveSound: vi.fn(),
     playGameOverSound: vi.fn(),
-        playGameStartSound: vi.fn(),
-        playGameVictorySound: vi.fn(),
+    playGameStartSound: vi.fn(),
+    playGameVictorySound: vi.fn(),
   }),
 }));
 
@@ -71,6 +69,7 @@ vi.mock('../components/gameWindow/board/Board', () => ({
 describe('GameWindow component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseUser.mockReturnValue({ user: null, setUser: vi.fn() });
     document.cookie = '';
   });
 
@@ -216,5 +215,40 @@ describe('GameWindow component', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '✕' }));
     expect(screen.getByRole('button', { name: '☰' })).toBeTruthy();
+  });
+
+  test('GameWindow shows modal when bot wins', async () => {
+    vi.spyOn(GameApi, 'createMatch').mockResolvedValue({ match_id: 'match-123' });
+    vi.spyOn(GameApi, 'sendMove').mockResolvedValue({ game_over: false });
+    vi.spyOn(GameApi, 'requestBotMove').mockResolvedValue({
+      coordinates: { x: 2, y: 0, z: 0 },
+      game_over: true,
+    });
+
+    render(<GameWindow />);
+    await waitFor(() => expect(GameApi.createMatch).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByText('MockBoard'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Game finished! bot won.')).toBeTruthy();
+    }, { timeout: 3000 });
+  });
+
+  test('GameWindow closes modal when the close button is clicked', async () => {
+    vi.spyOn(GameApi, 'createMatch').mockResolvedValue({ match_id: 'match-123' });
+    vi.spyOn(GameApi, 'sendMove').mockResolvedValue({ game_over: true });
+
+    render(<GameWindow />);
+    await waitFor(() => expect(GameApi.createMatch).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByText('MockBoard'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Game finished! Player 1 won.')).toBeTruthy();
+    });
+
+    fireEvent.click(screen.getByText('✕'));
+    expect(screen.queryByText('Game finished! Player 1 won.')).toBeNull();
   });
 });
