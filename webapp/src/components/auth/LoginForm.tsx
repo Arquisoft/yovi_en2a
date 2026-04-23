@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles from './AuthForm.module.css';
 import { useUser } from '../../contexts/UserContext';
 import { useCsrf } from '../../security/useCsrf';
 
 const LoginForm: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isLoggedIn, refreshUser } = useUser();
   const csrfToken = useCsrf();
@@ -30,7 +32,7 @@ const LoginForm: React.FC = () => {
     setError(null);
 
     if (!email.trim() || !password.trim()) {
-      setError('Please fill in all required fields.');
+      setError(t('auth.login.errorRequired'));
       return;
     }
 
@@ -51,10 +53,10 @@ const LoginForm: React.FC = () => {
         setResponseMessage(data.message);
         setTimeout(() => navigate('/gameSelection'), 1200);
       } else {
-        setError(data.error || 'Login failed. Please try again.');
+        setError(data.error || t('auth.login.errorFailed'));
       }
     } catch {
-      setError('Could not connect to the server. Please check your connection and try again.');
+      setError(t('auth.login.errorServer'));
     } finally {
       setLoading(false);
     }
@@ -62,10 +64,10 @@ const LoginForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className={styles.authForm}>
-      <h2>Login</h2>
+      <h2>{t('auth.login.title')}</h2>
 
       <div className={styles.formGroup}>
-        <label htmlFor="login-email">Email address</label>
+        <label htmlFor="login-email">{t('auth.login.email')}</label>
         <input
           type="email"
           id="login-email"
@@ -76,7 +78,7 @@ const LoginForm: React.FC = () => {
       </div>
 
       <div className={styles.formGroup}>
-        <label htmlFor="login-password">Password</label>
+        <label htmlFor="login-password">{t('auth.login.password')}</label>
         <input
           type="password"
           id="login-password"
@@ -87,11 +89,11 @@ const LoginForm: React.FC = () => {
       </div>
 
       <button type="submit" className={styles.submitButton} disabled={loading}>
-        {loading ? 'Processing...' : 'Login'}
+        {loading ? t('auth.login.loading') : t('auth.login.submit')}
       </button>
 
       <Link to="/register" className={styles.linkText}>
-        If you haven't registered yet, click here
+        {t('auth.login.registerLink')}
       </Link>
 
       {responseMessage && <div className={styles.successMessage}>{responseMessage}</div>}

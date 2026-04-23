@@ -1,0 +1,227 @@
+{
+  "auth": {
+    "login": {
+      "title": "Iniciar sesión",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "submit": "Iniciar sesión",
+      "loading": "Procesando...",
+      "registerLink": "¿No tienes cuenta? Regístrate aquí",
+      "errorRequired": "Por favor, rellena todos los campos obligatorios.",
+      "errorServer": "No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
+      "errorFailed": "Error al iniciar sesión. Inténtalo de nuevo."
+    },
+    "register": {
+      "title": "Registrarse",
+      "email": "Correo electrónico",
+      "username": "Nombre de usuario",
+      "password": "Contraseña",
+      "submit": "Crear cuenta",
+      "loading": "Procesando...",
+      "loginLink": "¿Ya tienes cuenta? Inicia sesión aquí",
+      "errorRequired": "Por favor, rellena todos los campos obligatorios.",
+      "errorServer": "No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
+      "errorFailed": "Error en el registro. Inténtalo de nuevo."
+    }
+  },
+  "mainMenu": {
+    "subtitle": "Tres lados, un objetivo",
+    "logIn": "Iniciar sesión",
+    "playAsGuest": "Jugar como invitado"
+  },
+  "gameSelection": {
+    "title": "SELECCIONA TU MODO DE JUEGO",
+    "difficulty": "Dificultad",
+    "size": "Tamaño",
+    "play": "JUGAR"
+  },
+  "gameModes": {
+    "normal": {
+      "label": "Modo Normal",
+      "description": "Modo normal que sigue las reglas clásicas del juego Gamey. Juega contra un bot e intenta conectar los tres lados para ganar."
+    },
+    "local": {
+      "label": "Modo Local",
+      "description": "Modo normal que sigue las reglas clásicas del juego Gamey. Juega localmente contra un amigo e intenta conectar los tres lados para ganar."
+    },
+    "why_not": {
+      "label": "¿Por qué no?",
+      "description": "Juega con reglas invertidas: el primer jugador en conectar los tres lados del tablero PIERDE."
+    }
+  },
+  "topRightMenu": {
+    "help": "Ayuda",
+    "rankings": "Clasificación",
+    "volume": "Volumen",
+    "settings": "Ajustes",
+    "user": "Usuario"
+  },
+  "settings": {
+    "title": "AJUSTES",
+    "sections": {
+      "audio": "Audio",
+      "account": "Cuenta",
+      "language": "Idioma"
+    },
+    "audio": {
+      "soundSettings": "Ajustes de sonido",
+      "masterVolume": "Volumen principal",
+      "musicVolume": "Volumen de música"
+    },
+    "account": {
+      "guest": "Invitado",
+      "notLoggedIn": "No iniciaste sesión",
+      "hint": "Inicia sesión para guardar tu historial de partidas y aparecer en las clasificaciones globales.",
+      "logIn": "Iniciar sesión",
+      "logOut": "Cerrar sesión",
+      "activeSession": "● Sesión activa"
+    },
+    "language": {
+      "selectLanguage": "Seleccionar idioma",
+      "en": "English",
+      "es": "Español"
+    }
+  },
+  "userMenu": {
+    "title": "PERFIL DE USUARIO",
+    "guestUser": "Usuario invitado",
+    "notLoggedIn": "No iniciaste sesión",
+    "joinUs": "¡Únete para guardar tu progreso!",
+    "logInForProfile": "Inicia sesión para acceder a tu perfil y tu historial de partidas.",
+    "goToLogin": "Ir al inicio de sesión",
+    "username": "Nombre de usuario",
+    "edit": "Editar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "logOut": "Cerrar sesión",
+    "failedUpdate": "Error al actualizar el nombre de usuario."
+  },
+  "rankings": {
+    "title": "CLASIFICACIÓN",
+    "local": "Local",
+    "global": "Global",
+    "loading": "Cargando historial...",
+    "loadingLeaderboard": "Cargando clasificación...",
+    "loadingFastest": "Cargando partidas más rápidas...",
+    "notLogged": "(Aún no has iniciado sesión)",
+    "login": "Iniciar sesión",
+    "localSubtabs": {
+      "historial": "Historial",
+      "time": "Tiempo",
+      "wins": "Victorias",
+      "loses": "Derrotas",
+      "statistics": "Estadísticas"
+    },
+    "globalSubtabs": {
+      "time": "Tiempo",
+      "wins": "Victorias",
+      "loses": "Derrotas",
+      "elo": "Elo"
+    },
+    "localTitles": {
+      "historial": "Historial de partidas ({{username}})",
+      "time": "Por duración — Las más cortas primero ({{username}})",
+      "wins": "Victorias — Las más recientes primero ({{username}})",
+      "loses": "Derrotas — Las más recientes primero ({{username}})"
+    },
+    "globalTitles": {
+      "time": "Partidas más rápidas — Top 20 mundial",
+      "wins": "Más victorias — Top 20 mundial",
+      "loses": "Menos derrotas — Top 20 mundial",
+      "elo": "Clasificación Elo — Top 20 mundial"
+    },
+    "table": {
+      "pos": "POS",
+      "player1": "JUGADOR 1",
+      "player2": "JUGADOR 2",
+      "result": "RESULTADO",
+      "time": "TIEMPO",
+      "replay": "Repetir"
+    }
+  },
+  "help": {
+    "title": "AYUDA",
+    "tabs": {
+      "mainMenu": "Menú principal",
+      "account": "Cuenta",
+      "gameRules": "Reglas del juego"
+    },
+    "mainMenu": {
+      "title": "Menú principal",
+      "welcome": "Bienvenido a Game Y. Aquí encontrarás soporte de ayuda completo.",
+      "whatIsGameY": "¿Qué es Game Y?",
+      "whatIsGameYText": "Game Y es un juego de estrategia de tablero. A cada jugador se le asignan dos lados opuestos del tablero y debe conectarlos con una cadena consecutiva de sus piezas.",
+      "gettingStarted": "Cómo empezar",
+      "gettingStartedItem1": "Desde el menú principal puedes iniciar sesión en tu cuenta o crear una nueva.",
+      "gettingStartedItem2": "También puedes jugar como invitado.",
+      "gettingStartedItem3": "Una vez dentro, selecciona tu modo de juego y el tamaño del tablero para empezar a jugar.",
+      "moreInfo": "Selecciona la ventana de ayuda de cada función específica para más información."
+    },
+    "gameRules": {
+      "title": "Reglas del juego",
+      "objective": "Objetivo",
+      "objectiveText": "Conecta los tres lados del tablero con una cadena consecutiva antes de que lo haga tu rival.",
+      "takingTurns": "Turnos",
+      "takingTurnsText1": "Los jugadores se turnan colocando una pieza por turno en cualquier celda vacía del tablero.",
+      "takingTurnsText2": "Una vez colocadas, las piezas no se pueden mover ni retirar.",
+      "takingTurnsText3": "El turno del jugador se indica en la pantalla.",
+      "winning": "Ganar",
+      "winningText": "El primer jugador en conectar los tres lados gana. El juego termina inmediatamente cuando se detecta un ganador.",
+      "timer": "Temporizador",
+      "timerText1": "Cada partida tiene un temporizador que empieza desde el inicio.",
+      "timerText2": "Tu tiempo total se registra al final de la partida y se usa en las clasificaciones si has iniciado sesión."
+    },
+    "account": {
+      "title": "Cuenta",
+      "intro": "Puedes jugar a Game Y como invitado o con una cuenta registrada.",
+      "playAsGuest": "Jugar como invitado",
+      "playAsGuestText1": "Juega una partida de inmediato sin crear una cuenta.",
+      "playAsGuestText2": "Tus partidas no se guardarán y no aparecerás en las clasificaciones.",
+      "createAccount": "Crear una cuenta",
+      "createAccountText": "Regístrate con tu correo para obtener un perfil persistente. Una vez registrado, se registrarán todas tus victorias, derrotas y mejores tiempos.",
+      "logIn": "Iniciar sesión",
+      "logInText1": "Inicia sesión con tu correo y contraseña para acceder a tu perfil completo.",
+      "logInText2": "Tu historial de partidas, estadísticas y posición en la clasificación están vinculados a tu cuenta.",
+      "logOut": "Cerrar sesión",
+      "logOutText": "Puedes cerrar sesión en cualquier momento desde el menú de usuario en la esquina superior derecha."
+    }
+  },
+  "gameWindow": {
+    "gameFinished": "¡Partida terminada! {{winner}} ha ganado.",
+    "totalTime": "Tiempo total: {{time}}",
+    "returnToSelection": "Volver a selección de juego"
+  },
+  "rightPanel": {
+    "timer": "Temporizador",
+    "players": "Jugadores",
+    "yourTurn": "TU TURNO",
+    "waiting": "ESPERANDO",
+    "human": "Humano",
+    "bot": "Bot",
+    "player1": "Jugador 1",
+    "player2": "Jugador 2"
+  },
+  "replay": {
+    "title": "REPETICIÓN",
+    "noMoveData": "No hay datos de movimientos para esta partida.\nSolo se pueden repetir las partidas jugadas después de que esta función fue añadida.",
+    "result": "Resultado",
+    "duration": "Duración",
+    "totalMoves": "Movimientos totales",
+    "move": "Movimiento"
+  },
+  "statistics": {
+    "totalGames": "Partidas totales",
+    "wins": "Victorias",
+    "winRate": "Porcentaje de victorias",
+    "streak": "Racha",
+    "fastestWin": "Victoria más rápida",
+    "avgDuration": "Duración media",
+    "winLossRatio": "Ratio victorias / derrotas",
+    "headToHead": "Cara a cara con los mejores rivales",
+    "noOpponentData": "Sin datos de rivales",
+    "eloEvolution": "Evolución del ELO",
+    "matchLabel": "Partida #",
+    "recentForm": "Forma reciente — últimas {{count}} partidas",
+    "noMatchData": "Sin datos de partidas. ¡Juega algunas partidas para ver tus estadísticas!"
+  }
+}

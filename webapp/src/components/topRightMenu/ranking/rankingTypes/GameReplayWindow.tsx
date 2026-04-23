@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import Board from '../../../gameWindow/board/Board';
 import { fromXYZ } from '../../../gameWindow/Game';
 import type { RankingElementLocal } from '../rankingElements/RankingElementLocal';
 import styles from './GameReplayWindow.module.css';
 
-const PLAYER1_LABEL = 'Player 1';
-const PLAYER2_LABEL = 'Player 2';
 const PLAY_INTERVAL_MS = 1200;
 
 const formatTime = (seconds: number): string => {
@@ -20,6 +19,7 @@ interface Props {
 }
 
 const GameReplayWindow = ({ match, onClose }: Props) => {
+  const { t } = useTranslation();
   const moves     = match.moves ?? [];
   const boardSize = match.boardSize ?? 8;
   const totalSteps = moves.length;
@@ -27,10 +27,8 @@ const GameReplayWindow = ({ match, onClose }: Props) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying,   setIsPlaying]   = useState(false);
 
-  // Board scaling via ResizeObserver
   const boardAreaRef = useRef<HTMLDivElement>(null);
   const [boardScale, setBoardScale] = useState(1);
-  // Approximate natural board pixel size (hex cells are 64×64, rows overlap by 15px)
   const naturalBoardW = boardSize * 64;
   const naturalBoardH = boardSize * 49 + 15;
 
@@ -49,7 +47,6 @@ const GameReplayWindow = ({ match, onClose }: Props) => {
     return () => obs.disconnect();
   }, [naturalBoardW, naturalBoardH]);
 
-  // Auto-play: advance one step per interval tick
   useEffect(() => {
     if (!isPlaying) return;
     const id = setInterval(() => {
@@ -58,8 +55,6 @@ const GameReplayWindow = ({ match, onClose }: Props) => {
     return () => clearInterval(id);
   }, [isPlaying, totalSteps]);
 
-  // Stop at end — delay by one full interval so the last move stays visible
-  // before playback stops (without the delay it would disappear almost instantly).
   useEffect(() => {
     if (totalSteps > 0 && currentStep >= totalSteps) {
       const t = setTimeout(() => setIsPlaying(false), PLAY_INTERVAL_MS);
@@ -90,17 +85,17 @@ const GameReplayWindow = ({ match, onClose }: Props) => {
         <button className="top-right-menu-close-btn" onClick={onClose} aria-label="Close">✕</button>
 
         <header className="top-right-menu-global-header">
-          <h2 className="top-right-menu-title">REPLAY</h2>
+          <h2 className="top-right-menu-title">{t('replay.title')}</h2>
         </header>
 
         <div className={styles.replayBody}>
 
-          {/* ── Board area (scales to fit) ── */}
           <div className={styles.boardArea} ref={boardAreaRef}>
             {hasNoMoves ? (
               <p className={styles.noMovesMsg}>
-                No move data available for this match.<br />
-                Only games played after this feature was added can be replayed.
+                {t('replay.noMoveData').split('\n').map((line, i) => (
+                  <span key={i}>{line}{i === 0 && <br />}</span>
+                ))}
               </p>
             ) : (
               <div
@@ -112,46 +107,42 @@ const GameReplayWindow = ({ match, onClose }: Props) => {
             )}
           </div>
 
-          {/* ── Info + Controls panel ── */}
           <aside className={styles.infoPanel}>
 
-            {/* Players */}
             <div className={styles.playersSection}>
               <div className={styles.playerRow}>
                 <span className={styles.colorDot} style={{ background: 'rgba(77,163,255,0.9)' }} />
                 <span className={styles.playerName}>{match.player1Name}</span>
-                <span className={styles.playerRole}>{PLAYER1_LABEL}</span>
+                <span className={styles.playerRole}>{t('rightPanel.player1')}</span>
               </div>
               <span className={styles.vsText}>VS</span>
               <div className={styles.playerRow}>
                 <span className={styles.colorDot} style={{ background: 'rgba(255,80,80,0.9)' }} />
                 <span className={styles.playerName}>{match.player2Name}</span>
-                <span className={styles.playerRole}>{PLAYER2_LABEL}</span>
+                <span className={styles.playerRole}>{t('rightPanel.player2')}</span>
               </div>
             </div>
 
-            {/* Match info */}
             <div className={styles.matchSection}>
               <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Result</span>
+                <span className={styles.infoLabel}>{t('replay.result')}</span>
                 <span className={`${styles.infoValue} ${styles.resultValue}`}>{match.result}</span>
               </div>
               <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Duration</span>
+                <span className={styles.infoLabel}>{t('replay.duration')}</span>
                 <span className={styles.infoValue}>{formatTime(match.time)}</span>
               </div>
               <div className={styles.infoRow}>
-                <span className={styles.infoLabel}>Total moves</span>
+                <span className={styles.infoLabel}>{t('replay.totalMoves')}</span>
                 <span className={styles.infoValue}>{totalSteps > 0 ? totalSteps : '—'}</span>
               </div>
             </div>
 
-            {/* Progress + Controls */}
             {!hasNoMoves && (
               <>
                 <div className={styles.progressSection}>
                   <div className={styles.stepLabel}>
-                    Move <strong>{currentStep}</strong> / {totalSteps}
+                    {t('replay.move')} <strong>{currentStep}</strong> / {totalSteps}
                   </div>
                   <div className={styles.progressTrack}>
                     <div className={styles.progressFill} style={{ width: `${progressPct}%` }} />

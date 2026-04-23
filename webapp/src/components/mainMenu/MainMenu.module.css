@@ -55,7 +55,7 @@
   border-radius: 0.5rem;
 }
 
-.mainMenuButtons :global(.mainMenuOption)[name="Log In"] {
+.mainMenuButtons :global(.mainMenuOption):nth-child(1) {
   background-color: rgba(0, 0, 0, 0.88);
   color: #ffffff;
   font-weight: 800;
@@ -64,20 +64,20 @@
   backdrop-filter: blur(0.1875rem);
 }
 
-.mainMenuButtons :global(.mainMenuOption)[name="Log In"]:hover {
+.mainMenuButtons :global(.mainMenuOption):nth-child(1):hover {
   background-color: rgba(0, 0, 0, 0.96);
   border-color: rgba(255, 255, 255, 0.4);
   transform: translateY(-0.0625rem);
 }
 
-.mainMenuButtons :global(.mainMenuOption)[name="Play as Guest"] {
+.mainMenuButtons :global(.mainMenuOption):nth-child(2) {
   background-color: rgba(63, 62, 62, 0.2);
   color: #ffffff;
   border: 0.0625rem solid rgba(160, 160, 160, 0.4);
   backdrop-filter: blur(0.25rem);
 }
 
-.mainMenuButtons :global(.mainMenuOption)[name="Play as Guest"]:hover {
+.mainMenuButtons :global(.mainMenuOption):nth-child(2):hover {
   background-color: rgba(0, 0, 0, 0.78);
   border-color: rgba(255, 255, 255, 0.35);
 }

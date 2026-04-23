@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import styles from './AuthForm.module.css';
 import { useUser } from '../../contexts/UserContext';
 import { useCsrf } from '../../security/useCsrf';
 
 const RegisterForm: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { isLoggedIn, refreshUser } = useUser();
   const csrfToken = useCsrf();
@@ -27,7 +29,7 @@ const RegisterForm: React.FC = () => {
     setError(null);
 
     if (!email.trim() || !username.trim() || !password.trim()) {
-      setError('Please fill in all required fields.');
+      setError(t('auth.register.errorRequired'));
       return;
     }
 
@@ -47,10 +49,10 @@ const RegisterForm: React.FC = () => {
         setResponseMessage(data.message);
         setTimeout(() => navigate('/gameSelection'), 1500);
       } else {
-        setError(data.error || 'Registration failed. Please try again.');
+        setError(data.error || t('auth.register.errorFailed'));
       }
     } catch {
-      setError('Could not connect to the server. Please check your connection and try again.');
+      setError(t('auth.register.errorServer'));
     } finally {
       setLoading(false);
     }
@@ -58,10 +60,10 @@ const RegisterForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className={styles.authForm}>
-      <h2>Register</h2>
+      <h2>{t('auth.register.title')}</h2>
 
       <div className={styles.formGroup}>
-        <label htmlFor="register-email">Email address</label>
+        <label htmlFor="register-email">{t('auth.register.email')}</label>
         <input
           type="email"
           id="register-email"
@@ -72,7 +74,7 @@ const RegisterForm: React.FC = () => {
       </div>
 
       <div className={styles.formGroup}>
-        <label htmlFor="register-username">Username</label>
+        <label htmlFor="register-username">{t('auth.register.username')}</label>
         <input
           type="text"
           id="register-username"
@@ -83,7 +85,7 @@ const RegisterForm: React.FC = () => {
       </div>
 
       <div className={styles.formGroup}>
-        <label htmlFor="register-password">Password</label>
+        <label htmlFor="register-password">{t('auth.register.password')}</label>
         <input
           type="password"
           id="register-password"
@@ -94,11 +96,11 @@ const RegisterForm: React.FC = () => {
       </div>
 
       <button type="submit" className={styles.submitButton} disabled={loading}>
-        {loading ? 'Processing...' : 'Sign Up'}
+        {loading ? t('auth.register.loading') : t('auth.register.submit')}
       </button>
 
       <Link to="/login" className={styles.linkText}>
-        Already have an account? Click here to login
+        {t('auth.register.loginLink')}
       </Link>
 
       {responseMessage && <div className={styles.successMessage}>{responseMessage}</div>}

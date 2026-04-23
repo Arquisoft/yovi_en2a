@@ -1,0 +1,78 @@
+.langPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.langList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.langCard {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.langCard:hover:not(.langCardActive) {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.18);
+  transform: translateY(-0.1rem);
+}
+
+.langCardActive {
+  background: rgba(77, 163, 255, 0.1);
+  border-color: var(--primary-color, #4da3ff);
+  box-shadow: 0 0 0 1px var(--primary-color, #4da3ff);
+}
+
+.flag {
+  width: 2.4rem;
+  height: 1.6rem;
+  border-radius: 0.2rem;
+  object-fit: cover;
+  flex-shrink: 0;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+.langInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.langName {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.langCardActive .langName {
+  color: var(--primary-color, #4da3ff);
+}
+
+.langSubtitle {
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+}
+
+.activeDot {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 50%;
+  background: var(--primary-color, #4da3ff);
+  flex-shrink: 0;
+}

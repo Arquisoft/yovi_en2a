@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { type GameMode, Difficulty } from "./GameMode";
 import { Difficulty as DifficultyValues } from "./GameMode";
 import styles from "./GameModeContainer.module.css";
@@ -10,24 +11,22 @@ type Props = {
 };
 
 export const GameModeContainer: React.FC<Props> = ({ mode }) => {
+  const { t } = useTranslation();
   const difficulties: Difficulty[] = Object.values(DifficultyValues);
-  
+
   const navigate = useNavigate();
   const location = useLocation();
   const isGuest = location.state?.guest === true;
 
-  // State for Difficulty
   const [currentDifficultyIndex, setCurrentDifficultyIndex] = useState(
     difficulties.indexOf(mode.currentLevel)
   );
-  
-  // State for Size (fallback to 8 if not defined)
+
   const [currentSize, setCurrentSize] = useState(mode.size || 8);
 
   const minSize = 4;
-  const maxSize = 12; // Prevents the grid from getting absurdly large
+  const maxSize = 12;
 
-  // --- Difficulty Handlers ---
   const decreaseDifficulty = () => {
     setCurrentDifficultyIndex((prev) => Math.max(prev - 1, 0));
   };
@@ -38,7 +37,6 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
     );
   };
 
-  // --- Size Handlers ---
   const decreaseSize = () => {
     setCurrentSize((prev) => Math.max(prev - 1, minSize));
   };
@@ -49,29 +47,28 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
 
   const currentDifficulty = difficulties[currentDifficultyIndex];
 
+  const label = t(`gameModes.${mode.id}.label`, { defaultValue: mode.label });
+  const description = t(`gameModes.${mode.id}.description`, { defaultValue: mode.description });
+
   return (
     <div className={styles.gameModeContainer}>
-      {/* Top: Title and help */}
       <div className={styles.header}>
-        <h2 className={styles.title}>{mode.label}</h2>
+        <h2 className={styles.title}>{label}</h2>
         <div className={styles.tooltipContainer}>
           <button className={styles.infoButton}>?</button>
-          <div className={styles.tooltip}>{mode.description}</div>
+          <div className={styles.tooltip}>{description}</div>
         </div>
       </div>
 
-      {/* Center: Image */}
       <div className={styles.imageContainer}>
-        <img src={mode.image ?? imagenGameY} alt={mode.label} />
+        <img src={mode.image ?? imagenGameY} alt={label} />
       </div>
 
-      {/* Controls Wrapper: Side-by-side layout to save vertical space */}
       <div className={styles.controlsWrapper}>
-        
-        {/* Difficulty Selector */}
+
         {mode.showDifficulty && (
           <div className={styles.difficultySection}>
-            <span className={styles.difficultyLabel}>Difficulty</span>
+            <span className={styles.difficultyLabel}>{t('gameSelection.difficulty')}</span>
             <div className={styles.difficultySelector}>
               <button
                 className={styles.arrow}
@@ -94,9 +91,8 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
           </div>
         )}
 
-        {/* Size Selector */}
         <div className={styles.sizeSection}>
-          <span className={styles.difficultyLabel}>Size</span>
+          <span className={styles.difficultyLabel}>{t('gameSelection.size')}</span>
           <div className={styles.difficultySelector}>
             <button
               className={styles.arrow}
@@ -118,11 +114,9 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
 
       </div>
 
-      {/* Bottom: Play Button */}
       <button
         className={styles.playButton}
         onClick={() => {
-          // Actualizamos el modelo por si lo necesitas en otro lado
           mode.currentLevel = currentDifficulty;
           mode.size = currentSize;
 
@@ -131,7 +125,7 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
           else { navigate(`/play/${currentSize}/${mode.mode}`, navState); }
         }}
       >
-        PLAY
+        {t('gameSelection.play')}
       </button>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { RankingElementGlobal } from "../rankingElements/RankingElementGlobal";
 import type { RankingElementLocal } from "../rankingElements/RankingElementLocal";
 import RankingTableGlobal from "../RankingTableGlobal";
@@ -8,14 +9,8 @@ import styles from './GlobalRanking.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-const GLOBAL_SUBTABS = [
-    { id: 'time',  label: 'Time'  },
-    { id: 'wins',  label: 'Wins'  },
-    { id: 'loses', label: 'Loses' },
-    { id: 'elo',   label: 'Elo'   },
-] as const;
-
-type SubTabId = typeof GLOBAL_SUBTABS[number]['id'];
+const GLOBAL_SUBTABS = ['time', 'wins', 'loses', 'elo'] as const;
+type SubTabId = typeof GLOBAL_SUBTABS[number];
 
 interface RawScore {
     playerid: string;
@@ -51,16 +46,6 @@ const mapToDisplayData = (scores: RawScore[], subTab: Exclude<SubTabId, 'time'>)
     });
 };
 
-const getTitle = (subTab: SubTabId): string => {
-    switch (subTab) {
-        case 'time':  return 'Fastest Games — World Top 20';
-        case 'wins':  return 'Most Wins — World Top 20';
-        case 'loses': return 'Fewest Losses — World Top 20';
-        case 'elo':   return 'Elo Ranking — World Top 20';
-    }
-};
-
-/** Fetch the fastest match played by a player and map it to RankingElementLocal. */
 const fetchBestMatch = async (score: RawScore, position: number): Promise<RankingElementLocal | null> => {
     try {
         const res = await fetch(`${API_URL}/game/localRankings`, {
@@ -92,6 +77,7 @@ const fetchBestMatch = async (score: RawScore, position: number): Promise<Rankin
 };
 
 export const GlobalRanking = () => {
+    const { t } = useTranslation();
     const [rawScores, setRawScores] = useState<RawScore[]>([]);
     const [loading, setLoading] = useState(true);
     const [activeSubTab, setActiveSubTab] = useState<SubTabId>('time');
@@ -108,7 +94,6 @@ export const GlobalRanking = () => {
             .finally(() => setLoading(false));
     }, []);
 
-    // Eagerly fetch all best matches when Time tab is active
     useEffect(() => {
         if (activeSubTab !== 'time' || !rawScores.length || timeFetched.current) return;
 
@@ -128,7 +113,7 @@ export const GlobalRanking = () => {
             .finally(() => setTimeLoading(false));
     }, [activeSubTab, rawScores]);
 
-    if (loading) return <div className={styles.loadingContainer}>Loading leaderboard...</div>;
+    if (loading) return <div className={styles.loadingContainer}>{t('rankings.loadingLeaderboard')}</div>;
 
     return (
         <>
@@ -139,11 +124,11 @@ export const GlobalRanking = () => {
             <nav className={styles.subMenu}>
                 {GLOBAL_SUBTABS.map(tab => (
                     <button
-                        key={tab.id}
-                        className={`${styles.subTabBtn} ${activeSubTab === tab.id ? styles.active : ''}`}
-                        onClick={() => setActiveSubTab(tab.id)}
+                        key={tab}
+                        className={`${styles.subTabBtn} ${activeSubTab === tab ? styles.active : ''}`}
+                        onClick={() => setActiveSubTab(tab)}
                     >
-                        {tab.label}
+                        {t(`rankings.globalSubtabs.${tab}`)}
                     </button>
                 ))}
             </nav>
@@ -151,16 +136,16 @@ export const GlobalRanking = () => {
             <div className={styles.subContent}>
                 {activeSubTab === 'time' ? (
                     timeLoading
-                        ? <div className={styles.loadingContainer}>Loading fastest games...</div>
+                        ? <div className={styles.loadingContainer}>{t('rankings.loadingFastest')}</div>
                         : <RankingTableLocal
                             data={timeMatches}
-                            title={getTitle('time')}
+                            title={t('rankings.globalTitles.time')}
                             onReplay={setReplayMatch}
                           />
                 ) : (
                     <RankingTableGlobal
                         data={mapToDisplayData(rawScores, activeSubTab)}
-                        title={getTitle(activeSubTab)}
+                        title={t(`rankings.globalTitles.${activeSubTab}`)}
                     />
                 )}
             </div>

@@ -1,36 +1,34 @@
-  import { useNavigate } from 'react-router-dom';
-  import MenuButtons from '../generalComponents/MenuButtons';
-  import TopRightMenu from '../topRightMenu/TopRightMenu';
-  // 1. Import the styles object
-  import styles from './MainMenu.module.css';
+import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import MenuButtons from '../generalComponents/MenuButtons';
+import TopRightMenu from '../topRightMenu/TopRightMenu';
+import styles from './MainMenu.module.css';
 
-  const MainMenu = () => {
-    const navigate = useNavigate();
+const MainMenu = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
 
-    return (
-      <div className={styles.mainMenu}>
-        {/* Right most section*/}
-        <TopRightMenu/>
+  return (
+    <div className={styles.mainMenu}>
+      <TopRightMenu/>
 
-        {/* Title and Subtitle */}
-        <div className={styles.mainTitle}>
-          <h2>GAMEY</h2>
-          <p className={styles.subtitle}>Three sides, one goal</p>
-        </div>
-
-        {/* Principal action buttons */}
-        <div className={styles.mainMenuButtons}>
-          <MenuButtons 
-            label="Log In" 
-            onClick={() => navigate("/login")} 
-          />
-          <MenuButtons
-            label="Play as Guest"
-            onClick={() => navigate("/gameSelection", { state: { guest: true } })}
-          />
-        </div>
+      <div className={styles.mainTitle}>
+        <h2>GAMEY</h2>
+        <p className={styles.subtitle}>{t('mainMenu.subtitle')}</p>
       </div>
-    );
-  };
 
-  export default MainMenu;
+      <div className={styles.mainMenuButtons}>
+        <MenuButtons
+          label={t('mainMenu.logIn')}
+          onClick={() => navigate("/login")}
+        />
+        <MenuButtons
+          label={t('mainMenu.playAsGuest')}
+          onClick={() => navigate("/gameSelection", { state: { guest: true } })}
+        />
+      </div>
+    </div>
+  );
+};
+
+export default MainMenu;

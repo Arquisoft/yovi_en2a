@@ -1,29 +1,21 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import './HelpMenu-module.css';
 import MainMenuHelp from './tabs/MainMenuHelp';
 import GameRulesHelp from './tabs/GameRulesHelp';
 import AccountHelp from './tabs/AccountHelp';
 
-type Tab = {
-  id: string;
-  label: string;
-  component: React.ReactNode;
-};
-
-const tabs: Tab[] = [
-  { id: 'mainMenu',   label: 'Main Menu',   component: <MainMenuHelp /> },
-  { id: 'account',    label: 'Account',     component: <AccountHelp /> },
-  { id: 'gameRules',  label: 'Game Rules',  component: <GameRulesHelp /> },
-];
+type TabId = 'mainMenu' | 'account' | 'gameRules';
 
 type NavItemsProps = {
-  tabs: Tab[];
+  tabs: { id: TabId; labelKey: string }[];
   activeTab: string;
   onTabClick: (id: string) => void;
 };
 
-/* Create navigation */
-  const NavItems = ({ tabs, activeTab, onTabClick }: NavItemsProps) => (
+const NavItems = ({ tabs, activeTab, onTabClick }: NavItemsProps) => {
+  const { t } = useTranslation();
+  return (
     <>
       {tabs.map(tab => (
         <button
@@ -31,24 +23,31 @@ type NavItemsProps = {
           className={activeTab === tab.id ? 'active' : ''}
           onClick={() => onTabClick(tab.id)}
         >
-          {tab.label}
+          {t(tab.labelKey)}
         </button>
       ))}
     </>
   );
+};
+
+const TAB_DEFS: { id: TabId; labelKey: string; component: React.ReactNode }[] = [
+  { id: 'mainMenu',  labelKey: 'help.tabs.mainMenu',   component: <MainMenuHelp /> },
+  { id: 'account',   labelKey: 'help.tabs.account',    component: <AccountHelp /> },
+  { id: 'gameRules', labelKey: 'help.tabs.gameRules',  component: <GameRulesHelp /> },
+];
 
 type Props = { readonly onClose: () => void };
 
 export default function HelpMenu({ onClose }: Props) {
-  const [activeTab, setActiveTab] = useState('mainMenu');
+  const { t } = useTranslation();
+  const [activeTab, setActiveTab] = useState<TabId>('mainMenu');
   const [menuOpen, setMenuOpen] = useState(false);
-  const current = tabs.find(t => t.id === activeTab)!;
+  const current = TAB_DEFS.find(tab => tab.id === activeTab)!;
 
   const handleTabClick = (id: string) => {
-    setActiveTab(id);
+    setActiveTab(id as TabId);
     setMenuOpen(false);
   };
-
 
   return (
     <div className="help-menu-overlay" onClick={onClose} onKeyDown={e => e.key === 'Escape' && onClose()} role="presentation">
@@ -56,33 +55,33 @@ export default function HelpMenu({ onClose }: Props) {
         <button className="help-close-btn" onClick={onClose}>✕</button>
 
         <nav className="help-sidebar">
-            <p>HELP</p>
-            <NavItems tabs={tabs} activeTab={activeTab} onTabClick={handleTabClick} />
+          <p>{t('help.title')}</p>
+          <NavItems tabs={TAB_DEFS} activeTab={activeTab} onTabClick={handleTabClick} />
         </nav>
 
         {/* Mobile */}
         <div className="help-mobile">
-            <div className="help-mobile-header">
+          <div className="help-mobile-header">
             <button onClick={() => setMenuOpen(!menuOpen)}>
-                {menuOpen ? '✕' : '☰'}
+              {menuOpen ? '✕' : '☰'}
             </button>
-            <p>{current.label}</p>
-            </div>
+            <p>{t(current.labelKey)}</p>
+          </div>
 
-            {menuOpen && (
+          {menuOpen && (
             <nav className="help-mobile-nav">
-                <NavItems tabs={tabs} activeTab={activeTab} onTabClick={handleTabClick} />
+              <NavItems tabs={TAB_DEFS} activeTab={activeTab} onTabClick={handleTabClick} />
             </nav>
-            )}
+          )}
 
-            <div className="help-content">
+          <div className="help-content">
             {current.component}
-            </div>
+          </div>
         </div>
 
         {/* Desktop content */}
         <div className="help-content help-desktop-content">
-            {current.component}
+          {current.component}
         </div>
       </div>
     </div>

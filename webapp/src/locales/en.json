@@ -1,0 +1,227 @@
+{
+  "auth": {
+    "login": {
+      "title": "Login",
+      "email": "Email address",
+      "password": "Password",
+      "submit": "Login",
+      "loading": "Processing...",
+      "registerLink": "If you haven't registered yet, click here",
+      "errorRequired": "Please fill in all required fields.",
+      "errorServer": "Could not connect to the server. Please check your connection and try again.",
+      "errorFailed": "Login failed. Please try again."
+    },
+    "register": {
+      "title": "Register",
+      "email": "Email address",
+      "username": "Username",
+      "password": "Password",
+      "submit": "Sign Up",
+      "loading": "Processing...",
+      "loginLink": "Already have an account? Click here to login",
+      "errorRequired": "Please fill in all required fields.",
+      "errorServer": "Could not connect to the server. Please check your connection and try again.",
+      "errorFailed": "Registration failed. Please try again."
+    }
+  },
+  "mainMenu": {
+    "subtitle": "Three sides, one goal",
+    "logIn": "Log In",
+    "playAsGuest": "Play as Guest"
+  },
+  "gameSelection": {
+    "title": "SELECT YOUR GAME MODE",
+    "difficulty": "Difficulty",
+    "size": "Size",
+    "play": "PLAY"
+  },
+  "gameModes": {
+    "normal": {
+      "label": "Normal Mode",
+      "description": "Normal mode that follows the classical rules of the gamey game. Play against a bot and try to connect the three sizes to win."
+    },
+    "local": {
+      "label": "Local Mode",
+      "description": "Normal mode that follows the classical rules of the gamey game. Play locally against a friend and try to connect the three sizes to win."
+    },
+    "why_not": {
+      "label": "WhY not",
+      "description": "Play with inverted rules: the first player to connect all three edges of the board LOSES."
+    }
+  },
+  "topRightMenu": {
+    "help": "Help",
+    "rankings": "Rankings",
+    "volume": "Volume",
+    "settings": "Settings",
+    "user": "User"
+  },
+  "settings": {
+    "title": "SETTINGS",
+    "sections": {
+      "audio": "Audio",
+      "account": "Account",
+      "language": "Language"
+    },
+    "audio": {
+      "soundSettings": "Sound Settings",
+      "masterVolume": "Master Volume",
+      "musicVolume": "Music Volume"
+    },
+    "account": {
+      "guest": "Guest",
+      "notLoggedIn": "Not logged in",
+      "hint": "Log in to save your match history and appear in global rankings.",
+      "logIn": "Log In",
+      "logOut": "Log Out",
+      "activeSession": "● Active session"
+    },
+    "language": {
+      "selectLanguage": "Select Language",
+      "en": "English",
+      "es": "Español"
+    }
+  },
+  "userMenu": {
+    "title": "USER PROFILE",
+    "guestUser": "Guest User",
+    "notLoggedIn": "Not logged in",
+    "joinUs": "Join us to save your progress!",
+    "logInForProfile": "Log in to access your profile settings and match history.",
+    "goToLogin": "Go to Login",
+    "username": "Username",
+    "edit": "Edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "logOut": "Log Out",
+    "failedUpdate": "Failed to update username."
+  },
+  "rankings": {
+    "title": "RANKINGS",
+    "local": "Local",
+    "global": "Global",
+    "loading": "Loading history...",
+    "loadingLeaderboard": "Loading leaderboard...",
+    "loadingFastest": "Loading fastest games...",
+    "notLogged": "(You are not logged yet)",
+    "login": "Login",
+    "localSubtabs": {
+      "historial": "Historial",
+      "time": "Time",
+      "wins": "Wins",
+      "loses": "Loses",
+      "statistics": "Statistics"
+    },
+    "globalSubtabs": {
+      "time": "Time",
+      "wins": "Wins",
+      "loses": "Loses",
+      "elo": "Elo"
+    },
+    "localTitles": {
+      "historial": "Match History ({{username}})",
+      "time": "By Duration — Shortest First ({{username}})",
+      "wins": "Wins — Most Recent First ({{username}})",
+      "loses": "Loses — Most Recent First ({{username}})"
+    },
+    "globalTitles": {
+      "time": "Fastest Games — World Top 20",
+      "wins": "Most Wins — World Top 20",
+      "loses": "Fewest Losses — World Top 20",
+      "elo": "Elo Ranking — World Top 20"
+    },
+    "table": {
+      "pos": "POS",
+      "player1": "PLAYER 1",
+      "player2": "PLAYER 2",
+      "result": "RESULT",
+      "time": "TIME",
+      "replay": "Replay"
+    }
+  },
+  "help": {
+    "title": "HELP",
+    "tabs": {
+      "mainMenu": "Main Menu",
+      "account": "Account",
+      "gameRules": "Game Rules"
+    },
+    "mainMenu": {
+      "title": "Main Menu",
+      "welcome": "Welcome to Game Y. Here, you will obtain a complete help support.",
+      "whatIsGameY": "What is Game Y?",
+      "whatIsGameYText": "Game Y is a strategy board game. Each player is assigned two opposite sides of the board and must connect them with a consecutive chain of their pieces.",
+      "gettingStarted": "Getting started",
+      "gettingStartedItem1": "From the main menu you can log in to your account or create a new one.",
+      "gettingStartedItem2": "You can also play as a guest.",
+      "gettingStartedItem3": "Once inside, select your game mode and board size to start playing.",
+      "moreInfo": "Select the help window for each specific feature for more information."
+    },
+    "gameRules": {
+      "title": "Game Rules",
+      "objective": "Objective",
+      "objectiveText": "Connect all three sides of the board with a consecutive chain before your opponent does.",
+      "takingTurns": "Taking turns",
+      "takingTurnsText1": "Players alternate placing one piece per turn on any empty cell of the board.",
+      "takingTurnsText2": "Once placed, pieces cannot be moved or removed.",
+      "takingTurnsText3": "The player turn is indicated on the screen.",
+      "winning": "Winning",
+      "winningText": "The first player to connect all three side wins. The game ends immediately when a winner is detected.",
+      "timer": "Timer",
+      "timerText1": "Each match has a timer running from the start.",
+      "timerText2": "Your total time is recorded at the end of the game and used in the rankings if you are logged in."
+    },
+    "account": {
+      "title": "Account",
+      "intro": "You can play Game Y as a guest or with a registered account.",
+      "playAsGuest": "Play as Guest",
+      "playAsGuestText1": "Play a game immediately without creating an account.",
+      "playAsGuestText2": "Your matches won't be saved and you won't appear in the rankings.",
+      "createAccount": "Create an account",
+      "createAccountText": "Register with your email to get a persistent profile. Once registered, all your wins, losses, and best times will be recorded.",
+      "logIn": "Log in",
+      "logInText1": "Log in with your email and password to access your full profile.",
+      "logInText2": "Your match history, stats, and ranking position are all tied to your account.",
+      "logOut": "Log out",
+      "logOutText": "You can log out at any time from the user menu in the top right corner."
+    }
+  },
+  "gameWindow": {
+    "gameFinished": "Game finished! {{winner}} won.",
+    "totalTime": "Total time: {{time}}",
+    "returnToSelection": "Return to game Selection"
+  },
+  "rightPanel": {
+    "timer": "Timer",
+    "players": "Players",
+    "yourTurn": "YOUR TURN",
+    "waiting": "WAITING",
+    "human": "Human",
+    "bot": "Bot",
+    "player1": "Player 1",
+    "player2": "Player 2"
+  },
+  "replay": {
+    "title": "REPLAY",
+    "noMoveData": "No move data available for this match.\nOnly games played after this feature was added can be replayed.",
+    "result": "Result",
+    "duration": "Duration",
+    "totalMoves": "Total moves",
+    "move": "Move"
+  },
+  "statistics": {
+    "totalGames": "Total Games",
+    "wins": "Wins",
+    "winRate": "Win Rate",
+    "streak": "Streak",
+    "fastestWin": "Fastest Win",
+    "avgDuration": "Avg Duration",
+    "winLossRatio": "Win / Loss Ratio",
+    "headToHead": "Head-to-Head vs Top Opponents",
+    "noOpponentData": "No opponent data",
+    "eloEvolution": "ELO Evolution",
+    "matchLabel": "Match #",
+    "recentForm": "Recent Form — last {{count}} games",
+    "noMatchData": "No match data yet. Play some games to see your statistics!"
+  }
+}

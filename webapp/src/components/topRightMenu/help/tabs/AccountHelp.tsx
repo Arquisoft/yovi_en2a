@@ -1,42 +1,39 @@
+import { useTranslation } from 'react-i18next';
 import playGuest from '../../../../assets/play_guest.png';
 import register from '../../../../assets/register.png';
 import login from '../../../../assets/login.png';
 
 export default function AccountHelp() {
+  const { t } = useTranslation();
+
   return (
     <div>
-      <h2>Account</h2>
-      <p> You can play Game Y as a guest or with a registered account. </p>
+      <h2>{t('help.account.title')}</h2>
+      <p>{t('help.account.intro')}</p>
 
       <section>
-        <h3>Play as Guest</h3>
-        <p> Play a game immediately without creating an account. </p>
-        <p> Your matches won't be saved and you won't appear in the rankings.</p>
-
+        <h3>{t('help.account.playAsGuest')}</h3>
+        <p>{t('help.account.playAsGuestText1')}</p>
+        <p>{t('help.account.playAsGuestText2')}</p>
         <img src={playGuest} alt="Main menu" />
       </section>
 
       <section>
-        <h3>Create an account</h3>
-        <p>
-          Register with your email to get a persistent profile. 
-          Once registered, all your wins, losses, and best times will be recorded.
-        </p>
+        <h3>{t('help.account.createAccount')}</h3>
+        <p>{t('help.account.createAccountText')}</p>
         <img src={register} alt="Registration window" />
       </section>
 
       <section>
-        <h3>Log in</h3>
-        <p>Log in with your email and password to access your full profile. </p>
+        <h3>{t('help.account.logIn')}</h3>
+        <p>{t('help.account.logInText1')}</p>
         <img src={login} alt="Log in window" />
-        <p> Your match history, stats, and ranking position are all tied to your account.</p>
+        <p>{t('help.account.logInText2')}</p>
       </section>
 
       <section>
-        <h3>Log out</h3>
-        <p>
-          You can log out at any time from the user menu in the top right corner.
-        </p>
+        <h3>{t('help.account.logOut')}</h3>
+        <p>{t('help.account.logOutText')}</p>
       </section>
     </div>
   );

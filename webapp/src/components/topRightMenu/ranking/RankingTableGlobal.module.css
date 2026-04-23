@@ -18,8 +18,10 @@
 .rankingList {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow-y: auto;
   padding-right: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
 }
 
 /* GRID LAYOUT: 3.5rem (POS) | 1fr (NAME) | 4.5rem (METRIC) */

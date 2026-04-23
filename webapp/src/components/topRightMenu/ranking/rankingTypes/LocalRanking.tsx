@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useUser } from "../../../../contexts/UserContext";
 import type { RankingElementLocal } from "../rankingElements/RankingElementLocal";
 import RankingTableLocal from "../RankingTableLocal";
@@ -9,22 +10,15 @@ import styles from './LocalRanking.module.css';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-const LOCAL_SUBTABS = [
-  { id: 'historial',   label: 'Historial'   },
-  { id: 'time',        label: 'Time'        },
-  { id: 'wins',        label: 'Wins'        },
-  { id: 'loses',       label: 'Loses'       },
-  { id: 'statistics',  label: 'Statistics'  },
-] as const;
-
-type SubTabId = typeof LOCAL_SUBTABS[number]['id'];
+const LOCAL_SUBTABS = ['historial', 'time', 'wins', 'loses', 'statistics'] as const;
+type SubTabId = typeof LOCAL_SUBTABS[number];
 
 const getDisplayData = (data: RankingElementLocal[], subTab: SubTabId): RankingElementLocal[] => {
   switch (subTab) {
     case 'historial':
-      return [...data].reverse(); // most recent first
+      return [...data].reverse();
     case 'time':
-      return [...data].sort((a, b) => a.time - b.time); // shortest first
+      return [...data].sort((a, b) => a.time - b.time);
     case 'wins':
       return [...data].filter(m => m.result.toLowerCase().includes('win')).reverse();
     case 'loses':
@@ -34,17 +28,8 @@ const getDisplayData = (data: RankingElementLocal[], subTab: SubTabId): RankingE
   }
 };
 
-const getTitle = (subTab: SubTabId, username: string): string => {
-  switch (subTab) {
-    case 'historial':   return `Match History (${username})`;
-    case 'time':        return `By Duration — Shortest First (${username})`;
-    case 'wins':        return `Wins — Most Recent First (${username})`;
-    case 'loses':       return `Loses — Most Recent First (${username})`;
-    case 'statistics':  return '';
-  }
-};
-
 export const LocalRanking = () => {
+  const { t } = useTranslation();
   const [data, setData] = useState<RankingElementLocal[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeSubTab, setActiveSubTab] = useState<SubTabId>('historial');
@@ -76,19 +61,24 @@ export const LocalRanking = () => {
   }, []);
 
   if (loading) {
-    return <div className={styles.loadingContainer}>Loading history...</div>;
+    return <div className={styles.loadingContainer}>{t('rankings.loading')}</div>;
   }
 
   if (!user) {
     return (
       <div className={styles.notLoggedContainer}>
-        <p className={styles.notLoggedText}>(You are not logged yet)</p>
-        <button onClick={() => navigate('/login')} className={styles.loginButton}>Login</button>
+        <p className={styles.notLoggedText}>{t('rankings.notLogged')}</p>
+        <button onClick={() => navigate('/login')} className={styles.loginButton}>{t('rankings.login')}</button>
       </div>
     );
   }
 
   const displayed = getDisplayData(data, activeSubTab);
+
+  const getTitle = (subTab: SubTabId): string => {
+    if (subTab === 'statistics') return '';
+    return t(`rankings.localTitles.${subTab}`, { username: user.username });
+  };
 
   return (
     <>
@@ -99,11 +89,11 @@ export const LocalRanking = () => {
       <nav className={styles.subMenu}>
         {LOCAL_SUBTABS.map(tab => (
           <button
-            key={tab.id}
-            className={`${styles.subTabBtn} ${activeSubTab === tab.id ? styles.active : ''}`}
-            onClick={() => setActiveSubTab(tab.id)}
+            key={tab}
+            className={`${styles.subTabBtn} ${activeSubTab === tab ? styles.active : ''}`}
+            onClick={() => setActiveSubTab(tab)}
           >
-            {tab.label}
+            {t(`rankings.localSubtabs.${tab}`)}
           </button>
         ))}
       </nav>
@@ -114,7 +104,7 @@ export const LocalRanking = () => {
         ) : (
           <RankingTableLocal
             data={displayed}
-            title={getTitle(activeSubTab, user.username)}
+            title={getTitle(activeSubTab)}
             onReplay={setReplayMatch}
           />
         )}

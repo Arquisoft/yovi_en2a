@@ -1,6 +1,7 @@
 import "./GameWindow.css";
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom"; 
+import { useParams, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import TopLeftHeader from "../topLeftHeader/TopLeftHeader";
 import TopRightMenu from "../topRightMenu/TopRightMenu";
 import Board from "./board/Board";
@@ -20,13 +21,13 @@ export type Move = {
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// Función para convertir "02:30" a 150 segundos
 const timeToSeconds = (timeStr: string) => {
   const [mins, secs] = timeStr.split(":").map(Number);
   return mins * 60 + secs;
 };
 
 const GameWindow = () => {
+  const { t } = useTranslation();
   const { size: urlSize, mode: urlMode } = useParams();
   const navigate = useNavigate();
   const { user: currentUser } = useUser();
@@ -35,15 +36,14 @@ const GameWindow = () => {
   const size = urlSize ? Number.parseInt(urlSize, 10) : 8;
   const mode = urlMode;
   const isMultiplayer = mode === "multi" || mode === "why_not";
-  const player1 = currentUser ? currentUser.username : "Player 1";
-  const player2 = isMultiplayer ? "Player 2" : mode+"";
+  const player1 = currentUser ? currentUser.username : t('rightPanel.player1');
+  const player2 = isMultiplayer ? t('rightPanel.player2') : mode+"";
 
   const [game, setGame] = useState<Game>(new Game(size, player1, player2));
   const [loading, setLoading] = useState(false);
   const [paused, setPaused] = useState(false);
   const [showMobilePanel, setShowMobilePanel] = useState(false);
 
-  // NUEVO ESTADO: Controla el mensaje del modal. Si es null, el modal está oculto.
   const [modalMessage, setModalMessage] = useState<string | null>(null);
 
   const { formattedTime, resetTimer } = useTimer(!paused && !game.gameOver);
@@ -61,7 +61,7 @@ const GameWindow = () => {
 
   async function createGame() {
     setLoading(true);
-    setModalMessage(null); // Ocultamos el modal al reiniciar
+    setModalMessage(null);
     try {
       const variant = mode === "why_not" ? "why_not" : undefined;
       const data = await createMatch(player1, player2, size, variant);
@@ -78,27 +78,21 @@ const GameWindow = () => {
     }
   }
 
-  // --- NUEVA FUNCIÓN PARA GESTIONAR EL FINAL DEL JUEGO ---
-  // finishedMoves must be passed in explicitly — reading game.moves here would give
-  // the stale snapshot from before the winning move was added.
   const handleGameOver = (isPlayer1Winner: boolean, finishedMoves: Move[]) => {
     const winnerName = isPlayer1Winner ? player1 : player2;
-    setModalMessage(`Game finished! ${winnerName} won.`);
+    setModalMessage(t('gameWindow.gameFinished', { winner: winnerName }));
     if (isPlayer1Winner) {
       playGameVictorySound();
     } else {
       playGameOverSound();
     }
 
-    // Solo guardamos datos si hay un usuario logueado
     if (currentUser && game.matchId) {
       const timeInSeconds = timeToSeconds(formattedTime);
       const resultString = isPlayer1Winner ? "Win" : "Loss";
 
-      // 1. Actualizar el ranking del usuario
       updateScore(currentUser.email, currentUser.username, isPlayer1Winner, timeInSeconds);
 
-      // 2. Guardar el historial de la partida (Requiere endpoint en Rust)
       const movesAsCoords = finishedMoves.map(m => toXYZ(m.row, m.col, size));
       saveMatch(game.matchId, currentUser.email, player2, resultString, timeInSeconds, movesAsCoords);
     }
@@ -122,7 +116,6 @@ const GameWindow = () => {
       playMoveSound();
 
       if (data.game_over) {
-        // In standard Y the mover wins; in WhY not the mover LOSES (opponent wins).
         const moverIsP1 = game.turn === 0;
         const isP1Winner = mode === "why_not" ? !moverIsP1 : moverIsP1;
         handleGameOver(isP1Winner, updatedGame.moves);
@@ -153,17 +146,16 @@ const GameWindow = () => {
 
       const pos = fromXYZ(x, y, z, game.size);
       const botGame = cloneGame(currentGame);
-      
+
       botGame.addMove(pos.row, pos.col);
       botGame.setGameOver(botData.game_over);
       setGame(botGame);
       playMoveSound();
 
       if (botData.game_over) {
-          handleGameOver(false, botGame.moves); // Falso porque ganó el Bot (Jugador 2)
+          handleGameOver(false, botGame.moves);
       }
     } finally {
-      // Dejamos de cargar si el bot ha terminado
     }
   }
 
@@ -178,7 +170,7 @@ const GameWindow = () => {
             onClick={() => setShowMobilePanel(!showMobilePanel)}>
             {showMobilePanel ? "✕" : "☰"}
       </button>
-      
+
       <div className="center-area">
 
         <Board
@@ -197,7 +189,6 @@ const GameWindow = () => {
         </div>
       </div>
 
-      {/* --- EL MODAL DE VICTORIA --- */}
       {modalMessage && (
           <div className={modalStyles.modalOverlay}>
             <div className={modalStyles.modalContent}>
@@ -208,12 +199,12 @@ const GameWindow = () => {
                 ✕
               </button>
               <h2>{modalMessage}</h2>
-              <p>Total time: {formattedTime}</p>
+              <p>{t('gameWindow.totalTime', { time: formattedTime })}</p>
               <button
                   className={modalStyles.returnBtn}
                   onClick={() => navigate('/gameSelection')}
               >
-                Return to game Selection
+                {t('gameWindow.returnToSelection')}
               </button>
             </div>
           </div>

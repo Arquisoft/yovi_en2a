@@ -1,31 +1,26 @@
+import { useTranslation } from 'react-i18next';
+
 export default function MainMenuHelp() {
+  const { t } = useTranslation();
+
   return (
     <div>
-      <h2>Main Menu</h2>
-      <p>
-        Welcome to Game Y. Here, you will obtain a complete help support.
-      </p>
+      <h2>{t('help.mainMenu.title')}</h2>
+      <p>{t('help.mainMenu.welcome')}</p>
 
       <section>
-        <h3>What is Game Y?</h3>
-        <p>
-          Game Y is a strategy board game. Each player is assigned two opposite 
-          sides of the board and must connect them with a consecutive chain 
-          of their pieces.
-        </p>
+        <h3>{t('help.mainMenu.whatIsGameY')}</h3>
+        <p>{t('help.mainMenu.whatIsGameYText')}</p>
       </section>
 
       <section>
-        <h3>Getting started</h3>
+        <h3>{t('help.mainMenu.gettingStarted')}</h3>
         <ul>
-          <li>From the main menu you can log in to your account or create a new one. </li>
-          <li>You can also play as a guest.</li>
-          <li>Once inside, select your game mode and board size to start playing.</li>
+          <li>{t('help.mainMenu.gettingStartedItem1')}</li>
+          <li>{t('help.mainMenu.gettingStartedItem2')}</li>
+          <li>{t('help.mainMenu.gettingStartedItem3')}</li>
         </ul>
-
-        <p>
-          Select the help window fot each specific feature for more information.
-        </p>
+        <p>{t('help.mainMenu.moreInfo')}</p>
       </section>
     </div>
   );

@@ -1,5 +1,5 @@
-import accountStyles from './AccountSettings.module.css';
 import type { SettingsSection } from "./SettingsStrategy";
+import AccountSettingsPanel from "./AccountSettingsPanel";
 
 export class AccountSettings implements SettingsSection {
   id = 'account';
@@ -23,53 +23,13 @@ export class AccountSettings implements SettingsSection {
   }
 
   render() {
-    if (!this.isLoggedIn) {
-      return (
-        <div className={accountStyles.accountPanel}>
-          <div className={accountStyles.profileCard}>
-            <div className={accountStyles.avatarGuest}>?</div>
-            <div className={accountStyles.profileInfo}>
-              <span className={accountStyles.profileName}>Guest</span>
-              <span className={accountStyles.profileStatus}>Not logged in</span>
-            </div>
-          </div>
-
-          <p className={accountStyles.hint}>
-            Log in to save your match history and appear in global rankings.
-          </p>
-
-          <button
-            className={accountStyles.primaryBtn}
-            onClick={() => this.navigate('/login')}
-          >
-            Log In
-          </button>
-        </div>
-      );
-    }
-
-    const initial = this.username?.[0]?.toUpperCase() ?? '?';
-
     return (
-      <div className={accountStyles.accountPanel}>
-        <div className={accountStyles.profileCard}>
-          <div className={accountStyles.avatar}>{initial}</div>
-          <div className={accountStyles.profileInfo}>
-            <span className={accountStyles.profileName}>{this.username}</span>
-            <span className={accountStyles.profileBadge}>● Active session</span>
-          </div>
-        </div>
-
-        <button
-          className={accountStyles.dangerBtn}
-          onClick={async () => {
-            this.navigate('/');
-            await this.logout();
-          }}
-        >
-          Log Out
-        </button>
-      </div>
+      <AccountSettingsPanel
+        isLoggedIn={this.isLoggedIn}
+        username={this.username}
+        navigate={this.navigate}
+        logout={this.logout}
+      />
     );
   }
 }
