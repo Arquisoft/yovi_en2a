@@ -55,6 +55,7 @@ export interface ExecuteMoveRequest {
     coord_x: number;
     coord_y: number;
     coord_z: number;
+    player_id: number;
 }
 
 export interface ExecuteMoveResponse {
@@ -188,10 +189,10 @@ export function joinOnlineMatch(
     return postJson(`${GAME}/joinMatch`, req);
 }
 
-export function executeMove(
+export function executeMoveOnline(
     req: ExecuteMoveRequest
 ): Promise<ExecuteMoveResponse> {
-    return postJson(`${GAME}/executeMove`, req);
+    return postJson(`${GAME}/executeMoveOnline`, req);
 }
 
 export function getMatchStatus(matchId: string): Promise<MatchStatusResponse> {

@@ -27,7 +27,7 @@ import {useServerCountdown} from "./UseServerCountdown.ts";
 
 import {
     claimForfeit,
-    executeMove,
+    executeMoveOnline,
     extractOccupiedFromYen,
     getMatchStatus,
     getMatchTurnInfo,
@@ -100,6 +100,8 @@ const GameWindowOnline = () => {
 
     const sendingRef = useRef(false);
     sendingRef.current = sending;
+
+    const turnExpireSentForRef = useRef<string | null>(null);
 
     // --- Bootstrap: fetch authoritative match info (size, turn start). ---
     useEffect(() => {
@@ -223,6 +225,7 @@ const GameWindowOnline = () => {
     const meDisplay = currentUser?.username
         ?? displayNameFor(myPlayerId, mySeat);
     const oppDisplay = displayNameFor(oppPlayerId, (1 - mySeat) as 0 | 1);
+
 
     // --- Persist outcome in DB (winner only). ---
     const persistOutcome = useCallback(async (
@@ -371,11 +374,12 @@ const GameWindowOnline = () => {
             setSending(true);
             try {
                 const { x, y, z } = toXYZ(row, col, g.size);
-                const res = await executeMove({
+                const res = await executeMoveOnline({
                     match_id: g.matchId,
                     coord_x: x,
                     coord_y: y,
                     coord_z: z,
+                    player_id: mySeat,
                 });
 
                 const updated = cloneGame(g);
@@ -406,14 +410,38 @@ const GameWindowOnline = () => {
         return empty[Math.floor(Math.random() * empty.length)];
     }, []);
 
+    // Momento en que este cliente entró en el turno actual (key = epoch).
+    const myTurnEnteredAtRef = useRef<{ epoch: string; at: number } | null>(null);
+
+// Mantener sincronizado: cada vez que cambia el epoch Y es mi turno, guarda el timestamp.
+    useEffect(() => {
+        if (game.gameOver || graceActive) return;
+        if (game.turn !== mySeat) {
+            // No es mi turno: resetea el "desde cuándo".
+            myTurnEnteredAtRef.current = null;
+            return;
+        }
+        const epoch = `${game.matchId}:${game.moves.length}`;
+        if (myTurnEnteredAtRef.current?.epoch !== epoch) {
+            myTurnEnteredAtRef.current = { epoch, at: Date.now() };
+        }
+    }, [game.turn, game.matchId, game.moves.length, game.gameOver, graceActive, mySeat]);
+
+
     const onTurnExpire = useCallback(() => {
         const g = gameRef.current;
         if (g.gameOver || g.turn !== mySeat) return;
         if (sendingRef.current) return;
 
+        const epoch = `${g.matchId}:${g.moves.length}`;
+        const entered = myTurnEnteredAtRef.current;
+        if (!entered || entered.epoch !== epoch) return;
+        if (Date.now() - entered.at < 2000) return;   // la defensa que ya tenías
+        if (turnExpireSentForRef.current === epoch) return;
+        turnExpireSentForRef.current = epoch;
+
         const cell = pickRandomEmpty();
-        if (!cell) return;
-        void handlePlace(cell.row, cell.col);
+        if (cell) void handlePlace(cell.row, cell.col);
     }, [mySeat, handlePlace, pickRandomEmpty]);
 
     const turnEpoch = `${game.matchId}:${game.moves.length}`;

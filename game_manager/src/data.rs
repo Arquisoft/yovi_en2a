@@ -149,6 +149,15 @@
         pub coord_z: u32,
     }
 
+    #[derive(Deserialize)]
+    pub struct MoveRequestOnline {
+        pub match_id: String,
+        pub coord_x: u32,
+        pub coord_y: u32,
+        pub coord_z: u32,
+        pub player_id: u8,
+    }
+
     #[derive(Serialize)]
     pub struct MoveResponse {
         pub match_id: String,

@@ -63,6 +63,7 @@ export function useServerCountdown({
     useEffect(() => {
         if (!matchId) return;
         firedRef.current = false;
+        anchorRef.current = null;
         let cancelled = false;
 
         (async () => {

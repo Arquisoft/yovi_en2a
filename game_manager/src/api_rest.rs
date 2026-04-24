@@ -1,8 +1,9 @@
 use crate::redis_client;
 use crate::data::{EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, Match, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, SaveMatchRequest, SaveMatchResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN, CreateOnlineMatchRequest, CreateOnlineMatchResponse,
-                  JoinOnlineMatchRequest, JoinOnlineMatchResponse, UpdateOnlineMatchRequest, UpdateOnlineMatchResponse };
+                  JoinOnlineMatchRequest, JoinOnlineMatchResponse, UpdateOnlineMatchRequest, UpdateOnlineMatchResponse, MoveRequestOnline };
 
 use std::net::SocketAddr;
+use std::ops::Deref;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::net::TcpListener;
@@ -613,6 +614,7 @@ pub fn build_router(state: Arc<AppState>) -> Router {
     Router::new()
         .route("/new", post(create_match))
         .route("/executeMove", post(execute_move))
+        .route("/executeMoveOnline", post(execute_move_online))
         .route("/reqBotMove", post(request_bot_move))
         .route("/debug/redis", get(dump_redis))
         .route("/localRankings", post(get_local_rankings))
@@ -628,6 +630,50 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/claimForfeit/{match_id}", post(claim_forfeit))
         .with_state(state)
 }
+
+
+async fn execute_move_online(
+    State(state): State<Arc<AppState>>,
+    Json(payload): Json<MoveRequestOnline>,
+) -> Result<Json<MoveResponse>, (StatusCode, String)> {
+
+    let current_yen_json = redis_client::get_match_state(&state.redis_pool, &payload.match_id)
+        .await
+        .map_err(|_| (StatusCode::NOT_FOUND, "Match not found".to_string()))?;
+
+    let current_yen: serde_json::Value = serde_json::from_str(&current_yen_json)
+        .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
+    
+    let turn = current_yen
+        .get("turn")
+        .and_then(|v| v.as_u64())
+        .ok_or((
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Invalid board state: missing 'turn' field".to_string(),
+        ))?;
+
+    if turn == payload.player_id as u64{
+        execute_move(
+            State(state),
+            Json(MoveRequest {
+                match_id: payload.match_id,
+                coord_x: payload.coord_x,
+                coord_y: payload.coord_y,
+                coord_z: payload.coord_z,
+            }),
+        )
+            .await
+    } else {
+        Err((
+            StatusCode::FORBIDDEN,
+            format!(
+                "Not your turn. Current turn: {}, your player_id: {}",
+                turn, payload.player_id
+            ),
+        ))
+    }
+}
+
 
 pub async fn run() {
     let redis_host = std::env::var("REDIS_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
