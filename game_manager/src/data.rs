@@ -236,3 +236,39 @@ pub struct SaveMatchResponse {
         /// The winner's symbol ("B" or "R") if the game is over, otherwise null.
         pub winner: Option<String>,
     }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_yen_new_accessors() {
+        let yen = YEN::new(3, 1, vec!['B', 'R'], "B/RR/BBB".to_string());
+        assert_eq!(yen.size(), 3);
+        assert_eq!(yen.turn(), 1);
+        assert_eq!(yen.players(), &['B', 'R']);
+        assert_eq!(yen.layout(), "B/RR/BBB");
+    }
+
+    #[test]
+    fn test_yen_new_with_variant_some() {
+        let yen = YEN::new_with_variant(4, 0, vec!['B', 'R'], "B/RR/BBB/....".to_string(), Some("why_not".to_string()));
+        assert_eq!(yen.size(), 4);
+        assert_eq!(yen.layout(), "B/RR/BBB/....");
+    }
+
+    #[test]
+    fn test_yen_new_with_variant_none() {
+        let yen = YEN::new_with_variant(2, 0, vec!['B', 'R'], "B/RR".to_string(), None);
+        assert_eq!(yen.size(), 2);
+        assert_eq!(yen.turn(), 0);
+    }
+
+    #[test]
+    fn test_coordinates_fields() {
+        let c = Coordinates { x: 1, y: 2, z: 3 };
+        assert_eq!(c.x, 1);
+        assert_eq!(c.y, 2);
+        assert_eq!(c.z, 3);
+    }
+}
