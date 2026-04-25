@@ -53,6 +53,8 @@ endif::arc42help[]
 * After the match finishes, the system must display an end-game summary screen including relevant statistics such as match duration, number of moves, difficulty level, and winner.
 * The application must allow users to view rankings, including local and global rankings.
 * The system must provide a tutorial or help section explaining the rules of Game Y and how to interact with the interface.
+* The application must support multiple game modes, including local 2-player and variant rule sets.
+* The interface must support multiple languages.
 
 ==== Related to the AI Service
 
@@ -101,7 +103,7 @@ endif::arc42help[]
 | The system shall correctly implement the classic version of Game Y, including win-condition verification for any supported board size. All user-facing features (play game, select strategy, view statistics) and API operations shall behave according to the specified requirements.
 
 | Performance Efficiency
-| For a standard match, the system shall return a computer move or API response within 1 second under normal load. The architecture shall support at least 20 concurrent players without noticeable degradation in responsiveness.
+| For a standard match, the system shall return a computer move or API response within 2 seconds under normal load. The architecture shall support at least 20 concurrent players without noticeable degradation in responsiveness.
 
 | Reliability
 | The system shall consistently determine correct game outcomes and suggested moves, with an error rate of less than 1% in win detection or AI move generation. User data and match history shall not be lost during normal operation.

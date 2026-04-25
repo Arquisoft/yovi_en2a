@@ -17,7 +17,7 @@ Before(async function () {
   const devtools = false
 
   this.browser = await chromium.launch({ headless, slowMo, devtools })
-  this.page = await this.browser.newPage()
+  this.page = await this.browser.newPage({ locale: 'en-US' })
 })
 
 After(async function () {

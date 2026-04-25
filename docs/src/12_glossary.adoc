@@ -51,4 +51,9 @@ endif::arc42help[]
 |Session Cookie |An `httpOnly`, `Secure`, `SameSite=Lax` cookie named `sessionId` set by the Users Gateway after a successful login or registration. Its value is an opaque random ID pointing to the user's session record in Redis.
 |sslip.io |A wildcard DNS service that maps IP-based subdomains (e.g. `20-250-145-156.sslip.io`) to their embedded IP address. Used to give the Azure VM a resolvable domain name so Let's Encrypt can issue a certificate without a custom domain purchase.
 |YEN Notation |Project-specific JSON-based format used for serializing board states and moves between the frontend and backend subsystems.
+|Game Y |Abstract strategy board game played on a triangular hexagonal grid. The goal is to connect all three sides of the board with a continuous chain of pieces.
+|Why Not |A variant of Game Y in which the player who completes the winning connection loses instead of winning. Also known as the reverse or "last player loses" rule.
+|ELO |A numerical rating system used to rank players based on match outcomes. A win increases the rating; a loss decreases it.
+|SPA |Single Page Application. A web application that loads a single HTML page and dynamically updates content without full page reloads. Used to refer to the React frontend.
+|i18n |Abbreviation for internationalisation. The process of adapting software to support multiple languages without code changes. In this system it is implemented via the react-i18next library, with translations stored in dedicated locale files (`en.json`, `es.json`) and selectable from the settings menu at runtime.
 |===

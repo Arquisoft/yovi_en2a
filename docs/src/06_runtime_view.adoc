@@ -178,11 +178,9 @@ Gateway --> Client : New Board State
 ....
 
 === Bot Move
-This scenario covers automated gameplay. It is typically triggered internally by the Game Manager once a player's turn is completed.
+This scenario covers automated gameplay. It is triggered by the frontend as a second HTTP call immediately after the player's move response returns — the Game Manager does not initiate it automatically.
 
-Decision Making: The Bot Logic within the Engine calculates the optimal response.
-
-Asynchronous Sync: The resulting state is synchronized with the Redis cache so the player sees the bot's reaction upon their next refresh or through a socket.
+Two-step flow: After the player move response confirms the game is not over, the frontend calls `/reqBotMove`. The Game Manager reads the current state from Redis, requests the bot move from the Gamey Engine, writes the result back to Redis, and returns the bot's coordinates. The player sees the update as part of this second response — no polling, refresh, or WebSocket is involved.
 
 [plantuml, target=runtime_bot_move, format=png]
 ....
@@ -197,17 +195,21 @@ skinparam DatabaseBorderColor #424242
 skinparam SequenceArrowColor #424242
 skinparam ActorBorderColor #424242
 
+actor "Player" as Client
+participant "Webapp\n(Frontend)" as WebApp
 participant "Game Manager" as GM
 participant "Gamey\n(Engine)" as Engine
-participant "Bot Logic" as Bot
 database "Redis" as Redis
 
-note over GM, Engine: Post-player move
+note over Client, Redis: Triggered immediately after player move response (game not over)
+Client -> WebApp : move registered on board
+WebApp -> GM : POST /reqBotMove
+GM -> Redis : Get Current State
 GM -> Engine : Request Bot Move (Bot Server)
-Engine -> Bot : Calculate Best Move
-Bot --> Engine : Return Move
-Engine --> GM : Bot Move Result
-GM -> Redis : Sync Bot State
+Engine --> GM : Bot Move Result + New State
+GM -> Redis : Update State (Cache)
+GM --> WebApp : Bot coordinates + game_over
+WebApp --> Client : Board updated with bot move
 @enduml
 ....
 

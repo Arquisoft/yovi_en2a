@@ -39,6 +39,8 @@ node "Azure VM\n(Docker Compose)" as Azure #F0F0F0 {
     rectangle "Game Manager\n(Rust/Axum :5000)" as GM #FFFFFF
     rectangle "Gamey Engine\n(Rust/Axum :4000)" as Gamey #FFFFFF
     database "Redis\n(:6379)" as Redis #F5F5F5
+    rectangle "Prometheus\n(:9090)" as Prometheus #FFFFFF
+    rectangle "Grafana\n(:9091)" as Grafana #FFFFFF
 }
 
 node "Google Cloud\n(Firebase Platform)" as GCP #E8F4FD {
@@ -56,6 +58,8 @@ AuthEng --> Firebase : credentials
 GM --> Gamey : game logic
 GM --> Redis : game state
 GM --> Firebase : match persistence
+Prometheus --> UsersAPI : scrape metrics
+Grafana --> Prometheus : query
 @enduml
 ....
 
@@ -81,6 +85,8 @@ Mapping of Building Blocks to Infrastructure::
 | **Gamey Engine** | Docker container running the Rust/Axum game engine and bot service on port 4000.
 | **Redis** | Docker container running Redis for in-memory game state caching on port 6379.
 | **Firebase Auth + Firestore** | Fully managed by Google Cloud (Firebase Platform). No self-hosted component.
+| **Prometheus** | Docker container scraping metrics from the Users API for operational monitoring.
+| **Grafana** | Docker container providing dashboards fed by Prometheus for visualizing system health.
 |===
 
 === Infrastructure Level 2
