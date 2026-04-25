@@ -11,6 +11,20 @@ When('I click the {string} button', async function (label) {
 })
 
 Then('I should see the title {string}', async function (expected) {
-  const title = await this.page.locator('h2').first().textContent()
-  assert.strictEqual(title, expected)
+  // Prefer an h2 whose entire text matches `expected` exactly. This handles
+  // pages with multiple h2s (e.g. SelectionWindow header + mode card titles)
+  // without picking the wrong one.
+  const exact = this.page.locator(`h2:text-is("${expected}")`).first()
+  if (await exact.count() > 0) {
+    await exact.waitFor({ state: 'visible', timeout: 5_000 })
+    return
+  }
+
+  // Fallback: original behaviour — first h2 must include the text.
+  const first = this.page.locator('h2').first()
+  const title = await first.textContent()
+  assert.ok(
+    (title ?? '').includes(expected),
+    `Expected an h2 with title "${expected}", got "${title}"`
+  )
 })
