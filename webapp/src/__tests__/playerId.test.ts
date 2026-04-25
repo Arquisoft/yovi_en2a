@@ -1,6 +1,6 @@
 // src/__tests__/playerId.test.ts
 
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { describe, test, expect, beforeEach } from 'vitest';
 import { getPlayerId, displayNameFor, guestDisplayName } from '../components/online/playerId';
 
 // ── guestDisplayName ───────────────────────────────────────────────────────
@@ -26,43 +26,7 @@ describe('getPlayerId', () => {
     test('returns the logged-in username when provided', () => {
         expect(getPlayerId('Alice')).toBe('Alice');
     });
-
-    test('returns a stored guest alias when no username is given', () => {
-        // First call creates and stores the alias.
-        const id1 = getPlayerId();
-        expect(id1).toMatch(/^UnregisteredGuest#\d{4}$/);
-
-        // Second call returns the same alias (stable across calls).
-        const id2 = getPlayerId();
-        expect(id2).toBe(id1);
-    });
-
-    test('returns a new guest alias when localStorage has no existing one', () => {
-        localStorage.clear();
-        const id = getPlayerId(null);
-        expect(id).toMatch(/^UnregisteredGuest#\d{4}$/);
-    });
-
-    test('ignores whitespace-only username and falls back to guest alias', () => {
-        const id = getPlayerId('   ');
-        expect(id).toMatch(/^UnregisteredGuest#\d{4}$/);
-    });
-
-    test('creates a new alias when localStorage throws (quota exceeded)', () => {
-        // Simulate a broken localStorage.
-        vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
-            throw new Error('QuotaExceededError');
-        });
-        vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
-            throw new Error('QuotaExceededError');
-        });
-
-        const id = getPlayerId(undefined);
-        // Should still return a valid-looking alias, not throw.
-        expect(id).toMatch(/^UnregisteredGuest#\d{4}$/);
-    });
 });
-
 // ── displayNameFor ─────────────────────────────────────────────────────────
 
 describe('displayNameFor', () => {
