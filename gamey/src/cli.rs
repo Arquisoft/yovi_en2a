@@ -94,11 +94,13 @@ pub fn run_cli_game() -> Result<()> {
     let variant = match args.variant.as_str() {
         "why_not" => GameVariant::WhyNot,
         "master_y" => GameVariant::MasterY,
+        "fortune_y" => GameVariant::FortuneY,
         _ => GameVariant::Standard,
     };
     match variant {
         GameVariant::WhyNot => println!("Variant: WhY not — connecting all three sides LOSES!"),
         GameVariant::MasterY => println!("Variant: Master Y — each player places two pieces per turn."),
+        GameVariant::FortuneY => println!("Variant: Fortune Y — a coin flip decides who plays next each turn."),
         GameVariant::Standard => {}
     }
     let mut game = game::GameY::new_with_variant(args.size, variant);

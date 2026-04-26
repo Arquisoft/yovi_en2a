@@ -1,6 +1,7 @@
 use crate::core::SetIdx;
 use crate::core::player_set::PlayerSet;
 use crate::{Coordinates, GameAction, GameYError, Movement, PlayerId, RenderOptions, YEN};
+use rand::Rng;
 use std::collections::HashMap;
 use std::fmt::Write;
 use std::path::Path;
@@ -16,7 +17,9 @@ pub enum GameVariant {
     /// Misère rules: connecting all three sides loses (the opponent wins).
     WhyNot,
     /// Each player places two pieces per turn instead of one.
-    MasterY
+    MasterY,
+    /// Before each move a coin decides who plays next (random player selection).
+    FortuneY
 }
 
 impl GameVariant {
@@ -24,6 +27,7 @@ impl GameVariant {
         match s {
             "why_not" => GameVariant::WhyNot,
             "master_y" => GameVariant::MasterY,
+            "fortune_y" => GameVariant::FortuneY,
             _ => GameVariant::Standard,
         }
     }
@@ -33,6 +37,7 @@ impl GameVariant {
             GameVariant::Standard => None,
             GameVariant::WhyNot => Some("why_not"),
             GameVariant::MasterY => Some("master_y"),
+            GameVariant::FortuneY => Some("fortune_y"),
         }
     }
 }
@@ -278,6 +283,10 @@ impl GameY {
                 } else {
                     player
                 }
+            }
+            GameVariant::FortuneY => {
+                let next_id: u32 = rand::rng().random_range(0..2);
+                PlayerId::new(next_id)
             }
             _ => other_player(player),
         }
@@ -1006,6 +1015,33 @@ mod tests {
         assert_eq!(restored.variant(), GameVariant::MasterY);
     }
 
+    // ── FortuneY ─────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_fortune_y_next_player_is_valid() {
+        let mut game = GameY::new_with_variant(5, GameVariant::FortuneY);
+        game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(2, 1, 1),
+        }).unwrap();
+        // After a move the next player must be either 0 or 1.
+        match &game.status {
+            GameStatus::Ongoing { next_player } => {
+                assert!(next_player.id() == 0 || next_player.id() == 1);
+            }
+            _ => panic!("Game should be ongoing"),
+        }
+    }
+
+    #[test]
+    fn test_fortune_y_yen_roundtrip() {
+        let mut game = GameY::new_with_variant(3, GameVariant::FortuneY);
+        game.add_move(Movement::Placement { player: PlayerId::new(0), coords: Coordinates::new(2, 0, 0) }).unwrap();
+        let yen: YEN = (&game).into();
+        assert_eq!(yen.variant(), Some("fortune_y"));
+        let restored = GameY::try_from(yen).unwrap();
+        assert_eq!(restored.variant(), GameVariant::FortuneY);
+    }
 
     // Test loading a YEN representation of a finished game
     #[test]
