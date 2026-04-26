@@ -24,7 +24,7 @@ pub mod error;
 pub mod state;
 pub mod version;
 mod req_res_formats;
-mod play;
+pub mod play;
 
 use axum::response::IntoResponse;
 use std::sync::Arc;
