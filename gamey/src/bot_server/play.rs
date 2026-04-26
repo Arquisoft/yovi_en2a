@@ -141,9 +141,11 @@ pub async fn player_play(
 /// On success, the [`Coordinates`](crate::Coordinates) chosen by the bot.
 /// On failure, a JSON [`ErrorResponse`] describing what went wrong.
 pub async fn play(
-    bot_id: &str,
+    bot_id: Option<&str>,
     Json(yen): Json<YEN>,
 ) -> Result<crate::Coordinates, Json<ErrorResponse>> {
+    let bot_id = bot_id.unwrap_or_else(|| "minimax_bot");
+
     let mut game = match GameY::try_from(yen.clone()) {
         Ok(g) => g,
         Err(err) => return Err(Json(ErrorResponse::error(
@@ -182,7 +184,7 @@ pub async fn play(
 #[derive(Deserialize)]
 pub struct PlayQuery {
     position: String,
-    bot_id: String,
+    bot_id: Option<String>,
 }
 
 /// GET handler at `/play?bot_id=<id>&position=<url-encoded JSON>`.
@@ -194,11 +196,10 @@ pub async fn play_get(
         Json(ErrorResponse::error(
             &format!("Invalid position query parameter: {}", err),
             Some("v1".to_string()),
-            Some(query.bot_id.clone()),
+            Some("bot".to_string()),
         ))
     })?;
-
-    let coords = play(&query.bot_id, Json(yen)).await?;
+    let coords = play(query.bot_id.as_deref(), Json(yen)).await?;
     Ok(Json(coords))
 }
 
@@ -294,7 +295,7 @@ mod tests {
         let bot_id = any_available_bot_id();
         let yen = YEN::new(3, 0, vec!['B', 'R'], empty_board_size_3());
 
-        let result = play(&bot_id, Json(yen)).await;
+        let result = play(Option::from(&*bot_id), Json(yen)).await;
 
         assert!(
             result.is_ok(),
@@ -307,7 +308,7 @@ mod tests {
     async fn test_play_unknown_bot_returns_error() {
         let yen = YEN::new(3, 0, vec!['B', 'R'], empty_board_size_3());
 
-        let result = play("__definitely_not_a_real_bot__", Json(yen)).await;
+        let result = play(Option::from("__definitely_not_a_real_bot__"), Json(yen)).await;
 
         let Json(err) = result.expect_err("unknown bot should produce an error");
         let msg = format!("{:?}", err);
@@ -329,7 +330,7 @@ mod tests {
         // Layout that does not match the declared size -> GameY::try_from must fail.
         let yen = YEN::new(3, 0, vec!['B', 'R'], "garbage-layout".to_string());
 
-        let result = play(&bot_id, Json(yen)).await;
+        let result = play(Option::from(&*bot_id), Json(yen)).await;
 
         let Json(err) = result.expect_err("invalid YEN should produce an error");
         let msg = format!("{:?}", err);
@@ -346,11 +347,24 @@ mod tests {
         let bot_id = any_available_bot_id();
         let yen = YEN::new(3, 1, vec!['B', 'R'], empty_board_size_3());
 
-        let result = play(&bot_id, Json(yen)).await;
+        let result = play(Option::from(&*bot_id), Json(yen)).await;
 
         assert!(
             result.is_ok(),
             "play should honor a non-zero turn on a non-terminal position, got: {:?}",
+            result.err().map(|Json(e)| e)
+        );
+    }
+
+    #[tokio::test]
+    async fn test_play_no_bot() {
+        let yen = YEN::new(3, 1, vec!['B', 'R'], empty_board_size_3());
+
+        let result = play(None, Json(yen)).await;
+
+        assert!(
+            result.is_ok(),
+            "play should honor a minimax bot, got: {:?}",
             result.err().map(|Json(e)| e)
         );
     }
