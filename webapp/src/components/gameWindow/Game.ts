@@ -18,6 +18,12 @@ export function fromXYZ(x: number, y: number, _z: number, size: number) {
   return { row, col };
 }
 
+function flatToRowColKey(idx: number): string {
+  let row = 0;
+  while ((row + 1) * (row + 2) / 2 <= idx) row++;
+  return `${row},${idx - row * (row + 1) / 2}`;
+}
+
 export class Game {
   size: number;
   matchId: string | null;
@@ -26,6 +32,8 @@ export class Game {
   moves: Move[];
   turn: 0 | 1;
   gameOver: boolean;
+  holeCells: Set<string>;
+  blockedCells: Set<string>;
 
   constructor(size: number, player1: string, player2: string) {
     this.size = size;
@@ -35,6 +43,8 @@ export class Game {
     this.moves = [];
     this.turn = 0;
     this.gameOver = false;
+    this.holeCells = new Set();
+    this.blockedCells = new Set();
   }
 
   setMatchId(id: string) {
@@ -46,6 +56,18 @@ export class Game {
     this.turn = this.turn === 0 ? 1 : 0;
   }
 
+  setTurn(turn: 0 | 1): void {
+    this.turn = turn;
+  }
+
+  setHoleCells(indices: number[]): void {
+    this.holeCells = new Set(indices.map((i) => flatToRowColKey(i)));
+  }
+
+  setBlockedCells(indices: number[]): void {
+    this.blockedCells = new Set(indices.map((i) => flatToRowColKey(i)));
+  }
+
   setGameOver(value: boolean): void {
     this.gameOver = value;
   }
@@ -55,6 +77,8 @@ export class Game {
     this.moves = [];
     this.turn = 0;
     this.gameOver = false;
+    this.holeCells = new Set();
+    this.blockedCells = new Set();
   }
 
   isOccupied(row: number, col: number): boolean {

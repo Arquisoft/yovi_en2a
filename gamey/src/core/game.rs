@@ -208,6 +208,19 @@ impl GameY {
         &self.holes
     }
 
+    /// Returns flat cell indices of all hole cells.
+    pub fn hole_indices(&self) -> Vec<u32> {
+        self.holes.iter().map(|c| c.to_index(self.board_size)).collect()
+    }
+
+    /// Returns the flat cell indices of all cells neighboring `coords`.
+    pub fn neighbor_indices(coords: Coordinates, board_size: u32) -> Vec<u32> {
+        Self::coords_neighbors(coords)
+            .into_iter()
+            .map(|c| c.to_index(board_size))
+            .collect()
+    }
+
 
     /// Returns the [`PlayerId`] of the player whose piece occupies `coords`,
     /// or `None` if the cell is empty.
@@ -693,10 +706,20 @@ impl TryFrom<YEN> for GameY {
             HashSet::new()
         };
 
+        // For TabuY reconstruct as Standard so that replaying historical moves
+        // in scan order does not trigger false tabu violations.
+        let reconstruct_variant = if variant == GameVariant::TabuY {
+            GameVariant::Standard
+        } else {
+            variant
+        };
+
+        let mut last_tabu: Option<(Coordinates, PlayerId)> = None;
+
         let mut ygame = if variant == GameVariant::HoleyY {
             GameY::new_holey_from_positions(game.size(), holes)
         } else {
-            GameY::new_with_variant(game.size(), variant)
+            GameY::new_with_variant(game.size(), reconstruct_variant)
         };
 
         for (row, row_str) in rows.iter().enumerate() {
@@ -714,17 +737,15 @@ impl TryFrom<YEN> for GameY {
                 let z = game.size() - 1 - x - y;
                 let coords = Coordinates::new(x, y, z);
                 match cell {
-                    'B' => {
-                        ygame.add_move(Movement::Placement {
-                            player: PlayerId::new(0),
-                            coords,
-                        })?;
+                    'B' | 'b' => {
+                        let player = PlayerId::new(0);
+                        ygame.add_move(Movement::Placement { player, coords })?;
+                        if *cell == 'b' { last_tabu = Some((coords, player)); }
                     }
-                    'R' => {
-                        ygame.add_move(Movement::Placement {
-                            player: PlayerId::new(1),
-                            coords,
-                        })?;
+                    'R' | 'r' => {
+                        let player = PlayerId::new(1);
+                        ygame.add_move(Movement::Placement { player, coords })?;
+                        if *cell == 'r' { last_tabu = Some((coords, player)); }
                     }
                     '.' | 'H' => {}
                     _ => {
@@ -737,6 +758,16 @@ impl TryFrom<YEN> for GameY {
                 }
             }
         }
+        // Restore TabuY variant with correct last-move history so future
+        // tabu checks reference the actual last placed stone.
+        if variant == GameVariant::TabuY {
+            ygame.variant = GameVariant::TabuY;
+            ygame.history.clear();
+            if let Some((coords, player)) = last_tabu {
+                ygame.history.push(Movement::Placement { player, coords });
+            }
+        }
+
         Ok(ygame)
     }
 }
@@ -751,11 +782,20 @@ impl From<&GameY> for YEN {
         let mut layout = String::new();
         let total_cells = (game.board_size * (game.board_size + 1)) / 2;
         let players = vec!['B', 'R'];
+        let last_tabu_coords: Option<Coordinates> = if game.variant == GameVariant::TabuY {
+            game.history.iter().rev().find_map(|m| match m {
+                Movement::Placement { coords, .. } => Some(*coords),
+                _ => None,
+            })
+        } else {
+            None
+        };
         for idx in 0..total_cells {
             let coords = Coordinates::from_index(idx, game.board_size);
+            let is_last_tabu = last_tabu_coords == Some(coords);
             let cell_char = match game.board_map.get(&coords) {
-                Some((_, player)) if player.id() == 0 => 'B',
-                Some((_, player)) if player.id() == 1 => 'R',
+                Some((_, player)) if player.id() == 0 => if is_last_tabu { 'b' } else { 'B' },
+                Some((_, player)) if player.id() == 1 => if is_last_tabu { 'r' } else { 'R' },
                 _ if game.holes.contains(&coords) => 'H',
                 _ => '.',
             };

@@ -5,6 +5,8 @@ import { Difficulty } from "./GameMode";
 export class WhyNotMode implements GameMode {
   showDifficulty = false;
 
+  showVariant = false;
+
   mode = "why_not";
 
   id = "why_not";

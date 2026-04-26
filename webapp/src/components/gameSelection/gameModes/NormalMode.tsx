@@ -7,6 +7,8 @@ import normal from "../../../assets/normal.png";
 export class NormalMode implements GameMode {
   showDifficulty = true;
 
+  showVariant = false;
+
   mode = "bot";
 
   id = "normal";

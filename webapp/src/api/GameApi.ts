@@ -1,7 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // Response: match_id:string
-export function createMatch(player1: string, player2: string, size: number, variant?: string) {
+export function createMatch(player1: string, player2: string, size: number, variant?: string, holeCount?: number) {
   return fetch(`${API_URL}/game/new`, {
     method: "POST",
     headers: {
@@ -12,6 +12,7 @@ export function createMatch(player1: string, player2: string, size: number, vari
       player2,
       size,
       ...(variant ? { variant } : {}),
+      ...(holeCount === undefined ? {} : { hole_count: holeCount }),
     }),
   }).then(async (res) => {
     const text = await res.text();

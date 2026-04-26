@@ -6,6 +6,15 @@ import { Difficulty as DifficultyValues } from "./GameMode";
 import styles from "./GameModeContainer.module.css";
 import imagenGameY from "../../../assets/background_image_gameY.png";
 
+const VARIANTS = [
+  { value: "standard", label: "Standard" },
+  { value: "why_not",  label: "Why Not"  },
+  { value: "master_y", label: "Master Y" },
+  { value: "fortune_y",label: "Fortune Y"},
+  { value: "tabu_y",   label: "Tabu Y"   },
+  { value: "holey_y",  label: "Holey Y"  },
+];
+
 type Props = {
   mode: GameMode;
 };
@@ -23,6 +32,8 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
   );
 
   const [currentSize, setCurrentSize] = useState(mode.size || 8);
+  const [currentVariant, setCurrentVariant] = useState("standard");
+  const [currentHoleCount, setCurrentHoleCount] = useState(Math.max(1, Math.floor((mode.size || 8) / 3)));
 
   const minSize = 4;
   const maxSize = 12;
@@ -114,15 +125,61 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
 
       </div>
 
+      {mode.showVariant && (
+        <div className={styles.variantSection}>
+          <span className={styles.difficultyLabel}>{t('gameSelection.variant', { defaultValue: 'Game Variant' })}</span>
+          <select
+            className={styles.variantSelect}
+            value={currentVariant}
+            onChange={(e) => setCurrentVariant(e.target.value)}
+          >
+            {VARIANTS.map((v) => (
+              <option key={v.value} value={v.value}>{v.label}</option>
+            ))}
+          </select>
+
+          {currentVariant === "holey_y" && (
+            <div className={styles.holeCountRow}>
+              <span className={styles.difficultyLabel}>{t('gameSelection.holes', { defaultValue: 'Holes' })}</span>
+              <div className={styles.difficultySelector}>
+                <button
+                  className={styles.arrow}
+                  onClick={() => setCurrentHoleCount((n) => Math.max(1, n - 1))}
+                  style={{ visibility: currentHoleCount > 1 ? "visible" : "hidden" }}
+                >←</button>
+                <div className={styles.difficultyBox}>{currentHoleCount}</div>
+                <button
+                  className={styles.arrow}
+                  onClick={() => setCurrentHoleCount((n) => Math.min(currentSize, n + 1))}
+                  style={{ visibility: currentHoleCount < currentSize ? "visible" : "hidden" }}
+                >→</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <button
         className={styles.playButton}
         onClick={() => {
           mode.currentLevel = currentDifficulty;
           mode.size = currentSize;
 
-          const navState = isGuest ? { state: { guest: true } } : undefined;
-          if (mode.showDifficulty) { navigate(`/play/${currentSize}/${currentDifficulty[1]}`, navState); }
-          else { navigate(`/play/${currentSize}/${mode.mode}`, navState); }
+          if (mode.showDifficulty) {
+            const navState = isGuest ? { state: { guest: true } } : undefined;
+            navigate(`/play/${currentSize}/${currentDifficulty[1]}`, navState);
+          } else if (mode.showVariant) {
+            const urlMode = currentVariant === "standard" ? "multi" : currentVariant;
+            const stateObj = {
+              ...(isGuest ? { guest: true } : {}),
+              ...(currentVariant === "holey_y" ? { holeCount: currentHoleCount } : {}),
+            };
+            const navOptions = Object.keys(stateObj).length > 0 ? { state: stateObj } : undefined;
+            navigate(`/play/${currentSize}/${urlMode}`, navOptions);
+          } else {
+            const navState = isGuest ? { state: { guest: true } } : undefined;
+            navigate(`/play/${currentSize}/${mode.mode}`, navState);
+          }
         }}
       >
         {t('gameSelection.play')}

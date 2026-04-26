@@ -10,6 +10,7 @@ const mockUseUser = vi.fn().mockReturnValue({ user: null, setUser: vi.fn() });
 vi.mock('react-router-dom', () => ({
   useParams: () => ({ size: '3', mode: 'bot' }),
   useNavigate: () => mockNavigate,
+  useLocation: () => ({ state: {} }),
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
 }));
 
@@ -96,7 +97,7 @@ describe('GameWindow component', () => {
     render(<GameWindow />);
 
     await waitFor(() => {
-      expect(createMatchSpy).toHaveBeenCalledWith('Player 1', 'bot', 3, undefined);
+      expect(createMatchSpy).toHaveBeenCalledWith('Player 1', 'bot', 3, undefined, undefined);
     });
   });
 

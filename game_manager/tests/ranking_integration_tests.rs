@@ -35,7 +35,7 @@ async fn test_full_ranking_and_match_lifecycle() {
 
     // --- 3. TEST: Update Score & ELO ---
     // This tests both insert_score (first time) and update_score logic
-    let update_res = update_score(&p1, "TesterName", true, 45.5).await;
+    let update_res = update_score(&p1, "TesterName", true, 0.001).await;
     assert!(update_res.is_ok(), "Failed to update player score");
 
     // --- 4. TEST: Global Rankings (Best Times) ---

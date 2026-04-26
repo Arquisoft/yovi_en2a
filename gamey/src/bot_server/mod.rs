@@ -33,8 +33,8 @@ pub use error::ErrorResponse;
 pub use version::*;
 use axum::{Json, http::StatusCode};
 
-use crate::{GameYError, RandomBot, GreedyBot, MinimaxBot, YBotRegistry, state::AppState, YEN, Coordinates, Movement, PlayerId, GameY};
-use crate::bot_server::req_res_formats::{ProcessMoveRequest, ProcessMoveResponse};
+use crate::{GameYError, GameVariant, RandomBot, GreedyBot, MinimaxBot, YBotRegistry, state::AppState, YEN, Coordinates, Movement, PlayerId, GameY};
+use crate::bot_server::req_res_formats::{ProcessMoveRequest, ProcessMoveResponse, InitGameRequest, InitGameResponse};
 
 /// Creates the Axum router with the given state.
 ///
@@ -51,6 +51,7 @@ pub fn create_router(state: AppState) -> axum::Router {
             axum::routing::post(play::play),
         )
         .route("/engine/move", axum::routing::post(process_move))
+        .route("/engine/init", axum::routing::post(init_game))
         .with_state(state)
 }
 
@@ -105,6 +106,31 @@ pub async fn status() -> impl IntoResponse {
 }
 
 
+pub async fn init_game(
+    Json(payload): Json<InitGameRequest>,
+) -> Result<Json<InitGameResponse>, (StatusCode, String)> {
+    let game = match payload.variant.as_deref() {
+        Some("holey_y") => {
+            let count = payload.hole_count.unwrap_or((payload.size / 3).max(1));
+            GameY::new_holey(payload.size, count)
+                .map_err(|e| (StatusCode::BAD_REQUEST, e.to_string()))?
+        }
+        v => {
+            let variant = match v.unwrap_or("") {
+                "why_not"   => GameVariant::WhyNot,
+                "master_y"  => GameVariant::MasterY,
+                "fortune_y" => GameVariant::FortuneY,
+                "tabu_y"    => GameVariant::TabuY,
+                _           => GameVariant::Standard,
+            };
+            GameY::new_with_variant(payload.size, variant)
+        }
+    };
+    let hole_cells = game.hole_indices();
+    let yen: YEN = (&game).into();
+    Ok(Json(InitGameResponse { yen, hole_cells }))
+}
+
 pub async fn process_move(
     Json(payload): Json<ProcessMoveRequest>,
 ) -> Result<Json<ProcessMoveResponse>, (StatusCode, String)> {
@@ -131,11 +157,19 @@ pub async fn process_move(
 
     // 4. Comprobar si terminó y preparar respuesta
     let game_over = game.check_game_over();
+    let hole_cells = game.hole_indices();
+    let blocked_cells = if game.variant() == GameVariant::TabuY {
+        GameY::neighbor_indices(coords, game.board_size())
+    } else {
+        Vec::new()
+    };
     let new_yen: YEN = (&game).into();
 
     Ok(Json(ProcessMoveResponse {
         new_yen_json: new_yen,
-        game_over
+        game_over,
+        hole_cells,
+        blocked_cells,
     }))
 }
 

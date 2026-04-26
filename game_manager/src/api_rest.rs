@@ -1,5 +1,5 @@
 use crate::redis_client;
-use crate::data::{EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, Match, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, SaveMatchRequest, SaveMatchResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN};
+use crate::data::{EngineMoveRequest, EngineMoveResponse, EngineInitResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, Match, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, SaveMatchRequest, SaveMatchResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN};
 
 use std::net::SocketAddr;
 use std::sync::Arc;
@@ -32,8 +32,37 @@ async fn create_match(
     Json(payload): Json<NewMatchRequest>
     ) -> Json<NewMatchResponse> {
     let new_id = Uuid::new_v4().to_string();
-    let _ = redis_client::create_match(&state.redis_pool, &new_id, &payload.size, &payload.player1, &payload.player2, payload.variant).await;
-    Json(NewMatchResponse { match_id: new_id })
+
+    let (init_layout, hole_cells) = if payload.variant.as_deref() == Some("holey_y") {
+        let engine_url = format!("{}/engine/init", state.gamey_url);
+        let client = Client::new();
+        let body = serde_json::json!({
+            "size": payload.size,
+            "variant": "holey_y",
+            "hole_count": payload.hole_count,
+        });
+        if let Ok(resp) = client.post(&engine_url).json(&body).send().await {
+            if let Ok(init) = resp.json::<EngineInitResponse>().await {
+                (Some(init.yen.layout().to_string()), init.hole_cells)
+            } else {
+                (None, Vec::new())
+            }
+        } else {
+            (None, Vec::new())
+        }
+    } else {
+        (None, Vec::new())
+    };
+
+    let layout = init_layout.unwrap_or_else(|| {
+        (1u32..=payload.size)
+            .map(|row| ".".repeat(row as usize))
+            .collect::<Vec<_>>()
+            .join("/")
+    });
+
+    let _ = redis_client::create_match(&state.redis_pool, &new_id, &payload.size, &payload.player1, &payload.player2, payload.variant, Some(layout)).await;
+    Json(NewMatchResponse { match_id: new_id, hole_cells })
 }
 
 async fn execute_move(
@@ -89,6 +118,9 @@ async fn execute_move(
     Ok(Json(MoveResponse {
         match_id: payload.match_id,
         game_over: engine_result.game_over,
+        turn: engine_result.new_yen_json.turn(),
+        hole_cells: engine_result.hole_cells,
+        blocked_cells: engine_result.blocked_cells,
     }))
 }
 

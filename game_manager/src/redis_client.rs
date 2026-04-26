@@ -121,14 +121,15 @@ pub async fn create_match(
     player1: &String,
     player2: &String,
     variant: Option<String>,
+    initial_layout: Option<String>,
     ) -> Result<(), MatchError> {
 
-    // 1. Crear el layout inicial (puntos '.')
-    // El tamaño del layout para un tablero triangular es (n * (n + 1)) / 2
-    let layout: String = (1u32..=*size)
-        .map(|row| ".".repeat(row as usize))
-        .collect::<Vec<_>>()
-        .join("/");
+    let layout = initial_layout.unwrap_or_else(|| {
+        (1u32..=*size)
+            .map(|row| ".".repeat(row as usize))
+            .collect::<Vec<_>>()
+            .join("/")
+    });
 
     // 2. Crear el objeto YEN inicial
     let initial_state = YEN::new_with_variant(

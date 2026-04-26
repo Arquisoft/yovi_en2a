@@ -102,7 +102,7 @@ const GameReplayWindow = ({ match, onClose }: Props) => {
                 className={styles.boardWrapper}
                 style={{ transform: `scale(${boardScale})`, transformOrigin: 'center center' }}
               >
-                <Board size={boardSize} moves={boardMoves} blocked={true} onPlace={() => {}} />
+                <Board size={boardSize} moves={boardMoves} blocked={true} holeCells={new Set()} blockedCells={new Set()} onPlace={() => {}} />
               </div>
             )}
           </div>
