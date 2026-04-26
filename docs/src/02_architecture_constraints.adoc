@@ -24,7 +24,7 @@ ifndef::imagesdir[:imagesdir: ../images]
 |User data, match history, and statistics must be stored in Firebase, as chosen by the team.
 
 |Deployment on a cloud platform
-|The system must be publicly accessible. The backend services will be deployed on a cloud provider (e.g., Vercel, Railway, or Azure).
+|The system must be publicly accessible. The backend services are deployed on an Azure Virtual Machine, with all services containerized via Docker Compose.
 
 |Public external API for bots
 |The system must expose a documented API allowing external bots to access game data and play matches.

@@ -1,8 +1,10 @@
 import { Given, When, Then } from '@cucumber/cucumber'
 import assert from 'assert'
 
+const BASE_URL = process.env.BASE_URL ?? 'http://localhost:5173'
+
 Given('the main menu is open', async function () {
-  await this.page.goto('http://localhost:5173')
+  await this.page.goto(`${BASE_URL}`)
   await this.page.waitForLoadState('domcontentloaded')
 })
 

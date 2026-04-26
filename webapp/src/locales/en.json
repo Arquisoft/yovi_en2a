@@ -52,7 +52,8 @@
   "topRightMenu": {
     "help": "Help",
     "rankings": "Rankings",
-    "volume": "Volume",
+    "mute": "Mute",
+    "unmute": "Unmute",
     "settings": "Settings",
     "user": "User"
   },

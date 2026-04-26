@@ -15,10 +15,18 @@ describe('App Component Root', () => {
     expect(mainTitle).toBeInTheDocument()
   })
 
-  test('should match the snapshot', () => {
-    const { asFragment } = render(<App />)
-    
-    // Snapshot testing ensures the UI structure doesn't change unexpectedly
-    expect(asFragment()).toMatchSnapshot()
+  test('renders main menu action buttons', () => {
+    render(<App />)
+    expect(screen.getByRole('button', { name: /log in/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /play as guest/i })).toBeInTheDocument()
+  })
+
+  test('renders top-right navigation buttons', () => {
+    render(<App />)
+    expect(screen.getByRole('button', { name: /help/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /rankings/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /mute/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /settings/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /user/i })).toBeInTheDocument()
   })
 })

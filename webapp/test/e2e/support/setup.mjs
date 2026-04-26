@@ -28,7 +28,8 @@ Before(async function () {
     const mock = getMockServer()
 
     this.browser = await chromium.launch({ headless, slowMo, devtools })
-    this.page = await this.browser.newPage()
+    const context = await this.browser.newContext({ locale: 'en-US' })
+    this.page = await context.newPage()
     await mock.attach(this.page)
 })
 

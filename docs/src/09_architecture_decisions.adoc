@@ -186,6 +186,25 @@ Expose a REST-style HTTP API that:
 - Must be fully documented.
 
 
+=== ADR-008: Internationalisation via react-i18next
+
+*Status:* Accepted
+
+*Context:*
+The application targets users who may not speak English. The team needed a way to support multiple languages without duplicating components.
+
+*Decision:*
+Use **react-i18next** as the internationalisation library, with translations stored in JSON locale files (`en.json`, `es.json`) loaded at runtime.
+
+*Rationale:*
+react-i18next is the standard i18n solution for React, well-maintained, and requires no backend changes — all translation logic stays in the frontend.
+
+*Consequences:*
+- Adding a new language requires only a new locale file.
+- All user-facing strings must be referenced through the library's `t()` function rather than hardcoded.
+
+---
+
 ifdef::arc42help[]
 [role="arc42help"]
 ****

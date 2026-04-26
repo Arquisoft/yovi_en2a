@@ -40,7 +40,7 @@ const TopRightMenu: React.FC = () => {
       />
 
       <MenuButtons
-        label={t('topRightMenu.volume')}
+        label={isMuted ? t('topRightMenu.unmute') : t('topRightMenu.mute')}
         onClick={toggleMute}
         img={isMuted ? volumeMuteIcon : volumeUnmuteIcon}
       />

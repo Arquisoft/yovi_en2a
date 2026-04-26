@@ -20,7 +20,8 @@ Given('a second player has the app open', async function () {
     const slowMo = Number(process.env.SLOW_MO ?? 0)
 
     this.browser2 = await chromium.launch({ headless, slowMo })
-    this.page2 = await this.browser2.newPage()
+    const context2 = await this.browser2.newContext({ locale: 'en-US' })
+    this.page2 = await context2.newPage()
 
     // Share the same in-memory mock state as page1.
     await getMockServer().attach(this.page2)

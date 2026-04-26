@@ -34,7 +34,7 @@ describe('TopRightMenu Component', () => {
     
     expect(screen.getByRole('button', { name: /help/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /rankings/i })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /volume/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /mute/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /settings/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /user/i })).toBeInTheDocument()
   })
@@ -43,7 +43,7 @@ describe('TopRightMenu Component', () => {
     const user = userEvent.setup()
     render(<MemoryRouter><TopRightMenu /></MemoryRouter>)
 
-    const volumeBtn = screen.getByRole('button', { name: /volume/i })
+    const volumeBtn = screen.getByRole('button', { name: /mute/i })
     await user.click(volumeBtn)
 
     expect(mockToggleMute).toHaveBeenCalledOnce()
