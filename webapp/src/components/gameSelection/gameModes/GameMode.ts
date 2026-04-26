@@ -2,9 +2,11 @@
 import React from "react";
 
 export const Difficulty = {
-  Easy:   ["Easy",   "easy"]   as const,
-  Normal: ["Normal", "normal"] as const,
-  Hard:   ["Hard",   "hard"]   as const,
+  VeryEasy:   ["Very Easy",   "random_bot"]   as const,
+  Easy:   ["Easy",   "greedy_bot"]   as const,
+  Normal: ["Normal", "minmax_bot"] as const,
+  Hard:   ["Hard",   "minmax_bot"]   as const,
+  VeryHard:   ["Very Hard",   "minmax_bot"]   as const,
 } as const;
 
 export type Difficulty = typeof Difficulty[keyof typeof Difficulty];

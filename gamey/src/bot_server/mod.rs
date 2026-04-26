@@ -47,10 +47,14 @@ pub fn create_router(state: AppState) -> axum::Router {
             axum::routing::post(choose::choose),
         )
         .route(
-            "/{api_version}/ybot/play/{bot_id}",
-            axum::routing::post(play::play),
+            "/{api_version}/ybot/player_play/{bot_id}",
+            axum::routing::post(play::player_play),
         )
         .route("/engine/move", axum::routing::post(process_move))
+        .route(
+            "/play/{bot_id}",
+            axum::routing::get(play::play_get),
+        )
         .with_state(state)
 }
 

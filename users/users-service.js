@@ -267,6 +267,16 @@ app.use('/game', createProxyMiddleware({
   },
 }));
 
+// Play Proxy
+app.use('/play', createProxyMiddleware({
+  target: ENGINE_URL,
+  change_origin: true,
+  pathRewrite: {'^/play': ''},
+  on: {
+    proxyReq: fixRequestBody
+  },
+}))
+
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   app.listen(port, () => {
     console.log(`User Service (API Gateway) listening on port ${port}`);

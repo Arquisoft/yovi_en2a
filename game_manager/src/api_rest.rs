@@ -21,9 +21,7 @@ use axum::http::StatusCode;
 
 /// How long after the 10s turn clock a player must be silent before the
 /// opponent can claim the win by forfeit. Total wall-clock limit before a
-/// forfeit is eligible is TURN_MS + FORFEIT_GRACE_MS.
 const TURN_MS: u64 = 10_000;
-const FORFEIT_GRACE_MS: u64 = 20_000;
 
 pub fn get_gamey_url() -> String {
     let host = std::env::var("GAMEY").unwrap_or_else(|_| "localhost".to_string());
@@ -178,9 +176,9 @@ async fn request_bot_move(
     let current_yen: serde_json::Value = serde_json::from_str(&current_yen_json)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    let (player1, bot_id) = redis_client::get_match_players(&state.redis_pool, &payload.match_id).await.unwrap();
+    let (_player1, bot_id) = redis_client::get_match_players(&state.redis_pool, &payload.match_id).await.unwrap();
 
-    let engine_url = format!("{}/{}/ybot/play/{}", state.gamey_url, "v1", bot_id);
+    let engine_url = format!("{}/{}/ybot/player_play/{}", state.gamey_url, "v1", bot_id);
     let client = Client::new();
 
     let engine_payload = current_yen;
