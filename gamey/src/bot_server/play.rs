@@ -52,31 +52,31 @@ pub struct PlayResponse {
 /// On failure, returns an `ErrorResponse` with details about what went wrong.
 #[axum::debug_handler]
 pub async fn player_play(
-    State(state): State<AppState>,
-    Path(params): Path<PlayParams>,
+    State(_state): State<AppState>,
+    Path(_params): Path<PlayParams>,
     Json(yen): Json<YEN>,
 ) -> Result<Json<PlayResponse>, Json<ErrorResponse>> {
-    check_api_version(&params.api_version)?;
+    check_api_version(&_params.api_version)?;
 
     let mut game = match GameY::try_from(yen.clone()) {
         Ok(g) => g,
         Err(err) => return Err(Json(ErrorResponse::error(
             &format!("Invalid YEN position: {}", err),
-            Some(params.api_version),
-            Some(params.bot_id),
+            Some(_params.api_version),
+            Some(_params.bot_id),
         ))),
     };
 
     game.force_turn(PlayerId::new(yen.turn()));
 
-    let bot = match state.bots().find(&params.bot_id) {
+    let bot = match _state.bots().find(&_params.bot_id) {
         Some(b) => b,
         None => {
-            let available = state.bots().names().join(", ");
+            let available = _state.bots().names().join(", ");
             return Err(Json(ErrorResponse::error(
-                &format!("Bot not found: {}, available bots: [{}]", params.bot_id, available),
-                Some(params.api_version),
-                Some(params.bot_id),
+                &format!("Bot not found: {}, available bots: [{}]", _params.bot_id, available),
+                Some(_params.api_version),
+                Some(_params.bot_id),
             )));
         }
     };
@@ -85,8 +85,8 @@ pub async fn player_play(
         Some(p) => p,
         None => return Err(Json(ErrorResponse::error(
             "Game is already over — no moves can be made",
-            Some(params.api_version),
-            Some(params.bot_id),
+            Some(_params.api_version),
+            Some(_params.bot_id),
         ))),
     };
 
@@ -94,16 +94,16 @@ pub async fn player_play(
         Some(c) => c,
         None => return Err(Json(ErrorResponse::error(
             "No valid moves available for the bot",
-            Some(params.api_version),
-            Some(params.bot_id),
+            Some(_params.api_version),
+            Some(_params.bot_id),
         ))),
     };
 
     if let Err(err) = game.add_move(Movement::Placement { player, coords }) {
         return Err(Json(ErrorResponse::error(
             &format!("Failed to apply bot move: {}", err),
-            Some(params.api_version),
-            Some(params.bot_id),
+            Some(_params.api_version),
+            Some(_params.bot_id),
         )));
     }
 
@@ -116,8 +116,8 @@ pub async fn player_play(
     };
 
     Ok(Json(PlayResponse {
-        api_version: params.api_version,
-        bot_id: params.bot_id,
+        api_version: _params.api_version,
+        bot_id: _params.bot_id,
         coords,
         position: YEN::from(&game),
         game_over,
@@ -179,31 +179,26 @@ pub async fn play(
     }
 }
 
-/// Query parameters for the GET play endpoint.
-///
-/// Since GET requests cannot carry a JSON body, the YEN position is passed
-/// as a single `yen` query parameter containing a URL-encoded JSON string.
-///
 #[derive(Deserialize)]
 pub struct PlayQuery {
     position: String,
+    bot_id: String,
 }
 
-/// GET handler at `/play/{bot_id}?position=<url-encoded JSON>`.
+/// GET handler at `/play?bot_id=<id>&position=<url-encoded JSON>`.
 #[axum::debug_handler]
 pub async fn play_get(
-    Path(bot_id): Path<String>,
     Query(query): Query<PlayQuery>,
 ) -> Result<Json<crate::Coordinates>, Json<ErrorResponse>> {
     let yen: YEN = serde_json::from_str(&query.position).map_err(|err| {
         Json(ErrorResponse::error(
             &format!("Invalid position query parameter: {}", err),
             Some("v1".to_string()),
-            Some(bot_id.clone()),
+            Some(query.bot_id.clone()),
         ))
     })?;
 
-    let coords = play(&bot_id, Json(yen)).await?;
+    let coords = play(&query.bot_id, Json(yen)).await?;
     Ok(Json(coords))
 }
 

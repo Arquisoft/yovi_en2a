@@ -51,10 +51,7 @@ pub fn create_router(state: AppState) -> axum::Router {
             axum::routing::post(play::player_play),
         )
         .route("/engine/move", axum::routing::post(process_move))
-        .route(
-            "/play/{bot_id}",
-            axum::routing::get(play::play_get),
-        )
+        .route("/play", axum::routing::get(play::play_get))
         .with_state(state)
 }
 
@@ -99,6 +96,7 @@ pub async fn run_bot_server(port: u16) -> Result<(), GameYError> {
         })?;
 
     Ok(())
+
 }
 
 /// Health check endpoint handler.
