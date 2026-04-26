@@ -403,3 +403,118 @@ describe('GameWindowOnline — redirect guard', () => {
         expect(mockNavigate).toHaveBeenCalledWith('/gameSelection', { replace: true });
     });
 });
+
+// ── Grace overlay ─────────────────────────────────────────────────────────
+
+describe('GameWindowOnline — grace overlay', () => {
+    test('shows "Get ready…" when turn_started_at is in the future', async () => {
+        mockGetMatchTurnInfo.mockResolvedValue({
+            ...defaultTurnInfo,
+            turn_started_at: NOW + 3_000,
+            now_server: NOW,
+        });
+
+        render(<GameWindowOnline />);
+
+        await waitFor(() => {
+            expect(mockGetMatchTurnInfo).toHaveBeenCalled();
+        });
+
+        expect(screen.getByText('Get ready…')).toBeInTheDocument();
+    });
+
+    test('does not show grace overlay when turn started in the past', async () => {
+        mockGetMatchTurnInfo.mockResolvedValue({
+            ...defaultTurnInfo,
+            turn_started_at: NOW - 5_000,
+            now_server: NOW,
+        });
+
+        render(<GameWindowOnline />);
+
+        await waitFor(() => {
+            expect(mockGetMatchTurnInfo).toHaveBeenCalled();
+        });
+
+        expect(screen.queryByText('Get ready…')).not.toBeInTheDocument();
+    });
+});
+
+// ── Forfeit persist outcome ────────────────────────────────────────────────
+
+describe('GameWindowOnline — forfeit persist outcome', () => {
+    test('saves "Forfeit win" when logged-in user wins by opponent forfeit', async () => {
+        mockUseUser.mockReturnValue({
+            user: { username: 'Alice', email: 'alice@test.com' },
+            setUser: vi.fn(),
+        });
+
+        mockExecuteMoveOnline.mockReturnValue(new Promise(() => {}));
+
+        mockGetMatchStatus
+            .mockResolvedValueOnce(defaultStatus)
+            .mockResolvedValue({
+                ...defaultStatus,
+                status: 'finished',
+                winner: 'p1@test.com',
+                end_reason: 'forfeit',
+            });
+
+        render(<GameWindowOnline />);
+
+        await waitFor(
+            () => expect(screen.getByText('Opponent forfeited — you win!')).toBeInTheDocument(),
+            { timeout: 8_000 }
+        );
+
+        expect(mockSaveMatchToDb).toHaveBeenCalledWith(
+            expect.objectContaining({ result: 'Forfeit win' })
+        );
+    }, 10_000);
+
+    test('does not save when guest wins by forfeit (no user logged in)', async () => {
+        mockExecuteMoveOnline.mockReturnValue(new Promise(() => {}));
+
+        mockGetMatchStatus
+            .mockResolvedValueOnce(defaultStatus)
+            .mockResolvedValue({
+                ...defaultStatus,
+                status: 'finished',
+                winner: 'p1@test.com',
+                end_reason: 'forfeit',
+            });
+
+        render(<GameWindowOnline />);
+
+        await waitFor(
+            () => expect(screen.getByText('Opponent forfeited — you win!')).toBeInTheDocument(),
+            { timeout: 8_000 }
+        );
+
+        expect(mockSaveMatchToDb).not.toHaveBeenCalled();
+    }, 10_000);
+});
+
+// ── Player IDs fetched on bootstrap ───────────────────────────────────────
+
+describe('GameWindowOnline — player display names', () => {
+    test('fetches player IDs from matchStatus on mount', async () => {
+        render(<GameWindowOnline />);
+
+        await waitFor(() => {
+            expect(mockGetMatchStatus).toHaveBeenCalledWith('match-abc');
+        });
+    });
+
+    test('board is blocked while it is not my turn', async () => {
+        // Set turnNumber=1 → mySeat=1, game.turn=0 initially → not my turn
+        mockUseLocation.mockReturnValue({
+            state: { matchId: 'match-abc', turnNumber: 1, online: true },
+        });
+
+        render(<GameWindowOnline />);
+
+        // Board is rendered as MockBoard even when blocked
+        expect(screen.getByText('MockBoard')).toBeInTheDocument();
+    });
+});

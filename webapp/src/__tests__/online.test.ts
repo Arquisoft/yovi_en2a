@@ -16,6 +16,9 @@ import {
     saveMatchToDb,
     updateScore,
     extractOccupiedFromYen,
+    isNoMatchesAvailable,
+    waitUntilMatchReady,
+    waitForTurn,
     ApiError,
     type Yen,
 } from '../components/online/online';
@@ -390,5 +393,197 @@ describe('ApiError', () => {
         expect(err.message).toBe('Not Found');
         expect(err.name).toBe('ApiError');
         expect(err).toBeInstanceOf(Error);
+    });
+});
+
+// ── isNoMatchesAvailable ───────────────────────────────────────────────────
+
+describe('isNoMatchesAvailable', () => {
+    test('returns false for a plain Error', () => {
+        expect(isNoMatchesAvailable(new Error('no match found'))).toBe(false);
+    });
+
+    test('returns false for non-error values', () => {
+        expect(isNoMatchesAvailable('no match')).toBe(false);
+        expect(isNoMatchesAvailable(null)).toBe(false);
+        expect(isNoMatchesAvailable(undefined)).toBe(false);
+    });
+
+    test('returns false for ApiError without "no match" in message', () => {
+        expect(isNoMatchesAvailable(new ApiError(404, 'Not Found'))).toBe(false);
+        expect(isNoMatchesAvailable(new ApiError(500, 'Server Error'))).toBe(false);
+    });
+
+    test('returns true for ApiError with "no match" in message (case-insensitive)', () => {
+        expect(isNoMatchesAvailable(new ApiError(404, 'no match found'))).toBe(true);
+        expect(isNoMatchesAvailable(new ApiError(404, 'No Match Available'))).toBe(true);
+    });
+
+    test('returns true for ApiError with "nomatch" (no space between words)', () => {
+        expect(isNoMatchesAvailable(new ApiError(404, 'nomatch'))).toBe(true);
+    });
+});
+
+// ── waitUntilMatchReady ────────────────────────────────────────────────────
+
+describe('waitUntilMatchReady', () => {
+    const readyStatus = {
+        match_id: 'm1', status: 'active', player1id: 'p1', player2id: 'p2',
+        ready: true, winner: null, end_reason: null,
+    };
+    const notReadyStatus = { ...readyStatus, ready: false };
+
+    test('resolves immediately when the first poll returns ready', async () => {
+        globalThis.fetch = mockFetchOk(readyStatus);
+
+        const result = await waitUntilMatchReady('m1', 1);
+
+        expect(result.ready).toBe(true);
+        expect(result.match_id).toBe('m1');
+    });
+
+    test('retries until status becomes ready', async () => {
+        let calls = 0;
+        globalThis.fetch = vi.fn().mockImplementation(async () => {
+            calls++;
+            const body = calls >= 3 ? readyStatus : notReadyStatus;
+            return {
+                ok: true,
+                headers: { get: () => 'application/json' },
+                json: async () => body,
+                text: async () => JSON.stringify(body),
+            } as unknown;
+        });
+
+        const result = await waitUntilMatchReady('m1', 1);
+
+        expect(result.ready).toBe(true);
+        expect(calls).toBeGreaterThanOrEqual(3);
+    });
+
+    test('throws AbortError immediately when signal is already aborted', async () => {
+        const ctrl = new AbortController();
+        ctrl.abort();
+
+        await expect(waitUntilMatchReady('m1', 1, ctrl.signal)).rejects.toMatchObject({
+            name: 'AbortError',
+        });
+    });
+
+    test('re-throws AbortError that surfaces from within getMatchStatus', async () => {
+        const abortErr = Object.assign(new Error('aborted'), { name: 'AbortError' });
+        globalThis.fetch = vi.fn().mockRejectedValue(abortErr);
+
+        const ctrl = new AbortController();
+
+        await expect(waitUntilMatchReady('m1', 1, ctrl.signal)).rejects.toMatchObject({
+            name: 'AbortError',
+        });
+    });
+
+    test('swallows non-abort fetch errors and keeps polling until ready', async () => {
+        let calls = 0;
+        globalThis.fetch = vi.fn().mockImplementation(async () => {
+            calls++;
+            if (calls < 3) throw new Error('Network down');
+            return {
+                ok: true,
+                headers: { get: () => 'application/json' },
+                json: async () => readyStatus,
+                text: async () => JSON.stringify(readyStatus),
+            } as unknown;
+        });
+
+        const result = await waitUntilMatchReady('m1', 1);
+
+        expect(result.ready).toBe(true);
+        expect(calls).toBeGreaterThanOrEqual(3);
+    });
+});
+
+// ── waitForTurn ────────────────────────────────────────────────────────────
+
+describe('waitForTurn', () => {
+    const boardPayload = {
+        match_id: 'm1',
+        board_status: { size: 8, turn: 1, layout: '', players: [] },
+    };
+
+    test('returns board state immediately on a 200 response', async () => {
+        globalThis.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: async () => boardPayload,
+        } as unknown);
+
+        const result = await waitForTurn({ match_id: 'm1', turn_number: 0 });
+
+        expect(result.match_id).toBe('m1');
+        expect(result.board_status.turn).toBe(1);
+    });
+
+    test('retries immediately on 408 and returns next successful response', async () => {
+        let calls = 0;
+        globalThis.fetch = vi.fn().mockImplementation(async () => {
+            calls++;
+            if (calls < 3) {
+                return { ok: false, status: 408, statusText: 'Timeout' } as unknown;
+            }
+            return { ok: true, status: 200, json: async () => boardPayload } as unknown;
+        });
+
+        const result = await waitForTurn({ match_id: 'm1', turn_number: 0 });
+
+        expect(result.board_status.turn).toBe(1);
+        expect(calls).toBeGreaterThanOrEqual(3);
+    });
+
+    test('throws AbortError when signal is already aborted before first fetch', async () => {
+        const ctrl = new AbortController();
+        ctrl.abort();
+
+        await expect(
+            waitForTurn({ match_id: 'm1', turn_number: 0 }, ctrl.signal)
+        ).rejects.toMatchObject({ name: 'AbortError' });
+    });
+
+    test('throws AbortError when fetch itself rejects with AbortError', async () => {
+        const abortErr = Object.assign(new Error('aborted'), { name: 'AbortError' });
+        globalThis.fetch = vi.fn().mockRejectedValue(abortErr);
+
+        const ctrl = new AbortController();
+        await expect(
+            waitForTurn({ match_id: 'm1', turn_number: 0 }, ctrl.signal)
+        ).rejects.toMatchObject({ name: 'AbortError' });
+    });
+});
+
+// ── postJson content-type guard ────────────────────────────────────────────
+
+describe('postJson — content-type guard', () => {
+    test('throws ApiError when server returns 200 with non-JSON content-type', async () => {
+        globalThis.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            headers: { get: () => 'text/html' },
+            text: async () => '<html>Error page</html>',
+        } as unknown);
+
+        await expect(
+            createOnlineMatch({ player1id: 'p1', size: 8, match_id: 'm1', match_password: 'x' })
+        ).rejects.toBeInstanceOf(ApiError);
+    });
+
+    test('ApiError from a non-JSON response carries the HTTP status code', async () => {
+        globalThis.fetch = vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            headers: { get: () => 'text/plain' },
+            text: async () => 'plain text body',
+        } as unknown);
+
+        await expect(
+            createOnlineMatch({ player1id: 'p1', size: 8, match_id: 'm1', match_password: 'x' })
+        ).rejects.toMatchObject({ status: 200 });
     });
 });

@@ -675,6 +675,49 @@ async fn execute_move_online(
 }
 
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use serial_test::serial;
+
+    #[test]
+    #[serial]
+    fn get_gamey_url_returns_default_when_env_unset() {
+        // SAFETY: tests are serialised via `serial_test`; no concurrent env access.
+        unsafe { std::env::remove_var("GAMEY") };
+        assert_eq!(get_gamey_url(), "http://localhost:4000");
+    }
+
+    #[test]
+    #[serial]
+    fn get_gamey_url_uses_gamey_env_var() {
+        // SAFETY: tests are serialised via `serial_test`; no concurrent env access.
+        unsafe { std::env::set_var("GAMEY", "gamey-service") };
+        let url = get_gamey_url();
+        unsafe { std::env::remove_var("GAMEY") };
+        assert_eq!(url, "http://gamey-service:4000");
+    }
+
+    #[test]
+    fn now_ms_returns_positive_value() {
+        assert!(now_ms() > 0);
+    }
+
+    #[test]
+    fn now_ms_is_close_to_system_time() {
+        use std::time::{SystemTime, UNIX_EPOCH};
+        let expected = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+        let got = now_ms();
+        assert!(
+            got.abs_diff(expected) < 1_000,
+            "now_ms() = {got}, expected ≈ {expected}"
+        );
+    }
+}
+
 pub async fn run() {
     let redis_host = std::env::var("REDIS_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
     let redis_port = std::env::var("REDIS_PORT").unwrap_or_else(|_| "6379".to_string());
