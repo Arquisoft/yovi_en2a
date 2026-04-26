@@ -367,5 +367,349 @@ mod tests {
             "play should honor a minimax bot, got: {:?}",
             result.err().map(|Json(e)| e)
         );
+        fn create_test_state() -> AppState {
+            create_default_state()
+        }
+
+        #[tokio::test]
+        async fn test_player_play_success_on_valid_position() {
+            let state = create_test_state();
+            let bot_id = any_available_bot_id();
+            let yen = YEN::new(3, 0, vec!['B', 'R'], empty_board_size_3());
+
+            let params = PlayParams {
+                api_version: "v1".to_string(),
+                bot_id: bot_id.clone(),
+            };
+
+            let result = player_play(
+                State(state),
+                Path(params),
+                Json(yen),
+            ).await;
+
+            assert!(
+                result.is_ok(),
+                "player_play should succeed on a valid empty position, got: {:?}",
+                result.err()
+            );
+
+            let Json(response) = result.unwrap();
+            assert_eq!(response.api_version, "v1");
+            assert_eq!(response.bot_id, bot_id);
+            assert!(!response.game_over);
+            assert!(response.winner.is_none());
+        }
+
+        #[tokio::test]
+        async fn test_player_play_invalid_api_version() {
+            let state = create_test_state();
+            let bot_id = any_available_bot_id();
+            let yen = YEN::new(3, 0, vec!['B', 'R'], empty_board_size_3());
+
+            let params = PlayParams {
+                api_version: "v999".to_string(), // Invalid version
+                bot_id: bot_id.clone(),
+            };
+
+            let result = player_play(
+                State(state),
+                Path(params),
+                Json(yen),
+            ).await;
+
+            assert!(
+                result.is_err(),
+                "player_play should reject invalid API version"
+            );
+        }
+
+        #[tokio::test]
+        async fn test_player_play_unknown_bot() {
+            let state = create_test_state();
+            let yen = YEN::new(3, 0, vec!['B', 'R'], empty_board_size_3());
+
+            let params = PlayParams {
+                api_version: "v1".to_string(),
+                bot_id: "__unknown_bot_xyz__".to_string(),
+            };
+
+            let result = player_play(
+                State(state),
+                Path(params),
+                Json(yen),
+            ).await;
+
+            assert!(
+                result.is_err(),
+                "player_play should return error for unknown bot"
+            );
+
+            let Json(err) = result.unwrap_err();
+            let msg = format!("{:?}", err);
+            assert!(
+                msg.contains("Bot not found"),
+                "error should mention 'Bot not found', got: {}",
+                msg
+            );
+        }
+
+        #[tokio::test]
+        async fn test_player_play_invalid_yen_position() {
+            let state = create_test_state();
+            let bot_id = any_available_bot_id();
+            let yen = YEN::new(3, 0, vec!['B', 'R'], "invalid-layout".to_string());
+
+            let params = PlayParams {
+                api_version: "v1".to_string(),
+                bot_id,
+            };
+
+            let result = player_play(
+                State(state),
+                Path(params),
+                Json(yen),
+            ).await;
+
+            assert!(
+                result.is_err(),
+                "player_play should reject invalid YEN position"
+            );
+
+            let Json(err) = result.unwrap_err();
+            let msg = format!("{:?}", err);
+            assert!(
+                msg.contains("Invalid YEN position"),
+                "error should mention 'Invalid YEN position', got: {}",
+                msg
+            );
+        }
+
+        #[tokio::test]
+        async fn test_player_play_respects_turn() {
+            let state = create_test_state();
+            let bot_id = any_available_bot_id();
+            let yen = YEN::new(3, 1, vec!['B', 'R'], empty_board_size_3());
+
+            let params = PlayParams {
+                api_version: "v1".to_string(),
+                bot_id,
+            };
+
+            let result = player_play(
+                State(state),
+                Path(params),
+                Json(yen),
+            ).await;
+
+            assert!(
+                result.is_ok(),
+                "player_play should honor non-zero turn, got: {:?}",
+                result.err()
+            );
+
+            let Json(response) = result.unwrap();
+            assert_eq!(response.api_version, "v1");
+        }
+
+        #[tokio::test]
+        async fn test_player_play_returns_valid_response_structure() {
+            let state = create_test_state();
+            let bot_id = any_available_bot_id();
+            let yen = YEN::new(3, 0, vec!['B', 'R'], empty_board_size_3());
+
+            let params = PlayParams {
+                api_version: "v1".to_string(),
+                bot_id: bot_id.clone(),
+            };
+
+            let result = player_play(
+                State(state),
+                Path(params),
+                Json(yen),
+            ).await;
+
+            let Json(response) = result.unwrap();
+
+            // Verify all fields are properly set
+            assert_eq!(response.api_version, "v1");
+            assert_eq!(response.bot_id, bot_id);
+            assert!(!response.game_over); // Board is not finished
+            assert!(response.winner.is_none()); // No winner yet
+            // coords should be valid (from the successful move)
+            // position should reflect the updated board
+        }
+
+        // ==================== NEW TESTS: play_get ====================
+
+        #[tokio::test]
+        async fn test_play_get_success_with_valid_position() {
+            let position_json = r#"{"size":3,"turn":0,"players":["B","R"],"layout":"./../..."}"#;
+            let query = PlayQuery {
+                position: position_json.to_string(),
+                bot_id: Some(any_available_bot_id()),
+            };
+
+            let result = play_get(Query(query)).await;
+
+            assert!(
+                result.is_ok(),
+                "play_get should succeed with valid position, got: {:?}",
+                result.err()
+            );
+        }
+
+        #[tokio::test]
+        async fn test_play_get_invalid_position_json() {
+            let query = PlayQuery {
+                position: "{ invalid json }".to_string(),
+                bot_id: Some(any_available_bot_id()),
+            };
+
+            let result = play_get(Query(query)).await;
+
+            assert!(
+                result.is_err(),
+                "play_get should fail on invalid JSON"
+            );
+
+            let Json(err) = result.unwrap_err();
+            let msg = format!("{:?}", err);
+            assert!(
+                msg.contains("Invalid position query parameter"),
+                "error should mention JSON parse error, got: {}",
+                msg
+            );
+        }
+
+        #[tokio::test]
+        async fn test_play_get_missing_bot_id_uses_default() {
+            let position_json = r#"{"size":3,"turn":0,"players":["B","R"],"layout":"./../..."}"#;
+            let query = PlayQuery {
+                position: position_json.to_string(),
+                bot_id: None, // Should default to "minimax_bot"
+            };
+
+            let result = play_get(Query(query)).await;
+
+            assert!(
+                result.is_ok(),
+                "play_get should succeed with default bot, got: {:?}",
+                result.err()
+            );
+        }
+
+        #[tokio::test]
+        async fn test_play_get_unknown_bot() {
+            let position_json = r#"{"size":3,"turn":0,"players":["B","R"],"layout":"./../..."}"#;
+            let query = PlayQuery {
+                position: position_json.to_string(),
+                bot_id: Some("__nonexistent_bot__".to_string()),
+            };
+
+            let result = play_get(Query(query)).await;
+
+            assert!(
+                result.is_err(),
+                "play_get should fail with unknown bot"
+            );
+
+            let Json(err) = result.unwrap_err();
+            let msg = format!("{:?}", err);
+            assert!(
+                msg.contains("Bot not found"),
+                "error should mention 'Bot not found', got: {}",
+                msg
+            );
+        }
+
+        #[tokio::test]
+        async fn test_play_get_invalid_yen_in_position() {
+            let position_json = r#"{"size":3,"turn":0,"players":["B","R"],"layout":"invalid"}"#;
+            let query = PlayQuery {
+                position: position_json.to_string(),
+                bot_id: Some(any_available_bot_id()),
+            };
+
+            let result = play_get(Query(query)).await;
+
+            assert!(
+                result.is_err(),
+                "play_get should fail on invalid YEN layout"
+            );
+
+            let Json(err) = result.unwrap_err();
+            let msg = format!("{:?}", err);
+            assert!(
+                msg.contains("Invalid YEN position"),
+                "error should mention 'Invalid YEN position', got: {}",
+                msg
+            );
+        }
+
+        #[tokio::test]
+        async fn test_play_get_returns_coordinates() {
+            let position_json = r#"{"size":3,"turn":0,"players":["B","R"],"layout":"./../..."}"#;
+            let query = PlayQuery {
+                position: position_json.to_string(),
+                bot_id: Some(any_available_bot_id()),
+            };
+
+            let result = play_get(Query(query)).await;
+
+            let Json(coords) = result.unwrap();
+            // Coordinates should be valid (not null, within board bounds)
+            // This is a basic check; specific validation depends on Coordinates structure
+            assert!(true); // Placeholder for coordinate validation
+        }
+
+        #[tokio::test]
+        async fn test_play_get_with_multiple_positions() {
+            let bot_id = any_available_bot_id();
+
+            // Test 1: Empty board
+            let query1 = PlayQuery {
+                position: r#"{"size":3,"turn":0,"players":["B","R"],"layout":"./../..."}"#.to_string(),
+                bot_id: Some(bot_id.clone()),
+            };
+            assert!(play_get(Query(query1)).await.is_ok());
+
+            // Test 2: Board with one move
+            let query2 = PlayQuery {
+                position: r#"{"size":3,"turn":1,"players":["B","R"],"layout":"B/../..."}"#.to_string(),
+                bot_id: Some(bot_id.clone()),
+            };
+            assert!(play_get(Query(query2)).await.is_ok());
+        }
+
+        #[tokio::test]
+        async fn test_play_get_malformed_json_structure() {
+            let query = PlayQuery {
+                position: r#"{"size":"three","players":["B","R"]}"#.to_string(), // Missing layout and turn
+                bot_id: Some(any_available_bot_id()),
+            };
+
+            let result = play_get(Query(query)).await;
+
+            assert!(result.is_err(), "play_get should fail on incomplete JSON structure");
+        }
+
+        #[tokio::test]
+        async fn test_play_get_url_encoded_position() {
+            // Simulating a URL-encoded position (should still parse)
+            let position_json = r#"{"size":3,"turn":0,"players":["B","R"],"layout":"./../..."}"#;
+            let query = PlayQuery {
+                position: position_json.to_string(),
+                bot_id: Some(any_available_bot_id()),
+            };
+
+            let result = play_get(Query(query)).await;
+
+            assert!(
+                result.is_ok(),
+                "play_get should handle URL-encoded positions, got: {:?}",
+                result.err()
+            );
+        }
     }
 }

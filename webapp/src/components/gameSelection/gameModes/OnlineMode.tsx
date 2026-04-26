@@ -7,7 +7,7 @@ export class OnlineMode implements GameMode {
   showDifficulty = false;
   showOnlyJoin = true;
   /** Public matchmaking is always 8×8 to keep the pool unified. */
-  hideSize = false;
+  hideSize = true;
 
   mode = "multi";
   id = "online";
