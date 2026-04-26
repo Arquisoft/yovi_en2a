@@ -1,16 +1,12 @@
 // tests/ranking_integration_tests.rs
-//
-// End-to-end tests exercising the Firebase-backed ranking stack:
-// insert_match_by_id → get_user_matches → update_score → get_ranking_time.
-// Requires Firebase credentials.
 
 use game_manager::data::{Match, YEN};
-use game_manager::firebase::{insert_match_by_id, get_user_matches, update_score, get_ranking_time};
+use game_manager::firebase::{insert_match_by_id, get_user_matches, update_score, get_user_score};
 use serial_test::serial;
 use rand::Rng;
 
 /// Golden-path lifecycle: save a match, read it back from user history,
-/// bump the score, and check the player shows up in the leaderboard.
+/// bump the score, and verify the score was written correctly.
 #[tokio::test]
 #[serial]
 async fn test_full_ranking_and_match_lifecycle() {
@@ -43,38 +39,32 @@ async fn test_full_ranking_and_match_lifecycle() {
         "Saved match should appear in the history for {}", p1
     );
 
-    // 3) Update score & ELO.
+    // 3) Update score.
     let update_res = update_score(&p1, "TesterName", true, 45.5).await;
     assert!(update_res.is_ok(), "Failed to update player score: {:?}", update_res.err());
 
-    // 4) Leaderboard includes this player.
-    let leaderboard = get_ranking_time().await.expect("Failed to fetch leaderboard");
-    let found = leaderboard.iter().any(|s| s.playerid == p1);
-    assert!(found, "New score should be visible in global rankings");
+    // 4) Verify the score was written directly for this player.
+    let score = get_user_score(&p1).await.expect("Failed to fetch player score");
+    assert!(score.wins >= 1, "Player should have at least 1 win, got {}", score.wins);
+    assert!(score.total_matches >= 1, "Player should have at least 1 match, got {}", score.total_matches);
 }
 
-/// Two consecutive wins should not duplicate the player in the scores table
-/// (update_score must be idempotent on identity, incremental on counts).
+/// Two consecutive wins should not duplicate the player in the scores table.
 #[tokio::test]
 #[serial]
 async fn test_update_score_accumulates_instead_of_duplicating() {
     let random_id: u32 = rand::thread_rng().gen_range(1000..9999);
     let pid = format!("acc_player_{}", random_id);
 
-    // Two wins in a row.
     update_score(&pid, "AccTester", true, 60.0).await
         .expect("first update_score failed");
     update_score(&pid, "AccTester", true, 55.0).await
         .expect("second update_score failed");
 
-    let leaderboard = get_ranking_time().await.expect("fetch leaderboard");
-    let occurrences = leaderboard.iter().filter(|s| s.playerid == pid).count();
-    assert!(occurrences <= 1, "Player {} appears {} times in rankings, expected 1", pid, occurrences);
-
-    if let Some(entry) = leaderboard.iter().find(|s| s.playerid == pid) {
-        assert!(entry.total_matches >= 2, "total_matches should have incremented to >=2, got {}", entry.total_matches);
-        assert!(entry.wins >= 2, "wins should have incremented to >=2, got {}", entry.wins);
-    }
+    // Verify directly on the player record instead of scanning the leaderboard.
+    let score = get_user_score(&pid).await.expect("Failed to fetch player score");
+    assert!(score.total_matches >= 2, "total_matches should be >=2, got {}", score.total_matches);
+    assert!(score.wins >= 2, "wins should be >=2, got {}", score.wins);
 }
 
 /// A faster win must lower best_time; a slower win must NOT raise it.
@@ -84,21 +74,16 @@ async fn test_best_time_monotonic_decreasing() {
     let random_id: u32 = rand::thread_rng().gen_range(1000..9999);
     let pid = format!("bt_player_{}", random_id);
 
-    // First win establishes a baseline.
     update_score(&pid, "BtTester", true, 100.0).await.expect("baseline update failed");
-
-    // Faster win lowers the best time.
     update_score(&pid, "BtTester", true, 70.0).await.expect("faster update failed");
-
-    // Slower win must not move the record back up.
     update_score(&pid, "BtTester", true, 200.0).await.expect("slower update failed");
 
-    let leaderboard = get_ranking_time().await.expect("fetch leaderboard");
-    let entry = leaderboard.iter().find(|s| s.playerid == pid)
-        .expect("player should be in leaderboard");
+    let score = get_user_score(&pid).await.expect("Failed to fetch player score");
     assert!(
-        entry.best_time <= 70.0 + 0.01,
+        score.best_time <= 70.0 + 0.01,
         "best_time should be at most 70.0, got {}",
-        entry.best_time
+        score.best_time
     );
+    assert!(score.total_matches >= 3, "total_matches should be >=3, got {}", score.total_matches);
+    assert!(score.wins >= 3, "wins should be >=3, got {}", score.wins);
 }

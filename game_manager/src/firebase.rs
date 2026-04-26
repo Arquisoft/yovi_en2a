@@ -293,3 +293,17 @@ pub async fn remove_match_by_id(match_id: &str) -> Result<Match, Box<dyn Error>>
         }
     }
 }
+
+pub async fn get_user_score(playerid: &str) -> Result<Score, Box<dyn Error>> {
+    let db = get_connection().await?;
+
+    let mut scores: Vec<Score> = db.fluent()
+        .select()
+        .from("Scores")
+        .filter(|q| q.for_all([q.field("playerid").eq(playerid)]))
+        .obj()
+        .query()
+        .await?;
+
+    scores.pop().ok_or_else(|| format!("Score not found for player {}", playerid).into())
+}
