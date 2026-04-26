@@ -38,6 +38,7 @@ const metricsMiddleware = promBundle({includeMethod: true});
 app.use(metricsMiddleware);
 
 const GAME_MANAGER_URL = process.env.GAMEMANAGER_URL || 'http://localhost:5000';
+const ENGINE_URL = process.env.GAMEY_URL || 'http://localhost:3002';
 const AUTH_URL = process.env.AUTH_URL || 'http://localhost:4001';
 
 // 3. CORS Configuration Middleware
