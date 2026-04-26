@@ -714,6 +714,47 @@ mod tests {
             "now_ms() = {got}, expected ≈ {expected}"
         );
     }
+    #[tokio::test]
+    #[serial]
+    #[ignore = "requires a running Redis instance"]
+    async fn request_bot_move_reaches_get_players_and_engine_url_lines() {
+        use tower::ServiceExt;
+
+        let redis_host = std::env::var("REDIS_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+        let redis_port = std::env::var("REDIS_PORT").unwrap_or_else(|_| "6379".to_string());
+        let pool = crate::redis_client::create_pool(
+            &format!("redis://{}:{}/", redis_host, redis_port)
+        ).await;
+
+        let match_id = "test-bot-cov-001".to_string();
+        crate::redis_client::create_match(
+            &pool, &match_id, &3,
+            &"human".to_string(), &"easy".to_string(),
+        ).await.unwrap();
+
+        let state = Arc::new(AppState {
+            redis_pool: pool,
+            // Port 19999 is intentionally unreachable — the test only needs
+            // execution to reach the get_match_players and engine_url lines
+            // before the HTTP call to gamey fails with 500.
+            gamey_url: "http://127.0.0.1:19999".to_string(),
+        });
+
+        let body = serde_json::json!({ "match_id": match_id }).to_string();
+        let response = build_router(state)
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/reqBotMove")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    }
 }
 
 pub async fn run() {
