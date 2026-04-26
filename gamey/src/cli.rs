@@ -44,8 +44,13 @@ pub struct CliArgs {
     ///   master_y  — each player places two pieces per turn
     ///   fortune_y — a coin flip decides who plays next each turn
     ///   tabu_y    — cannot place adjacent to the opponent's last move
+    ///   hole_y    — some cells are holes (specify with --holes)
     #[arg(long, default_value = "standard")]
     pub variant: String,
+
+    /// Number of holes to randomly place (only for --variant=hole_y). Defaults to board_size/2.
+    #[arg(long)]
+    pub hole_count: Option<u32>,
 }
 
 /// The game mode determining how the game is played.
@@ -98,6 +103,7 @@ pub fn run_cli_game() -> Result<()> {
         "master_y" => GameVariant::MasterY,
         "fortune_y" => GameVariant::FortuneY,
         "tabu_y" => GameVariant::TabuY,
+        "hole_y" => GameVariant::HoleyY,
         _ => GameVariant::Standard,
     };
     match variant {
@@ -105,9 +111,21 @@ pub fn run_cli_game() -> Result<()> {
         GameVariant::MasterY => println!("Variant: Master Y — each player places two pieces per turn."),
         GameVariant::FortuneY => println!("Variant: Fortune Y — a coin flip decides who plays next each turn."),
         GameVariant::TabuY => println!("Variant: Tabu Y — you may not place adjacent to your opponent's last move."),
+        GameVariant::HoleyY => println!("Variant: Holey Y — some cells are holes and cannot be used."),
         GameVariant::Standard => {}
     }
-    let mut game = game::GameY::new_with_variant(args.size, variant);
+    let mut game = if variant == GameVariant::HoleyY {
+        let hole_count = args.hole_count.unwrap_or(args.size);
+        match game::GameY::new_holey(args.size, hole_count) {
+            Ok(g) => g,
+            Err(e) => {
+                println!("Error creating holey game: {}", e);
+                return Ok(());
+            }
+        }
+    } else {
+        game::GameY::new_with_variant(args.size, variant)
+    };
     loop {
         println!("{}", game.render(&render_options));
         let status = game.status();

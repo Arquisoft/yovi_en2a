@@ -2,7 +2,7 @@ use crate::core::SetIdx;
 use crate::core::player_set::PlayerSet;
 use crate::{Coordinates, GameAction, GameYError, Movement, PlayerId, RenderOptions, YEN};
 use rand::Rng;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fmt::Write;
 use std::path::Path;
 
@@ -22,6 +22,8 @@ pub enum GameVariant {
     FortuneY,
     /// A player may not place adjacent to the cell their opponent placed last turn.
     TabuY,
+    /// Some cells are permanently blocked (holes).
+    HoleyY,
 }
 
 impl GameVariant {
@@ -31,6 +33,7 @@ impl GameVariant {
             "master_y" => GameVariant::MasterY,
             "fortune_y" => GameVariant::FortuneY,
             "tabu_y" => GameVariant::TabuY,
+            "holey_y" => GameVariant::HoleyY,
             _ => GameVariant::Standard,
         }
     }
@@ -42,6 +45,7 @@ impl GameVariant {
             GameVariant::MasterY => Some("master_y"),
             GameVariant::FortuneY => Some("fortune_y"),
             GameVariant::TabuY => Some("tabu_y"),
+            GameVariant::HoleyY => Some("holey_y"),
         }
     }
 }
@@ -75,6 +79,8 @@ pub struct GameY {
     // For MasterY: number of placements the current player has made in this turn (resets at 2).
     placements_this_turn: u32,
 
+    // For HoleyY: coordinates of permanently blocked cells.
+    holes: HashSet<Coordinates>,
 }
 
 impl GameY {
@@ -119,7 +125,87 @@ impl GameY {
             available_cells: (0..total_cells).collect(),
             variant,
             placements_this_turn: 0,
+            holes: HashSet::new(),
         }
+    }
+
+    /// Creates a HoleyY game with `hole_count` randomly placed holes.
+    /// No two holes will be adjacent to each other.
+    /// Returns an error if `hole_count` cannot be satisfied under that constraint.
+    pub fn new_holey(board_size: u32, hole_count: u32) -> Result<Self> {
+        let total_cells = (board_size * (board_size + 1)) / 2;
+        let mut candidates: Vec<u32> = (0..total_cells).collect();
+        rand::seq::SliceRandom::shuffle(candidates.as_mut_slice(), &mut rand::rng());
+
+        let mut holes: HashSet<Coordinates> = HashSet::new();
+        for idx in &candidates {
+            if holes.len() as u32 == hole_count {
+                break;
+            }
+            let coords = Coordinates::from_index(*idx, board_size);
+            let adjacent_to_hole = Self::coords_neighbors(coords).iter().any(|n| holes.contains(n));
+            if !adjacent_to_hole {
+                holes.insert(coords);
+            }
+        }
+
+        if holes.len() as u32 != hole_count {
+            return Err(GameYError::TooManyHoles {
+                requested: hole_count,
+                max: holes.len() as u32,
+                total_cells,
+            });
+        }
+
+        Ok(Self::new_holey_from_positions(board_size, holes))
+    }
+
+    fn coords_neighbors(coords: Coordinates) -> Vec<Coordinates> {
+        let mut neighbors = Vec::new();
+        let x = coords.x();
+        let y = coords.y();
+        let z = coords.z();
+        if x > 0 {
+            neighbors.push(Coordinates::new(x - 1, y + 1, z));
+            neighbors.push(Coordinates::new(x - 1, y, z + 1));
+        }
+        if y > 0 {
+            neighbors.push(Coordinates::new(x + 1, y - 1, z));
+            neighbors.push(Coordinates::new(x, y - 1, z + 1));
+        }
+        if z > 0 {
+            neighbors.push(Coordinates::new(x + 1, y, z - 1));
+            neighbors.push(Coordinates::new(x, y + 1, z - 1));
+        }
+        neighbors
+    }
+
+    fn new_holey_from_positions(board_size: u32, holes: HashSet<Coordinates>) -> Self {
+        let total_cells = (board_size * (board_size + 1)) / 2;
+        let available_cells = (0..total_cells)
+            .filter(|&idx| {
+                let coords = Coordinates::from_index(idx, board_size);
+                !holes.contains(&coords)
+            })
+            .collect();
+        Self {
+            board_size,
+            board_map: HashMap::new(),
+            history: Vec::new(),
+            sets: Vec::new(),
+            status: GameStatus::Ongoing {
+                next_player: PlayerId::new(0),
+            },
+            available_cells,
+            variant: GameVariant::HoleyY,
+            placements_this_turn: 0,
+            holes,
+        }
+    }
+
+    /// Returns the set of hole coordinates (only non-empty for HoleyY games).
+    pub fn holes(&self) -> &HashSet<Coordinates> {
+        &self.holes
     }
 
 
@@ -324,6 +410,14 @@ impl GameY {
                 player,
             });
         }
+
+        if self.variant == GameVariant::HoleyY && self.holes.contains(&coords) {
+            return Err(GameYError::HoleCell {
+                coordinates: coords,
+                player,
+            });
+        }
+
         if self.variant == GameVariant::TabuY {
             if let Some(last_opp) = self.last_opponent_placement(player) {
                 if self.get_neighbors(&last_opp).contains(&coords) {
@@ -334,6 +428,7 @@ impl GameY {
                 }
             }
         }
+
         Ok(())
     }
 
@@ -504,6 +599,7 @@ impl GameY {
         // 1. Base symbol
         let mut symbol = match player {
             Some(p) => format!("{}", p),
+            None if self.holes.contains(&coords) => "H".to_string(),
             None => ".".to_string(),
         };
 
@@ -579,7 +675,29 @@ impl TryFrom<YEN> for GameY {
             });
         }
 
-        let mut ygame = GameY::new_with_variant(game.size(), variant);
+        // For HoleyY: collect hole positions from the layout before constructing the game.
+        let holes: HashSet<Coordinates> = if variant == GameVariant::HoleyY {
+            let mut holes = HashSet::new();
+            for (row, row_str) in rows.iter().enumerate() {
+                for (col, cell) in row_str.chars().enumerate() {
+                    if cell == 'H' {
+                        let x = game.size() - 1 - (row as u32);
+                        let y = col as u32;
+                        let z = game.size() - 1 - x - y;
+                        holes.insert(Coordinates::new(x, y, z));
+                    }
+                }
+            }
+            holes
+        } else {
+            HashSet::new()
+        };
+
+        let mut ygame = if variant == GameVariant::HoleyY {
+            GameY::new_holey_from_positions(game.size(), holes)
+        } else {
+            GameY::new_with_variant(game.size(), variant)
+        };
 
         for (row, row_str) in rows.iter().enumerate() {
             let cells: Vec<char> = row_str.chars().collect();
@@ -638,6 +756,7 @@ impl From<&GameY> for YEN {
             let cell_char = match game.board_map.get(&coords) {
                 Some((_, player)) if player.id() == 0 => 'B',
                 Some((_, player)) if player.id() == 1 => 'R',
+                _ if game.holes.contains(&coords) => 'H',
                 _ => '.',
             };
             layout.push(cell_char);
@@ -1124,6 +1243,74 @@ mod tests {
         assert_eq!(yen.variant(), Some("tabu_y"));
         let restored = GameY::try_from(yen).unwrap();
         assert_eq!(restored.variant(), GameVariant::TabuY);
+    }
+
+    // ── HoleyY ───────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_holey_y_rejects_placement_on_hole() {
+        let hole = Coordinates::new(2, 0, 0);
+        let holes: HashSet<Coordinates> = [hole].into_iter().collect();
+        let mut game = GameY::new_holey_from_positions(3, holes);
+        let result = game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: hole,
+        });
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            GameYError::HoleCell { .. } => {}
+            e => panic!("Expected HoleCell, got {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_holey_y_hole_not_in_available_cells() {
+        let hole = Coordinates::new(2, 0, 0);
+        let holes: HashSet<Coordinates> = [hole].into_iter().collect();
+        let game = GameY::new_holey_from_positions(3, holes.clone());
+        let hole_idx = hole.to_index(3);
+        assert!(
+            !game.available_cells().contains(&hole_idx),
+            "Hole cell must not appear in available_cells"
+        );
+    }
+
+    #[test]
+    fn test_holey_y_allows_non_hole_placement() {
+        let hole = Coordinates::new(2, 0, 0);
+        let holes: HashSet<Coordinates> = [hole].into_iter().collect();
+        let mut game = GameY::new_holey_from_positions(3, holes);
+        // (0,2,0) is NOT a hole — placement should succeed.
+        let result = game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(0, 2, 0),
+        });
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_holey_y_yen_roundtrip() {
+        let hole = Coordinates::new(1, 0, 1);
+        let holes: HashSet<Coordinates> = [hole].into_iter().collect();
+        let mut game = GameY::new_holey_from_positions(3, holes.clone());
+        game.add_move(Movement::Placement { player: PlayerId::new(0), coords: Coordinates::new(2, 0, 0) }).unwrap();
+
+        let yen: YEN = (&game).into();
+        assert_eq!(yen.variant(), Some("holey_y"));
+        // The layout must encode the hole as 'H'.
+        assert!(yen.layout().contains('H'), "layout should contain 'H' for hole cells");
+
+        let restored = GameY::try_from(yen).unwrap();
+        assert_eq!(restored.variant(), GameVariant::HoleyY);
+        assert!(restored.holes().contains(&hole), "restored game must preserve holes");
+    }
+
+    #[test]
+    fn test_holey_y_holes_getter() {
+        let hole = Coordinates::new(0, 1, 1);
+        let holes: HashSet<Coordinates> = [hole].into_iter().collect();
+        let game = GameY::new_holey_from_positions(3, holes.clone());
+        assert_eq!(game.holes(), &holes);
     }
 
     // Test loading a YEN representation of a finished game
