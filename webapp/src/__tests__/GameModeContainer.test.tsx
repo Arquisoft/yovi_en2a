@@ -258,22 +258,22 @@ describe('GameModeContainer — size selector', () => {
 // ── Local play ────────────────────────────────────────────────────────────
 
 describe('GameModeContainer — local play', () => {
-  test('PLAY navigates to /play/:size/multi for non-difficulty modes', () => {
+  test('PLAY navigates to /player_play/:size/multi for non-difficulty modes', () => {
     render(<GameModeContainer mode={makeLocalMode()} />);
     fireEvent.click(screen.getByText('PLAY'));
     expect(mockNavigate).toHaveBeenCalledWith(
-        '/play/8/multi',
+        '/player_play/8/multi',
         expect.objectContaining({
           state: expect.objectContaining({ guest: true }),
         })
     );
   });
 
-  test('PLAY navigates to /play/:size/:difficulty for difficulty modes', () => {
+  test('PLAY navigates to /player_play/:size/:difficulty for difficulty modes', () => {
     render(<GameModeContainer mode={makeNormalMode()} />);
     fireEvent.click(screen.getByText('PLAY'));
     expect(mockNavigate).toHaveBeenCalledWith(
-        '/play/8/normal',
+        '/player_play/8/minimax_bot',
         expect.objectContaining({
           state: expect.objectContaining({ guest: true }),
         })
