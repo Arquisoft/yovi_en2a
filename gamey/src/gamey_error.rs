@@ -116,6 +116,15 @@ pub enum GameYError {
         line: u32,
     },
 
+    /// Placement violates the Tabu rule (adjacent to opponent's last move).
+    #[error("Player {player} cannot place at {coordinates}: cell is adjacent to the opponent's last move (Tabu Y rule)")]
+    TabuViolation {
+        /// The coordinates where placement was attempted.
+        coordinates: Coordinates,
+        /// The player who attempted the placement.
+        player: PlayerId,
+    },
+    
     /// Server operation failed.
     #[error("Server error: {message}")]
     ServerError {

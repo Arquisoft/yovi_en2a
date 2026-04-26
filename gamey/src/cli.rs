@@ -42,6 +42,8 @@ pub struct CliArgs {
     ///   standard  — default rules
     ///   why_not   — connecting all three sides loses (misère)
     ///   master_y  — each player places two pieces per turn
+    ///   fortune_y — a coin flip decides who plays next each turn
+    ///   tabu_y    — cannot place adjacent to the opponent's last move
     #[arg(long, default_value = "standard")]
     pub variant: String,
 }
@@ -95,12 +97,14 @@ pub fn run_cli_game() -> Result<()> {
         "why_not" => GameVariant::WhyNot,
         "master_y" => GameVariant::MasterY,
         "fortune_y" => GameVariant::FortuneY,
+        "tabu_y" => GameVariant::TabuY,
         _ => GameVariant::Standard,
     };
     match variant {
         GameVariant::WhyNot => println!("Variant: WhY not — connecting all three sides LOSES!"),
         GameVariant::MasterY => println!("Variant: Master Y — each player places two pieces per turn."),
         GameVariant::FortuneY => println!("Variant: Fortune Y — a coin flip decides who plays next each turn."),
+        GameVariant::TabuY => println!("Variant: Tabu Y — you may not place adjacent to your opponent's last move."),
         GameVariant::Standard => {}
     }
     let mut game = game::GameY::new_with_variant(args.size, variant);

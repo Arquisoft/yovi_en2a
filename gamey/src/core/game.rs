@@ -19,7 +19,9 @@ pub enum GameVariant {
     /// Each player places two pieces per turn instead of one.
     MasterY,
     /// Before each move a coin decides who plays next (random player selection).
-    FortuneY
+    FortuneY,
+    /// A player may not place adjacent to the cell their opponent placed last turn.
+    TabuY,
 }
 
 impl GameVariant {
@@ -28,6 +30,7 @@ impl GameVariant {
             "why_not" => GameVariant::WhyNot,
             "master_y" => GameVariant::MasterY,
             "fortune_y" => GameVariant::FortuneY,
+            "tabu_y" => GameVariant::TabuY,
             _ => GameVariant::Standard,
         }
     }
@@ -38,6 +41,7 @@ impl GameVariant {
             GameVariant::WhyNot => Some("why_not"),
             GameVariant::MasterY => Some("master_y"),
             GameVariant::FortuneY => Some("fortune_y"),
+            GameVariant::TabuY => Some("tabu_y"),
         }
     }
 }
@@ -320,9 +324,30 @@ impl GameY {
                 player,
             });
         }
+        if self.variant == GameVariant::TabuY {
+            if let Some(last_opp) = self.last_opponent_placement(player) {
+                if self.get_neighbors(&last_opp).contains(&coords) {
+                    return Err(GameYError::TabuViolation {
+                        coordinates: coords,
+                        player,
+                    });
+                }
+            }
+        }
         Ok(())
     }
 
+    /// Returns the coordinates of the most recent placement made by the opponent, if any.
+    fn last_opponent_placement(&self, current_player: PlayerId) -> Option<Coordinates> {
+        let opponent = other_player(current_player);
+        self.history.iter().rev().find_map(|m| {
+            if let Movement::Placement { player, coords } = m {
+                if *player == opponent { Some(*coords) } else { None }
+            } else {
+                None
+            }
+        })
+    }
 
     /// Updates internal data structures (Available cells, Sets, Map)
     /// Returns the index of the newly created set.
@@ -1041,6 +1066,64 @@ mod tests {
         assert_eq!(yen.variant(), Some("fortune_y"));
         let restored = GameY::try_from(yen).unwrap();
         assert_eq!(restored.variant(), GameVariant::FortuneY);
+    }
+
+    // ── TabuY ─────────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_tabu_y_rejects_adjacent_to_last_opponent_move() {
+        let mut game = GameY::new_with_variant(5, GameVariant::TabuY);
+        // Player 0 places at (2,1,1).
+        game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(2, 1, 1),
+        }).unwrap();
+        // (1,2,1) is a neighbor of (2,1,1), so player 1 cannot place there.
+        let result = game.add_move(Movement::Placement {
+            player: PlayerId::new(1),
+            coords: Coordinates::new(1, 2, 1),
+        });
+        assert!(result.is_err(), "Tabu violation should return an error");
+        match result.unwrap_err() {
+            GameYError::TabuViolation { .. } => {}
+            e => panic!("Expected TabuViolation, got {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_tabu_y_allows_non_adjacent_placement() {
+        let mut game = GameY::new_with_variant(5, GameVariant::TabuY);
+        game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(2, 1, 1),
+        }).unwrap();
+        // (0, 4, 0) is far from (2,1,1) — should be allowed.
+        let result = game.add_move(Movement::Placement {
+            player: PlayerId::new(1),
+            coords: Coordinates::new(0, 4, 0),
+        });
+        assert!(result.is_ok(), "Non-adjacent placement should be allowed");
+    }
+
+    #[test]
+    fn test_tabu_y_first_move_has_no_restriction() {
+        let mut game = GameY::new_with_variant(5, GameVariant::TabuY);
+        // No opponent move yet — any cell is legal.
+        let result = game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(2, 1, 1),
+        });
+        assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_tabu_y_yen_roundtrip() {
+        let mut game = GameY::new_with_variant(3, GameVariant::TabuY);
+        game.add_move(Movement::Placement { player: PlayerId::new(0), coords: Coordinates::new(2, 0, 0) }).unwrap();
+        let yen: YEN = (&game).into();
+        assert_eq!(yen.variant(), Some("tabu_y"));
+        let restored = GameY::try_from(yen).unwrap();
+        assert_eq!(restored.variant(), GameVariant::TabuY);
     }
 
     // Test loading a YEN representation of a finished game
