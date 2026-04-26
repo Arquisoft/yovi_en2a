@@ -273,7 +273,7 @@ describe('GameModeContainer — local play', () => {
     render(<GameModeContainer mode={makeNormalMode()} />);
     fireEvent.click(screen.getByText('PLAY'));
     expect(mockNavigate).toHaveBeenCalledWith(
-        '/play/8/normal',
+        '/play/8/greedy_bot',
         expect.objectContaining({
           state: expect.objectContaining({ guest: true }),
         })
