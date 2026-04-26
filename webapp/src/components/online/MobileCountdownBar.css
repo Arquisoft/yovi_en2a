@@ -1,0 +1,277 @@
+/* src/components/online/MobileCountdownBar.css
+ *
+ * Compact fixed bottom bar for mobile / tablet (< 1024 px).
+ * On desktop (≥ 1024 px) the element is hidden; the full RightPanelOnline
+ * is shown instead via .rightpanel-desktop.
+ */
+
+/* ── Shell ───────────────────────────────────────────────────────────── */
+
+/*
+ * Hidden by default (desktop ≥ 1024 px); the @media block below promotes it
+ * to display:flex on smaller screens. All other shell properties (position,
+ * background, etc.) live here in a single rule to keep the selector unique.
+ */
+.mobile-countdown-bar {
+    display: none;
+
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 400;
+
+    background: linear-gradient(
+            160deg,
+            rgba(22, 163, 74, 0.18) 0%,
+            #1e211e 70%
+    );
+    border-top: 1.5px solid rgba(74, 222, 128, 0.35);
+    box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.45);
+
+    /* Safe-area bottom for notch devices */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+
+    transition: border-color 0.2s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+
+@media (max-width: 1023px) {
+    .mobile-countdown-bar {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Hide the desktop right panel */
+    .rightpanel-desktop {
+        display: none !important;
+    }
+}
+
+/* Opponent's turn */
+.mobile-countdown-bar.is-theirs {
+    background: linear-gradient(
+            160deg,
+            rgba(59, 130, 246, 0.15) 0%,
+            #1e211e 70%
+    );
+    border-top-color: rgba(96, 165, 250, 0.3);
+}
+
+/* Critical (≤ 3 s) */
+.mobile-countdown-bar.is-critical {
+    border-top-color: #ef4444;
+    background: linear-gradient(
+            160deg,
+            rgba(239, 68, 68, 0.2) 0%,
+            #1e211e 70%
+    );
+    box-shadow: 0 -6px 30px rgba(239, 68, 68, 0.3),
+    0 -1px 0 rgba(239, 68, 68, 0.2);
+    animation: mcb-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes mcb-pulse {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-1px); }
+}
+
+/* Game over */
+.mobile-countdown-bar.is-over {
+    border-top-color: rgba(255, 255, 255, 0.1);
+    background: rgba(30, 33, 30, 0.95);
+    animation: none;
+}
+
+/* ── Progress track ──────────────────────────────────────────────────── */
+
+.mcb-progress-track {
+    width: 100%;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.4);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.mcb-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4ade80 0%, #22c55e 100%);
+    transition: width 0.1s linear, background 0.2s ease;
+}
+
+.is-theirs .mcb-progress-fill {
+    background: linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%);
+}
+
+.is-critical .mcb-progress-fill {
+    background: linear-gradient(90deg, #f87171 0%, #ef4444 100%);
+}
+
+/* ── Body row ────────────────────────────────────────────────────────── */
+
+.mcb-body {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px 10px;
+}
+
+/* ── Players (left column) ───────────────────────────────────────────── */
+
+.mcb-players {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.mcb-player {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0.45;
+    transition: opacity 0.2s ease;
+    min-width: 0;
+}
+
+.mcb-player--active {
+    opacity: 1;
+}
+
+.mcb-dot {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+}
+
+.mcb-dot--blue { background: #60a5fa; }
+.mcb-dot--red  { background: #f87171; }
+
+.mcb-player--active .mcb-dot--blue { background: #3b82f6; box-shadow: 0 0 5px rgba(59,130,246,0.7); }
+.mcb-player--active .mcb-dot--red  { background: #ef4444; box-shadow: 0 0 5px rgba(239,68,68,0.7); }
+
+.mcb-player-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: #e5e7eb;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+}
+
+.mcb-vs {
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+}
+
+/* ── Countdown (center) ──────────────────────────────────────────────── */
+
+.mcb-countdown {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.mcb-countdown-value {
+    font-size: 36px;
+    font-weight: 900;
+    line-height: 1;
+    letter-spacing: -0.04em;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+    transition: color 0.2s ease;
+}
+
+.is-critical .mcb-countdown-value {
+    color: #ffe4e4;
+    text-shadow: 0 0 16px rgba(239, 68, 68, 0.7);
+}
+
+.is-over .mcb-countdown-value {
+    color: rgba(255,255,255,0.3);
+}
+
+.mcb-countdown-unit {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.45);
+    margin-bottom: 2px;
+}
+
+/* ── Total time (right column) ───────────────────────────────────────── */
+
+.mcb-total {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1px;
+}
+
+.mcb-total-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.mcb-total-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.75);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.04em;
+}
+
+/* ── Tablet adjustments (768–1023 px) ───────────────────────────────── */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+    .mcb-countdown-value {
+        font-size: 42px;
+    }
+
+    .mcb-player-name {
+        max-width: 120px;
+        font-size: 12px;
+    }
+
+    .mcb-total-value {
+        font-size: 16px;
+    }
+
+    .mcb-body {
+        padding: 10px 24px 12px;
+    }
+}
+
+/* ── Extra-small phones (< 360 px) ──────────────────────────────────── */
+
+@media (max-width: 359px) {
+    .mcb-player-name {
+        max-width: 55px;
+        font-size: 10px;
+    }
+
+    .mcb-countdown-value {
+        font-size: 30px;
+    }
+
+    .mcb-total-value {
+        font-size: 13px;
+    }
+
+    .mcb-body {
+        padding: 6px 10px 8px;
+        gap: 4px;
+    }
+}

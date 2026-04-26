@@ -1,12 +1,10 @@
-// GameMode.ts
+// gameModes/GameMode.ts
 import React from "react";
 
 export const Difficulty = {
-  VeryEasy: ["Very Easy","random_bot"],
-  Easy: ["Easy","greedy_bot"],
-  Normal: ["Normal","minimax_bot"],
-  Hard: ["Hard","minimax_bot"],
-  VeryHard: ["Very Hard","minimax_bot"],
+  Easy:   ["Easy",   "easy"]   as const,
+  Normal: ["Normal", "normal"] as const,
+  Hard:   ["Hard",   "hard"]   as const,
 } as const;
 
 export type Difficulty = typeof Difficulty[keyof typeof Difficulty];
@@ -14,13 +12,27 @@ export type Difficulty = typeof Difficulty[keyof typeof Difficulty];
 export interface GameMode {
   id: string;
   label: string;
-  currentLevel: Difficulty;
   description: string;
-  size: number;
   mode: string;
-  showDifficulty: boolean;
-  image?: string;
-  start: () => React.ReactNode;
-}
 
-export const initialDifficulty: Difficulty = Difficulty.Normal;
+  currentLevel: Difficulty;
+  size: number;
+
+  // UI flags — every mode enables only what it needs.
+  showDifficulty?: boolean;
+  showMatchId?: boolean;
+  showPassword?: boolean;
+
+  /** Show CREATE + JOIN buttons (private rooms). */
+  showJoinCreate?: boolean;
+  /** Show JOIN only (public matchmaking). */
+  showOnlyJoin?: boolean;
+  /** Hide the size selector entirely — size is fixed by the mode (public)
+   *  or inherited from the creator (private JOIN). */
+  hideSize?: boolean;
+
+  matchId?: string;
+  password?: string;
+
+  start(): React.ReactNode;
+}

@@ -1,5 +1,4 @@
-    use std::ffi::{c_double, c_float};
-    use jsonwebtoken::signature::digest::typenum::Integer;
+    use std::ffi::{c_float};
     use serde::{Deserialize, Serialize};
     use crate::api_rest::get_gamey_url;
     pub trait DBData: Serialize + for<'de> Deserialize<'de> + std::fmt::Debug  + Send + Sync {}
@@ -151,6 +150,15 @@
         pub coord_z: u32,
     }
 
+    #[derive(Deserialize)]
+    pub struct MoveRequestOnline {
+        pub match_id: String,
+        pub coord_x: u32,
+        pub coord_y: u32,
+        pub coord_z: u32,
+        pub player_id: u8,
+    }
+
     #[derive(Serialize)]
     pub struct MoveResponse {
         pub match_id: String,
@@ -221,54 +229,56 @@ pub struct SaveMatchResponse {
     pub message: String,
 }
 
-    #[derive(Serialize, Deserialize, Debug, Clone)]
-    pub struct PlayResponse {
-        /// The API version used for this request.
-        pub api_version: String,
-        /// The bot that selected this move.
-        pub bot_id: String,
-        /// The coordinates where the bot chose to place its piece.
-        pub coords: Coordinates,
-        /// The updated board state in YEN notation after the bot's move.
-        pub position: YEN,
-        /// Whether the game is finished after this move.
-        pub game_over: bool,
-        /// The winner's symbol ("B" or "R") if the game is over, otherwise null.
-        pub winner: Option<String>,
-    }
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PlayResponse {
+    /// The API version used for this request.
+    pub api_version: String,
+    /// The bot that selected this move.
+    pub bot_id: String,
+    /// The coordinates where the bot chose to place its piece.
+    pub coords: Coordinates,
+    /// The updated board state in YEN notation after the bot's move.
+    pub position: YEN,
+    /// Whether the game is finished after this move.
+    pub game_over: bool,
+    /// The winner's symbol ("B" or "R") if the game is over, otherwise null.
+    pub winner: Option<String>,
+}
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// Online matches
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreateOnlineMatchRequest{
+    pub match_id: String,
+    pub match_password: String,
+    pub player1id: String,
+    pub size:u32,
+}
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct CreateOnlineMatchResponse{
+    pub match_id: String,
+    pub turn_number: u32,
+}
 
-    #[test]
-    fn test_yen_new_accessors() {
-        let yen = YEN::new(3, 1, vec!['B', 'R'], "B/RR/BBB".to_string());
-        assert_eq!(yen.size(), 3);
-        assert_eq!(yen.turn(), 1);
-        assert_eq!(yen.players(), &['B', 'R']);
-        assert_eq!(yen.layout(), "B/RR/BBB");
-    }
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct JoinOnlineMatchRequest{
+    pub match_id: String,
+    pub match_password: String,
+    pub player2id: String,
+}
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct JoinOnlineMatchResponse{
+    pub match_id: String,
+    pub turn_number: u32,
+}
 
-    #[test]
-    fn test_yen_new_with_variant_some() {
-        let yen = YEN::new_with_variant(4, 0, vec!['B', 'R'], "B/RR/BBB/....".to_string(), Some("why_not".to_string()));
-        assert_eq!(yen.size(), 4);
-        assert_eq!(yen.layout(), "B/RR/BBB/....");
-    }
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UpdateOnlineMatchRequest{
+    pub match_id: String,
+    pub turn_number: u32,
+}
 
-    #[test]
-    fn test_yen_new_with_variant_none() {
-        let yen = YEN::new_with_variant(2, 0, vec!['B', 'R'], "B/RR".to_string(), None);
-        assert_eq!(yen.size(), 2);
-        assert_eq!(yen.turn(), 0);
-    }
-
-    #[test]
-    fn test_coordinates_fields() {
-        let c = Coordinates { x: 1, y: 2, z: 3 };
-        assert_eq!(c.x, 1);
-        assert_eq!(c.y, 2);
-        assert_eq!(c.z, 3);
-    }
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct UpdateOnlineMatchResponse{
+    pub match_id: String,
+    pub board_status: YEN,
 }

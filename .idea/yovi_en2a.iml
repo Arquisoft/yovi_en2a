@@ -7,8 +7,11 @@
       <sourceFolder url="file://$MODULE_DIR$/gamey/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/game_manager/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/game_manager/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/userAuthentification/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/userAuthentification/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/gamey/target" />
       <excludeFolder url="file://$MODULE_DIR$/game_manager/target" />
+      <excludeFolder url="file://$MODULE_DIR$/userAuthentification/target" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

@@ -45,19 +45,19 @@
 .infoButton {
     width: 2rem; height: 2rem; border-radius: 50%;
     border: 1px solid rgba(255,255,255,0.1); background: #202320;
-    color: #D1D5DB; /* FIXED: Better contrast against dark background */
+    color: #D1D5DB;
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     font-size: 0.85rem; transition: background 0.15s, color 0.15s;
 }
 .infoButton:hover {
     background: #272b27;
-    color: #FFFFFF; /* FIXED */
+    color: #FFFFFF;
 }
 .tooltip {
     display: none; position: absolute; top: 115%; right: 0;
     width: 13rem; padding: 0.9rem 1rem; background: #1a1f1a;
     border: 1px solid rgba(22, 163, 74, 0.2);
-    color: #F3F4F6; /* FIXED */
+    color: #F3F4F6;
     border-radius: 0.75rem; font-size: 0.82rem; line-height: 1.5;
     box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.6); z-index: 9999;
 }
@@ -83,10 +83,11 @@
     border: 0.05rem solid rgba(255,255,255,0.06);
 }
 
-/* Wrapper to hold Difficulty and Size side-by-side */
+/* Wrapper to hold sections side-by-side */
 .controlsWrapper {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     gap: clamp(0.3rem, 1.5vw, 1rem);
     width: 100%;
     flex-shrink: 0;
@@ -96,7 +97,7 @@
 /* Difficulty & Size Sections */
 .difficultySection,
 .sizeSection {
-    flex: 1;
+    flex: 1 1 6rem;
     min-width: 0;
     box-sizing: border-box;
     display: flex;
@@ -111,7 +112,7 @@
 
 .difficultyLabel {
     font-size: 0.65rem;
-    color: #B0B7C3; /* AAA: 8.3:1 on dark background */
+    color: #B0B7C3;
     text-transform: uppercase;
     letter-spacing: 0.08rem;
 }
@@ -151,7 +152,7 @@
     font-family: var(--font-heading, var(--font-main)), serif;
     font-size: clamp(0.65rem, 1.5vw, 0.75rem);
     font-weight: 700;
-    color: #4ADE80; /* FIXED: Was #16a34a, lighter green needed for contrast */
+    color: #4ADE80;
 
     flex: 1;
     min-width: 0;
@@ -167,6 +168,57 @@
     padding: 0 0.1rem;
 }
 
+/* Text inputs (Match ID, Password) — match the "chip" look of the selectors */
+.inputField {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+
+    background: #282C28;
+    color: #F3F4F6;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.4rem;
+
+    padding: 0.35rem 0.5rem;
+    font-family: var(--font-heading, var(--font-main)), serif;
+    font-size: clamp(0.75rem, 1.5vw, 0.85rem);
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 0.04rem;
+
+    outline: none;
+    transition: background 0.15s, border-color 0.15s, box-shadow 0.15s;
+    box-sizing: border-box;
+}
+
+.inputField::placeholder {
+    color: rgba(209, 213, 219, 0.35);
+    font-weight: 500;
+    letter-spacing: 0.02rem;
+}
+
+.inputField:hover {
+    background: #2f342f;
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.inputField:focus {
+    background: #2f342f;
+    border-color: rgba(74, 222, 128, 0.55);
+    box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.12);
+    color: #fff;
+}
+
+/* Autofill override for Chromium — keeps the dark theme */
+.inputField:-webkit-autofill,
+.inputField:-webkit-autofill:hover,
+.inputField:-webkit-autofill:focus {
+    -webkit-text-fill-color: #F3F4F6;
+    -webkit-box-shadow: 0 0 0 1000px #282C28 inset;
+    caret-color: #F3F4F6;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
 /* PLAY Button */
 .playButton {
     width: 100%;
@@ -179,7 +231,7 @@
     letter-spacing: 0.12rem;
     border: none;
     border-radius: 0.75rem;
-    background: #145c2a; /* AAA: 8.1:1 contrast with white text */
+    background: #145c2a;
     color: #fff;
     cursor: pointer;
     box-sizing: border-box;
@@ -199,39 +251,43 @@
 
 /* ── Mobile < 45rem (720 px) ───────────────────────────────── */
 @media (max-width: 45rem) {
-  .gameModeContainer {
-    height: auto;
-  }
+    .gameModeContainer {
+        height: auto;
+    }
 
-  /* Fixed image height prevents cards from being excessively tall */
-  .imageContainer {
-    flex-basis: 10rem;
-    min-height: 0;
-  }
+    .imageContainer {
+        flex-basis: 10rem;
+        min-height: 0;
+    }
 
-  .title {
-    font-size: clamp(1.1rem, 6vw, 1.4rem);
-  }
+    .title {
+        font-size: clamp(1.1rem, 6vw, 1.4rem);
+    }
 
-  .playButton {
-    padding: 0.9rem;
-    font-size: 1.05rem;
-  }
+    .playButton {
+        padding: 0.9rem;
+        font-size: 1.05rem;
+    }
 }
 
 /* ── Mobile < 30rem (480 px) ───────────────────────────────── */
 @media (max-width: 30rem) {
-  .imageContainer {
-    flex-basis: 8rem;
-  }
+    .imageContainer {
+        flex-basis: 8rem;
+    }
 
-  .difficultyLabel {
-    font-size: 0.6rem;
-  }
+    .difficultyLabel {
+        font-size: 0.6rem;
+    }
 
-  .playButton {
-    padding: 0.8rem;
-    font-size: 1rem;
-    min-height: 2.75rem;
-  }
+    .playButton {
+        padding: 0.8rem;
+        font-size: 1rem;
+        min-height: 2.75rem;
+    }
+
+    .inputField {
+        padding: 0.3rem 0.4rem;
+        font-size: 0.8rem;
+    }
 }

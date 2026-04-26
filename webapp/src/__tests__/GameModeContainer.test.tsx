@@ -1,159 +1,491 @@
-import { render, screen, fireEvent, cleanup } from '@testing-library/react'
-import { describe, test, expect, afterEach, vi } from 'vitest'
-import { MemoryRouter } from 'react-router-dom'
-import { GameModeContainer } from '../components/gameSelection/gameModes/GameModeContainer'
-import { NormalMode } from '../components/gameSelection/gameModes/NormalMode'
-import { LocalMode } from '../components/gameSelection/gameModes/LocalMode'
-import '@testing-library/jest-dom'
+// src/__tests__/GameModeContainer.test.tsx
+//
+// Tests for the lobby card. Covers:
+//   - Local-play "PLAY" button → navigates with right URL.
+//   - Public matchmaking "JOIN" button → joinOnlineMatch happy path.
+//   - Public matchmaking auto-create fallback when no match available.
+//   - Private "CREATE" / "JOIN" with match id + password.
+//   - Difficulty + size selectors (increase / decrease, edge bounds).
+//   - Error rendering when API fails.
+//   - Guest vs logged-in user state forwarded to navigate.
 
-// 1. Mockeamos la navegación porque ahora el botón PLAY usa React Router
-const mockNavigate = vi.fn()
-vi.mock('react-router-dom', async () => {
-  const actual = await vi.importActual('react-router-dom')
+import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import type { GameMode } from '../components/gameSelection/gameModes/GameMode';
+import { Difficulty } from '../components/gameSelection/gameModes/GameMode';
+
+// ── Router ────────────────────────────────────────────────────────────────
+
+const mockNavigate = vi.fn();
+const mockUseLocation = vi.fn(() => ({ state: { guest: true } }));
+
+vi.mock('react-router-dom', () => ({
+  useNavigate: () => mockNavigate,
+  useLocation: () => mockUseLocation(),
+}));
+
+// ── User context ──────────────────────────────────────────────────────────
+
+const mockUseUser = vi.fn().mockReturnValue({ user: null });
+
+vi.mock('../contexts/UserContext', () => ({
+  useUser: () => mockUseUser(),
+}));
+
+// ── online module ─────────────────────────────────────────────────────────
+
+const mockCreateOnlineMatch = vi.fn();
+const mockJoinOnlineMatch = vi.fn();
+const mockIsNoMatchesAvailable = vi.fn();
+
+vi.mock('../components/online/online', () => ({
+  createOnlineMatch: (...a: unknown[]) => mockCreateOnlineMatch(...a),
+  joinOnlineMatch: (...a: unknown[]) => mockJoinOnlineMatch(...a),
+  isNoMatchesAvailable: (...a: unknown[]) => mockIsNoMatchesAvailable(...a),
+}));
+
+// ── playerId ──────────────────────────────────────────────────────────────
+
+vi.mock('../components/online/playerId', () => ({
+  getPlayerId: () => 'mock-player-id',
+}));
+
+// ── Asset import (won't actually load in jsdom) ───────────────────────────
+
+vi.mock('../assets/background_image_gameY.png', () => ({ default: 'mock-bg' }));
+
+// Now import the component (after mocks are set).
+import { GameModeContainer } from '../components/gameSelection/gameModes/GameModeContainer';
+
+// ── Mode factories ────────────────────────────────────────────────────────
+//
+// Build minimal GameMode instances that match the four real modes used in
+// the app (LocalMode, NormalMode, OnlineMode, OnlinePrivateMode).
+
+function makeLocalMode(): GameMode {
   return {
-    ...actual as any,
-    useNavigate: () => mockNavigate,
-  }
-})
+    id: 'local',
+    label: 'Local Mode',
+    description: 'Play locally.',
+    mode: 'multi',
+    currentLevel: Difficulty.Normal,
+    size: 8,
+    showDifficulty: false,
+    start: () => null,
+  };
+}
 
-describe('GameModeContainer Component', () => {
-  afterEach(() => {
-    cleanup()
-    vi.restoreAllMocks()
-    mockNavigate.mockClear() // Limpiamos la navegación entre tests
-  })
+function makeNormalMode(): GameMode {
+  return {
+    id: 'normal',
+    label: 'Normal Mode',
+    description: 'Play vs bot.',
+    mode: 'bot',
+    currentLevel: Difficulty.Normal,
+    size: 8,
+    showDifficulty: true,
+    start: () => null,
+  };
+}
 
-  test('should render mode info, image and difficulty section', () => {
-    const mode = new NormalMode()
-    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
-    
-    expect(screen.getByText(mode.label)).toBeInTheDocument()
-    expect(screen.getByText(mode.description)).toBeInTheDocument() 
-    expect(screen.getByAltText(mode.label)).toBeInTheDocument()
-    
-    expect(screen.getByText('Size')).toBeInTheDocument()
-    expect(screen.getByText('PLAY')).toBeInTheDocument()
-  })
+function makeOnlineMode(): GameMode {
+  return {
+    id: 'online',
+    label: 'Online Mode',
+    description: 'Play online.',
+    mode: 'multi',
+    currentLevel: Difficulty.Normal,
+    size: 8,
+    showOnlyJoin: true,
+    start: () => null,
+  };
+}
 
-  test('should navigate to the game on PLAY click', () => {
-    const mode = new NormalMode()
-    
-    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
-    
-    const playButton = screen.getByText('PLAY')
-    fireEvent.click(playButton)
-    
-    // 2. Comprobamos que el botón PLAY realmente llama a la redirección de React Router
-    expect(mockNavigate).toHaveBeenCalled()
-  })
+function makeOnlinePrivateMode(): GameMode {
+  return {
+    id: 'online_private',
+    label: 'Private Party Mode',
+    description: 'Private rooms.',
+    mode: 'multi',
+    currentLevel: Difficulty.Normal,
+    size: 8,
+    showMatchId: true,
+    showPassword: true,
+    showJoinCreate: true,
+    matchId: '',
+    password: '',
+    start: () => null,
+  };
+}
 
-  test('should handle difficulty navigation clicks', () => {
-    const mode = new NormalMode()
-    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
-    
-    // 3. Como ahora hay flechas para Difficulty y para Size, obtenemos TODAS las flechas
-    const leftArrows = screen.getAllByText('←')
-    const rightArrows = screen.getAllByText('→')
+// ── Setup ─────────────────────────────────────────────────────────────────
 
-    // Hacemos clic en el primer set de flechas (el de Difficulty)
-    fireEvent.click(rightArrows[0])
-    fireEvent.click(leftArrows[0])
-    
-    expect(leftArrows[0]).toBeInTheDocument()
-    expect(rightArrows[0]).toBeInTheDocument()
-  })
+beforeEach(() => {
+  vi.clearAllMocks();
+  mockUseLocation.mockReturnValue({ state: { guest: true } });
+  mockUseUser.mockReturnValue({ user: null });
+});
 
-  test('should handle size arrow clicks (increase and decrease)', () => {
-    const mode = new NormalMode()
-    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+// ── Rendering ─────────────────────────────────────────────────────────────
 
-    const rightArrows = screen.getAllByText('→')
-    const leftArrows = screen.getAllByText('←')
+describe('GameModeContainer — rendering', () => {
+  test('shows the mode label and description tooltip', () => {
+    render(<GameModeContainer mode={makeLocalMode()} />);
+    expect(screen.getByText('Local Mode')).toBeInTheDocument();
+    expect(screen.getByText('Play locally.')).toBeInTheDocument();
+  });
 
-    // Size arrows are at index 1 (index 0 is difficulty)
-    const initialSize = Number(screen.getByText(/^\d+$/).textContent)
+  test('shows the difficulty selector when showDifficulty is true', () => {
+    render(<GameModeContainer mode={makeNormalMode()} />);
+    expect(screen.getByText('Difficulty')).toBeInTheDocument();
+    expect(screen.getByText('Normal')).toBeInTheDocument();
+  });
 
-    fireEvent.click(rightArrows[1])
-    expect(Number(screen.getByText(/^\d+$/).textContent)).toBe(initialSize + 1)
+  test('does not show difficulty selector when showDifficulty is false', () => {
+    render(<GameModeContainer mode={makeLocalMode()} />);
+    expect(screen.queryByText('Difficulty')).not.toBeInTheDocument();
+  });
 
-    fireEvent.click(leftArrows[1])
-    expect(Number(screen.getByText(/^\d+$/).textContent)).toBe(initialSize)
-  })
+  test('always shows the size selector', () => {
+    render(<GameModeContainer mode={makeLocalMode()} />);
+    expect(screen.getByText('Size')).toBeInTheDocument();
+    expect(screen.getByText('8')).toBeInTheDocument();
+  });
 
-  test('should navigate to /play/.../multi when mode has no difficulty (LocalMode)', () => {
-    const mode = new LocalMode()
-    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+  test('renders match id and password inputs for private mode', () => {
+    render(<GameModeContainer mode={makeOnlinePrivateMode()} />);
+    expect(screen.getByPlaceholderText('ID...')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('****')).toBeInTheDocument();
+  });
 
-    fireEvent.click(screen.getByText('PLAY'))
+  test('shows PLAY button for local modes', () => {
+    render(<GameModeContainer mode={makeLocalMode()} />);
+    expect(screen.getByText('PLAY')).toBeInTheDocument();
+  });
 
+  test('shows JOIN button only for public matchmaking', () => {
+    render(<GameModeContainer mode={makeOnlineMode()} />);
+    expect(screen.getByText('JOIN')).toBeInTheDocument();
+    expect(screen.queryByText('CREATE')).not.toBeInTheDocument();
+  });
+
+  test('shows CREATE and JOIN buttons for private mode', () => {
+    render(<GameModeContainer mode={makeOnlinePrivateMode()} />);
+    expect(screen.getByText('CREATE')).toBeInTheDocument();
+    expect(screen.getByText('JOIN')).toBeInTheDocument();
+  });
+});
+
+// ── Difficulty selector ───────────────────────────────────────────────────
+
+describe('GameModeContainer — difficulty selector', () => {
+  test('right arrow advances difficulty', () => {
+    const { container } = render(<GameModeContainer mode={makeNormalMode()} />);
+    const arrows = Array.from(container.querySelectorAll('button')).filter(
+        (el) => el.textContent === '→'
+    );
+    fireEvent.click(arrows[0]);
+    expect(screen.getByText('Hard')).toBeInTheDocument();
+  });
+
+  test('left arrow goes back to easier difficulty', () => {
+    const { container } = render(<GameModeContainer mode={makeNormalMode()} />);
+    const leftArrows = Array.from(container.querySelectorAll('button')).filter(
+        (el) => el.textContent === '←'
+    );
+    fireEvent.click(leftArrows[0]);
+    expect(screen.getByText('Easy')).toBeInTheDocument();
+  });
+});
+
+// ── Size selector ─────────────────────────────────────────────────────────
+
+describe('GameModeContainer — size selector', () => {
+  test('right arrow increases size', () => {
+    const { container } = render(<GameModeContainer mode={makeLocalMode()} />);
+    const arrows = Array.from(container.querySelectorAll('button')).filter(
+        (el) => el.textContent === '→'
+    );
+    fireEvent.click(arrows[0]);
+    expect(screen.getByText('9')).toBeInTheDocument();
+  });
+
+  test('left arrow decreases size', () => {
+    const { container } = render(<GameModeContainer mode={makeLocalMode()} />);
+    const arrows = Array.from(container.querySelectorAll('button')).filter(
+        (el) => el.textContent === '←'
+    );
+    fireEvent.click(arrows[0]);
+    expect(screen.getByText('7')).toBeInTheDocument();
+  });
+
+  test('size cannot go below the minimum (4)', () => {
+    const mode = makeLocalMode();
+    mode.size = 4;
+    const { container } = render(<GameModeContainer mode={mode} />);
+
+    // Use querySelectorAll: getAllByRole excludes visibility:hidden buttons,
+    // and at the minimum the ← arrow is hidden but still in the DOM.
+    const leftArrows = Array.from(
+        container.querySelectorAll('button')
+    ).filter((el) => el.textContent === '←');
+
+    // If the arrow is hidden the click is a no-op, but Math.max in the
+    // handler also clamps. Either way size stays at 4.
+    if (leftArrows[0]) {
+      for (let i = 0; i < 10; i++) fireEvent.click(leftArrows[0]);
+    }
+    expect(screen.getByText('4')).toBeInTheDocument();
+  });
+
+  test('size cannot go above the maximum (12)', () => {
+    const mode = makeLocalMode();
+    mode.size = 12;
+    const { container } = render(<GameModeContainer mode={mode} />);
+
+    const rightArrows = Array.from(
+        container.querySelectorAll('button')
+    ).filter((el) => el.textContent === '→');
+
+    if (rightArrows[0]) {
+      for (let i = 0; i < 10; i++) fireEvent.click(rightArrows[0]);
+    }
+    expect(screen.getByText('12')).toBeInTheDocument();
+  });
+});
+
+// ── Local play ────────────────────────────────────────────────────────────
+
+describe('GameModeContainer — local play', () => {
+  test('PLAY navigates to /play/:size/multi for non-difficulty modes', () => {
+    render(<GameModeContainer mode={makeLocalMode()} />);
+    fireEvent.click(screen.getByText('PLAY'));
     expect(mockNavigate).toHaveBeenCalledWith(
-      expect.stringContaining('/multi'),
-      undefined
-    )
-  })
+        '/play/8/multi',
+        expect.objectContaining({
+          state: expect.objectContaining({ guest: true }),
+        })
+    );
+  });
 
-  test('passes guest state in navState when location has guest:true', () => {
-    const mode = new NormalMode()
-    render(
-      <MemoryRouter initialEntries={[{ pathname: '/gameSelection', state: { guest: true } }]}>
-        <GameModeContainer mode={mode} />
-      </MemoryRouter>
-    )
-    fireEvent.click(screen.getByText('PLAY'))
+  test('PLAY navigates to /play/:size/:difficulty for difficulty modes', () => {
+    render(<GameModeContainer mode={makeNormalMode()} />);
+    fireEvent.click(screen.getByText('PLAY'));
     expect(mockNavigate).toHaveBeenCalledWith(
-      expect.any(String),
-      { state: { guest: true } }
-    )
-  })
+        '/play/8/normal',
+        expect.objectContaining({
+          state: expect.objectContaining({ guest: true }),
+        })
+    );
+  });
 
-  test('decrease size button is hidden when size is at minimum', () => {
-    const mode = new NormalMode()
-    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+  test('PLAY does not include guest:true when user is logged in', () => {
+    mockUseLocation.mockReturnValue({ state: {guest: false} });
+    mockUseUser.mockReturnValue({
+      user: { username: 'Alice' },
+    });
 
-    const leftArrows = screen.getAllByText('←')
-    // Click left on size until minimum (4) — the size left arrow is index 1
-    for (let i = 0; i < 10; i++) fireEvent.click(leftArrows[1])
+    render(<GameModeContainer mode={makeLocalMode()} />);
+    fireEvent.click(screen.getByText('PLAY'));
 
-    expect(leftArrows[1]).toHaveStyle({ visibility: 'hidden' })
-  })
+    const callArgs = mockNavigate.mock.calls[0];
+    expect(callArgs[1].state.guest).toBeUndefined();
+  });
+});
 
-  test('increase size button is hidden when size is at maximum', () => {
-    const mode = new NormalMode()
-    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+// ── Public matchmaking ────────────────────────────────────────────────────
 
-    const rightArrows = screen.getAllByText('→')
-    for (let i = 0; i < 10; i++) fireEvent.click(rightArrows[1])
+describe('GameModeContainer — public matchmaking', () => {
+  test('JOIN happy path navigates to /waiting/:matchId', async () => {
+    mockJoinOnlineMatch.mockResolvedValue({
+      match_id: 'm1',
+      turn_number: 1,
+    });
 
-    expect(rightArrows[1]).toHaveStyle({ visibility: 'hidden' })
-  })
+    render(<GameModeContainer mode={makeOnlineMode()} />);
+    fireEvent.click(screen.getByText('JOIN'));
 
-  test('decrease difficulty button is hidden when at minimum difficulty', () => {
-    const mode = new NormalMode()
-    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+    await waitFor(() => {
+      expect(mockJoinOnlineMatch).toHaveBeenCalledWith({
+        player2id: 'mock-player-id',
+        match_id: '',
+        match_password: '',
+      });
+      expect(mockNavigate).toHaveBeenCalledWith(
+          '/waiting/m1',
+          expect.objectContaining({
+            state: expect.objectContaining({
+              role: 'join',
+              turnNumber: 1,
+            }),
+          })
+      );
+    });
+  });
 
-    const leftArrows = screen.getAllByText('←')
-    // Click difficulty left (index 0) many times to reach min
-    for (let i = 0; i < 10; i++) fireEvent.click(leftArrows[0])
+  test('falls back to createMatch when no matches are available', async () => {
+    const noMatchErr = new Error('no match available');
+    mockJoinOnlineMatch.mockRejectedValue(noMatchErr);
+    mockIsNoMatchesAvailable.mockReturnValue(true);
+    mockCreateOnlineMatch.mockResolvedValue({
+      match_id: 'created-m1',
+      turn_number: 0,
+    });
 
-    expect(leftArrows[0]).toHaveStyle({ visibility: 'hidden' })
-  })
+    render(<GameModeContainer mode={makeOnlineMode()} />);
+    fireEvent.click(screen.getByText('JOIN'));
 
-  test('increase difficulty button is hidden when at maximum difficulty', () => {
-    const mode = new NormalMode()
-    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
+    await waitFor(() => {
+      expect(mockCreateOnlineMatch).toHaveBeenCalled();
+      expect(mockNavigate).toHaveBeenCalledWith(
+          '/waiting/created-m1',
+          expect.objectContaining({
+            state: expect.objectContaining({
+              role: 'create',
+            }),
+          })
+      );
+    });
+  });
 
-    const rightArrows = screen.getAllByText('→')
-    // Click difficulty right (index 0) many times to reach max
-    for (let i = 0; i < 10; i++) fireEvent.click(rightArrows[0])
+  test('shows error when JOIN fails for non-no-match reason', async () => {
+    mockJoinOnlineMatch.mockRejectedValue(new Error('Server exploded'));
+    mockIsNoMatchesAvailable.mockReturnValue(false);
 
-    expect(rightArrows[0]).toHaveStyle({ visibility: 'hidden' })
-  })
+    render(<GameModeContainer mode={makeOnlineMode()} />);
+    fireEvent.click(screen.getByText('JOIN'));
 
-  test('size defaults to 8 when mode.size is 0 (falsy)', () => {
-    const mode = new NormalMode()
-    mode.size = 0
-    render(<MemoryRouter><GameModeContainer mode={mode} /></MemoryRouter>)
-    // The size display should show 8 (the fallback)
-    expect(screen.getByText('8')).toBeInTheDocument()
-  })
-})
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Server exploded');
+    });
+  });
+
+  test('shows error when fallback createMatch also fails', async () => {
+    mockJoinOnlineMatch.mockRejectedValue(new Error('no match'));
+    mockIsNoMatchesAvailable.mockReturnValue(true);
+    mockCreateOnlineMatch.mockRejectedValue(new Error('Could not create'));
+
+    render(<GameModeContainer mode={makeOnlineMode()} />);
+    fireEvent.click(screen.getByText('JOIN'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Could not create');
+    });
+  });
+});
+
+// ── Private rooms ─────────────────────────────────────────────────────────
+
+describe('GameModeContainer — private rooms', () => {
+  test('CREATE sends match id + password and navigates to /waiting', async () => {
+    mockCreateOnlineMatch.mockResolvedValue({
+      match_id: 'room-42',
+      turn_number: 0,
+    });
+
+    render(<GameModeContainer mode={makeOnlinePrivateMode()} />);
+    fireEvent.change(screen.getByPlaceholderText('ID...'), {
+      target: { value: 'room-42' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('****'), {
+      target: { value: 'hunter2' },
+    });
+    fireEvent.click(screen.getByText('CREATE'));
+
+    await waitFor(() => {
+      expect(mockCreateOnlineMatch).toHaveBeenCalledWith({
+        player1id: 'mock-player-id',
+        size: 8,
+        match_id: 'room-42',
+        match_password: 'hunter2',
+      });
+      expect(mockNavigate).toHaveBeenCalledWith(
+          '/waiting/room-42',
+          expect.objectContaining({
+            state: expect.objectContaining({
+              role: 'create',
+              isPrivate: true,
+              password: 'hunter2',
+            }),
+          })
+      );
+    });
+  });
+
+  test('JOIN sends match id + password and navigates', async () => {
+    mockJoinOnlineMatch.mockResolvedValue({
+      match_id: 'room-42',
+      turn_number: 1,
+    });
+
+    render(<GameModeContainer mode={makeOnlinePrivateMode()} />);
+    fireEvent.change(screen.getByPlaceholderText('ID...'), {
+      target: { value: 'room-42' },
+    });
+    fireEvent.change(screen.getByPlaceholderText('****'), {
+      target: { value: 'hunter2' },
+    });
+    fireEvent.click(screen.getByText('JOIN'));
+
+    await waitFor(() => {
+      expect(mockJoinOnlineMatch).toHaveBeenCalledWith({
+        player2id: 'mock-player-id',
+        match_id: 'room-42',
+        match_password: 'hunter2',
+      });
+      expect(mockNavigate).toHaveBeenCalledWith(
+          '/waiting/room-42',
+          expect.objectContaining({
+            state: expect.objectContaining({
+              role: 'join',
+              isPrivate: true,
+            }),
+          })
+      );
+    });
+  });
+
+  test('CREATE shows error when API fails', async () => {
+    mockCreateOnlineMatch.mockRejectedValue(new Error('Bad password'));
+
+    render(<GameModeContainer mode={makeOnlinePrivateMode()} />);
+    fireEvent.click(screen.getByText('CREATE'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Bad password');
+    });
+  });
+
+  test('shows generic error when rejected with empty message', async () => {
+    mockCreateOnlineMatch.mockRejectedValue(new Error(''));
+
+    render(<GameModeContainer mode={makeOnlinePrivateMode()} />);
+    fireEvent.click(screen.getByText('CREATE'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Could not create match');
+    });
+  });
+});
+
+// ── Busy state ────────────────────────────────────────────────────────────
+
+describe('GameModeContainer — busy state', () => {
+  test('disables buttons while a request is in flight', async () => {
+    // Promise that never resolves so the busy state sticks.
+    mockJoinOnlineMatch.mockReturnValue(new Promise(() => {}));
+
+    render(<GameModeContainer mode={makeOnlinePrivateMode()} />);
+    const joinBtn = screen.getByText('JOIN');
+    const createBtn = screen.getByText('CREATE');
+
+    fireEvent.click(joinBtn);
+
+    await waitFor(() => {
+      // Both buttons disabled while busy.
+      expect(joinBtn).toBeDisabled();
+      expect(createBtn).toBeDisabled();
+    });
+  });
+});
