@@ -8,19 +8,22 @@ use std::path::Path;
 /// A Result type alias for game operations that may fail with a `GameYError`.
 pub type Result<T> = std::result::Result<T, crate::GameYError>;
 
-/// Game variant that modifies the win condition.
+/// Game variant that modifies rules and win conditions.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GameVariant {
     /// Standard rules: connecting all three sides wins.
     Standard,
     /// Misère rules: connecting all three sides loses (the opponent wins).
     WhyNot,
+    /// Each player places two pieces per turn instead of one.
+    MasterY
 }
 
 impl GameVariant {
     fn from_str(s: &str) -> Self {
         match s {
             "why_not" => GameVariant::WhyNot,
+            "master_y" => GameVariant::MasterY,
             _ => GameVariant::Standard,
         }
     }
@@ -29,6 +32,7 @@ impl GameVariant {
         match self {
             GameVariant::Standard => None,
             GameVariant::WhyNot => Some("why_not"),
+            GameVariant::MasterY => Some("master_y"),
         }
     }
 }
@@ -58,6 +62,10 @@ pub struct GameY {
 
     // Game variant that modifies win conditions.
     variant: GameVariant,
+
+    // For MasterY: number of placements the current player has made in this turn (resets at 2).
+    placements_this_turn: u32,
+
 }
 
 impl GameY {
@@ -101,6 +109,7 @@ impl GameY {
             },
             available_cells: (0..total_cells).collect(),
             variant,
+            placements_this_turn: 0,
         }
     }
 
@@ -245,17 +254,32 @@ impl GameY {
         if self.check_game_over() {
             tracing::info!("Game was already over. Move ignored for status update.");
         } else if won {
-            // In WhyNot (misère) the player who connects all three sides LOSES.
+            // In WhyNot the player who connects all three sides LOSES.
             let winner = match self.variant {
                 GameVariant::WhyNot => other_player(player),
-                GameVariant::Standard => player,
+                _ => player,
             };
             tracing::debug!("Player {} wins the game!", winner);
             self.status = GameStatus::Finished { winner };
         } else {
-            self.status = GameStatus::Ongoing {
-                next_player: other_player(player),
-            };
+            let next = self.next_player_after(player);
+            self.status = GameStatus::Ongoing { next_player: next };
+        }
+    }
+
+    /// Determines the next player after a placement, applying variant-specific rules.
+    fn next_player_after(&mut self, player: PlayerId) -> PlayerId {
+        match self.variant {
+            GameVariant::MasterY => {
+                self.placements_this_turn += 1;
+                if self.placements_this_turn >= 2 {
+                    self.placements_this_turn = 0;
+                    other_player(player)
+                } else {
+                    player
+                }
+            }
+            _ => other_player(player),
         }
     }
 
@@ -275,7 +299,7 @@ impl GameY {
         }
     }
 
-    /// Handles validation logic (Game Over checks and Occupancy)
+    /// Handles validation logic (Game Over checks, occupancy, and variant-specific rules).
     fn validate_placement(&self, player: PlayerId, coords: Coordinates) -> Result<()> {
         if self.check_game_over() {
             tracing::info!("Game is already over. Move at {} could be ignored", coords);
@@ -289,6 +313,7 @@ impl GameY {
         }
         Ok(())
     }
+
 
     /// Updates internal data structures (Available cells, Sets, Map)
     /// Returns the index of the newly created set.
@@ -511,7 +536,7 @@ impl TryFrom<YEN> for GameY {
         let variant = game.variant()
             .map(GameVariant::from_str)
             .unwrap_or(GameVariant::Standard);
-        let mut ygame = GameY::new_with_variant(game.size(), variant);
+
         let rows: Vec<&str> = game.layout().split('/').collect();
         if rows.len() as u32 != game.size() {
             return Err(GameYError::InvalidYENLayout {
@@ -519,6 +544,9 @@ impl TryFrom<YEN> for GameY {
                 found: rows.len() as u32,
             });
         }
+
+        let mut ygame = GameY::new_with_variant(game.size(), variant);
+
         for (row, row_str) in rows.iter().enumerate() {
             let cells: Vec<char> = row_str.chars().collect();
             if cells.len() as u32 != row as u32 + 1 {
@@ -546,7 +574,7 @@ impl TryFrom<YEN> for GameY {
                             coords,
                         })?;
                     }
-                    '.' => {}
+                    '.' | 'H' => {}
                     _ => {
                         return Err(GameYError::InvalidCharInLayout {
                             char: *cell,
@@ -914,6 +942,70 @@ mod tests {
         let json = serde_json::to_string(&yen).unwrap();
         assert!(!json.contains("variant"), "standard YEN should not contain a variant field");
     }
+
+    // ── MasterY ──────────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_master_y_same_player_places_twice() {
+        let mut game = GameY::new_with_variant(5, GameVariant::MasterY);
+        // Player 0 first placement — still player 0's turn
+        game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(2, 1, 1),
+        }).unwrap();
+        match &game.status {
+            GameStatus::Ongoing { next_player } => assert_eq!(*next_player, PlayerId::new(0)),
+            _ => panic!("Game should be ongoing and still player 0's turn"),
+        }
+    }
+
+    #[test]
+    fn test_master_y_switches_after_two_placements() {
+        let mut game = GameY::new_with_variant(5, GameVariant::MasterY);
+        game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(2, 1, 1),
+        }).unwrap();
+        game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(3, 0, 1),
+        }).unwrap();
+        match &game.status {
+            GameStatus::Ongoing { next_player } => assert_eq!(*next_player, PlayerId::new(1)),
+            _ => panic!("Game should be ongoing and now player 1's turn"),
+        }
+    }
+
+    #[test]
+    fn test_master_y_win_ends_game_early() {
+        // Player 0 wins on the first of their two placements — game ends immediately.
+        let mut game = GameY::new_with_variant(3, GameVariant::MasterY);
+        // Build a partial win: player 0 needs to touch all 3 sides.
+        // On a size-3 board (0,2,0) touches side A+C, (0,0,2) touches side A+B.
+        // (2,0,0) touches sides B+C.  Placing all three connects all sides.
+        game.add_move(Movement::Placement { player: PlayerId::new(0), coords: Coordinates::new(0, 2, 0) }).unwrap();
+        game.add_move(Movement::Placement { player: PlayerId::new(0), coords: Coordinates::new(0, 0, 2) }).unwrap();
+        // Still player 0 after first pair; now second pair starts.
+        game.add_move(Movement::Placement { player: PlayerId::new(1), coords: Coordinates::new(2, 0, 0) }).unwrap();
+        game.add_move(Movement::Placement { player: PlayerId::new(1), coords: Coordinates::new(1, 1, 0) }).unwrap();
+        // Player 0 connects all three sides — game should end.
+        game.add_move(Movement::Placement { player: PlayerId::new(0), coords: Coordinates::new(0, 1, 1) }).unwrap();
+        match game.status {
+            GameStatus::Finished { winner } => assert_eq!(winner, PlayerId::new(0)),
+            _ => panic!("Game should be finished with player 0 as winner"),
+        }
+    }
+
+    #[test]
+    fn test_master_y_yen_roundtrip() {
+        let mut game = GameY::new_with_variant(3, GameVariant::MasterY);
+        game.add_move(Movement::Placement { player: PlayerId::new(0), coords: Coordinates::new(2, 0, 0) }).unwrap();
+        let yen: YEN = (&game).into();
+        assert_eq!(yen.variant(), Some("master_y"));
+        let restored = GameY::try_from(yen).unwrap();
+        assert_eq!(restored.variant(), GameVariant::MasterY);
+    }
+
 
     // Test loading a YEN representation of a finished game
     #[test]

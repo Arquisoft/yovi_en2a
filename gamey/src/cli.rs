@@ -38,7 +38,10 @@ pub struct CliArgs {
     #[arg(short, long, default_value_t = 3000)]
     pub port: u16,
 
-    /// Game variant: "standard" or "why_not" (misère: connecting all three sides loses)
+    /// Game variant. Options:
+    ///   standard  — default rules
+    ///   why_not   — connecting all three sides loses (misère)
+    ///   master_y  — each player places two pieces per turn
     #[arg(long, default_value = "standard")]
     pub variant: String,
 }
@@ -90,10 +93,13 @@ pub fn run_cli_game() -> Result<()> {
     };
     let variant = match args.variant.as_str() {
         "why_not" => GameVariant::WhyNot,
+        "master_y" => GameVariant::MasterY,
         _ => GameVariant::Standard,
     };
-    if variant == GameVariant::WhyNot {
-        println!("Variant: WhY not — connecting all three sides LOSES!");
+    match variant {
+        GameVariant::WhyNot => println!("Variant: WhY not — connecting all three sides LOSES!"),
+        GameVariant::MasterY => println!("Variant: Master Y — each player places two pieces per turn."),
+        GameVariant::Standard => {}
     }
     let mut game = game::GameY::new_with_variant(args.size, variant);
     loop {
