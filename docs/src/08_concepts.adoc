@@ -102,3 +102,11 @@ Since Game Y requires complex graph pathfinding to detect wins, all computationa
 
 === Deployment: Containerization (Docker)
 To ensure "it works on my machine" consistency, every sub-service is encapsulated in a **Docker** container. This cross-cutting concept simplifies local development and cloud deployment, ensuring identical runtimes for the Node.js gateway and the compiled Rust binary.
+
+=== Testing Strategy
+The project applies a multi-layer testing approach enforced through CI/CD:
+
+* **Unit tests:** Vitest for the webapp and users service; `cargo test` for the three Rust services (gamey, game_manager, userAuthentification).
+* **Integration tests:** Rust integration tests run against real Firebase instances using randomised test data and clean up after themselves.
+* **End-to-end tests:** Playwright and Cucumber scenarios covering full user flows, executed against the deployed application on each release.
+* **Load tests:** Gatling simulations (Maven) targeting the deployed server, measuring response times and success rates under concurrent load.

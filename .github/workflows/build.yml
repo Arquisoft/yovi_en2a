@@ -8,48 +8,60 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
-    - uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - uses: dtolnay/rust-toolchain@stable
-      with:
-        toolchain: stable
-        components: rustfmt, clippy
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 22
-    - run: npm --prefix users ci
-    - run: npm --prefix webapp ci
-    - run: npm --prefix users run test:coverage
-    - run: npm --prefix webapp run test:coverage
-    - name: Install cargo-llvm-cov
-      run: cargo install cargo-llvm-cov --locked
-    - name: Generate gamey code coverage
-      run: cd gamey && cargo llvm-cov --lcov --output-path lcov.info
-    - name: Normalize Rust coverage paths
-      run: |
-        sed -i "s|SF:${GITHUB_WORKSPACE}/|SF:|g" gamey/lcov.info
-        grep '^SF:' gamey/lcov.info | head
-    - name: Setup Firebase credentials for Rust tests
-      run: |
-        echo "$FIREBASE_CREDENTIALS_B64" | base64 -d > /tmp/firebase-credentials.json
-        echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-credentials.json" >> $GITHUB_ENV
-      env:
-        FIREBASE_CREDENTIALS_B64: ${{ secrets.FIREBASE_CREDENTIALS_B64 }}
-    - name: Generate game_manager code coverage
-      run: cd game_manager && cargo llvm-cov --lcov --output-path lcov.info
-      env:
-        FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-    - name: Normalize game_manager coverage paths
-      run: sed -i "s|SF:${GITHUB_WORKSPACE}/|SF:|g" game_manager/lcov.info
-    - name: Generate userAuthentification code coverage
-      run: cd userAuthentification && cargo llvm-cov --lcov --output-path lcov.info
-      env:
-        FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
-    - name: Normalize userAuthentification coverage paths
-      run: sed -i "s|SF:${GITHUB_WORKSPACE}/|SF:|g" userAuthentification/lcov.info
-    - name: Analyze with SonarQube
-      uses: SonarSource/sonarqube-scan-action@master
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm --prefix users ci
+      - run: npm --prefix webapp ci
+      - run: npm --prefix users run test:coverage
+      - run: npm --prefix webapp run test:coverage
+      - name: Install cargo-llvm-cov
+        run: cargo install cargo-llvm-cov --locked
+      - name: Generate gamey code coverage
+        run: cd gamey && cargo llvm-cov --lcov --output-path lcov.info
+      - name: Normalize Rust coverage paths
+        run: |
+          sed -i "s|SF:${GITHUB_WORKSPACE}/|SF:|g" gamey/lcov.info
+          grep '^SF:' gamey/lcov.info | head
+      - name: Setup Firebase credentials for Rust tests
+        run: |
+          echo "$FIREBASE_CREDENTIALS_B64" | base64 -d > /tmp/firebase-credentials.json
+          echo "GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-credentials.json" >> $GITHUB_ENV
+        env:
+          FIREBASE_CREDENTIALS_B64: ${{ secrets.FIREBASE_CREDENTIALS_B64 }}
+      - name: Generate game_manager code coverage
+        run: cd game_manager && cargo llvm-cov --lcov --output-path lcov.info
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+      - name: Normalize game_manager coverage paths
+        run: sed -i "s|SF:${GITHUB_WORKSPACE}/|SF:|g" game_manager/lcov.info
+      - name: Generate userAuthentification code coverage
+        run: cd userAuthentification && cargo llvm-cov --lcov --output-path lcov.info
+        env:
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+      - name: Normalize userAuthentification coverage paths
+        run: sed -i "s|SF:${GITHUB_WORKSPACE}/|SF:|g" userAuthentification/lcov.info
+      - name: Analyze with SonarQube
+        uses: SonarSource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

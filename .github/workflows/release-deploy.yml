@@ -32,14 +32,24 @@ jobs:
           cd ${{ matrix.service }}
           npm ci
 
-      - name: Run tests
+      - name: Run tests with coverage
         run: |
           cd ${{ matrix.service }}
-          npm test
+          npm run test:coverage
 
   test-rust:
     name: Run rust tests
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -61,6 +71,8 @@ jobs:
         run: cd game_manager && cargo test
         env:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
 
       - name: Run userAuthentification tests
         run: cd userAuthentification && cargo test
@@ -78,22 +90,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install users dependencies
-        run: |
-          cd users
-          npm ci
       - name: Install webapp dependencies
-        run: |
-          cd webapp
-          npm ci
+        run: cd webapp && npm ci
       - name: Install Playwright browsers
-        run: |
-          cd webapp
-          npm run test:e2e:install-browsers
-      - name: Run E2E tests (start servers and run cucumber)
-        run: |
-          cd webapp
-          npm run test:e2e
+        run: cd webapp && npx playwright install chromium --with-deps
+      - name: Run E2E tests
+        run: npm --prefix webapp run test:e2e:ci
 
   docker-push-users:
     name: Publish users image
@@ -210,6 +212,7 @@ jobs:
           command: |
             wget https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/master/docker-compose.yml -O docker-compose.yml
             docker compose down
+            docker volume ls -q | grep letsencrypt | xargs -r docker volume rm
             export FIREBASE_PROJECT_ID='${{ secrets.FIREBASE_PROJECT_ID }}'
             export FIREBASE_CREDENTIALS_B64='${{ secrets.FIREBASE_CREDENTIALS_B64 }}'
             export DEPLOY_HOST='${{ secrets.DEPLOY_HOST }}'
@@ -231,7 +234,18 @@ jobs:
           distribution: 'temurin'
 
       - name: Wait for services to be ready
-        run: sleep 30
+        run: |
+          echo "Waiting for https://${{ secrets.DEPLOY_HOST }}/api/csrf-token..."
+          for i in $(seq 1 24); do
+            if curl -sf https://${{ secrets.DEPLOY_HOST }}/api/csrf-token > /dev/null; then
+              echo "Service is up after $((i * 5))s"
+              exit 0
+            fi
+            echo "Attempt $i/24 failed, retrying in 5s..."
+            sleep 5
+          done
+          echo "Service did not become ready in time"
+          exit 1
 
       - name: Run Gatling simulations
         run: mvn gatling:test -DbaseUrl=https://${{ secrets.DEPLOY_HOST }}

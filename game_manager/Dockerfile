@@ -23,7 +23,7 @@ RUN apt-get update && \
 # Copy the compiled binary from the builder stage
 COPY --from=builder /app/game_manager/target/release/game_manager .
 
-# Copy the entrypoint script that decodes Firebase credentials from env var
+# Copy the entrypoint script that decodes Firebase credentials from .env var
 COPY entrypoint.sh /entrypoint.sh
 RUN sed -i 's/\r$//' /entrypoint.sh && chmod +x /entrypoint.sh
 

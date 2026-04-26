@@ -1,9 +1,8 @@
 use firestore::*;
-use serde::{Deserialize, Serialize};
 use std::error::Error;
 use std::env;
-use dotenvy::dotenv;
 use std::sync::Once;
+use ctor::ctor;
 
 // We import the data structures from data.rs where they match with the firebase definition
 use crate::data::{DBData, Match, Score};
@@ -12,33 +11,26 @@ use crate::data::{DBData, Match, Score};
 /// If we don't do this, the app might panic if we call `get_connection` multiple times.
 static INIT_CRYPTO: Once = Once::new();
 
+#[ctor]
+fn init_global_test_context() {
+    let _ = rustls::crypto::ring::default_provider().install_default();
+}
+
 /// Helper function to set up the Firestore connection.
 /// It also handles the 'Ring' crypto provider setup which was a bit of a headache
 /// because of how modern Rust crates handle TLS.
 async fn get_connection() -> Result<FirestoreDb, Box<dyn Error>> {
-        // Try to load the .env file if it exists
-        match dotenvy::dotenv() {
-            Ok(_) => println!("INFO: Archivo .env cargado correctamente."),
-            Err(e) => println!("ADVERTENCIA: No se pudo cargar el .env. Detalle: {}", e),
-        }
-
-        // This block only runs the very first time the function is called.
-        // Rust is very strict about crypto providers now!
-        INIT_CRYPTO.call_once(|| {
-            let provider = rustls::crypto::ring::default_provider();
-            let _ = provider.install_default();
-            println!("INFO: Global CryptoProvider (Ring) installed.");
-        });
-
-        // Check if the project ID is in our environment variables
-        let project_id = env::var("FIREBASE_PROJECT_ID")
-            .map_err(|_| "Environment variable FIREBASE_PROJECT_ID is not set")?;
-
-        // Create the actual client
-        let db = FirestoreDb::new(&project_id).await?;
-
-        Ok(db)
+    match dotenvy::dotenv() {
+        Ok(_) => println!("INFO: Archivo .env cargado correctamente."),
+        Err(_) => (), // Silencioso si ya está cargado
     }
+
+    let project_id = env::var("FIREBASE_PROJECT_ID")
+        .map_err(|_| "Environment variable FIREBASE_PROJECT_ID is not set")?;
+
+    let db = FirestoreDb::new(&project_id).await?;
+    Ok(db)
+}
 
 
 /// Fetches a single document from a Firestore collection and maps it to a type `T`.
@@ -102,9 +94,6 @@ where
         .execute::<()>()
         .await?;
 
-    // Post-insertion check.
-    // I'm calling read_db here just to be 100% sure the write worked.
-    // If read_db returns an error, the '?' will propagate it.
     read_db::<T>(table_name, id).await?;
 
     println!("Document [{}] verified correctly in {}.", id, table_name);
@@ -181,9 +170,7 @@ pub async fn update_score(
     is_win: bool,
     time: f32,
 ) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-    
-    // 🔥 CAMBIO AQUÍ: Interceptamos el error inseguro de get_connection() y 
-    // lo convertimos a un String seguro para que Axum no se queje.
+
     let db = get_connection()
         .await
         .map_err(|e| -> Box<dyn std::error::Error + Send + Sync> { e.to_string().into() })?;
@@ -278,4 +265,45 @@ pub async fn insert_score(
         .await?;
 
     Ok(())
+}
+
+pub async fn remove_match_by_id(match_id: &str) -> Result<Match, Box<dyn Error>> {
+    let db = get_connection().await?;
+
+    let match_data: Option<Match> = db.fluent()
+        .select()
+        .by_id_in("Match")
+        .obj()
+        .one(match_id)
+        .await?;
+
+    match match_data {
+        Some(data) => {
+            db.fluent()
+                .delete()
+                .from("Match")
+                .document_id(match_id)
+                .execute()
+                .await?;
+
+            Ok(data)
+        }
+        None => {
+            Err(format!("Could not remove unfound mathc with id {}", match_id).into())
+        }
+    }
+}
+
+pub async fn get_user_score(playerid: &str) -> Result<Score, Box<dyn Error>> {
+    let db = get_connection().await?;
+
+    let mut scores: Vec<Score> = db.fluent()
+        .select()
+        .from("Scores")
+        .filter(|q| q.for_all([q.field("playerid").eq(playerid)]))
+        .obj()
+        .query()
+        .await?;
+
+    scores.pop().ok_or_else(|| format!("Score not found for player {}", playerid).into())
 }

@@ -52,7 +52,8 @@
   "topRightMenu": {
     "help": "Ayuda",
     "rankings": "Clasificación",
-    "volume": "Volumen",
+    "mute": "Silenciar",
+    "unmute": "Activar sonido",
     "settings": "Ajustes",
     "user": "Usuario"
   },

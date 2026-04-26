@@ -34,6 +34,7 @@ endif::arc42help[]
 | Data Consistency | Potential desync between Redis (volatile) and Firebase (persistent). | Implement robust write-behind patterns and retry logic.
 | JS Performance | Real-time processing lag in the browser client. | Optimize event loop and use Web Workers for networking.
 | Rust Complexity | Steep learning curve affecting development velocity. | Peer programming and strict linting (clippy).
+| Single VM infrastructure | All services share one Azure VM. A hardware failure, reboot, or network issue makes the entire application unreachable. | No automatic failover exists. Mitigation relies on Prometheus/Grafana alerts to detect outages quickly and manual restart procedures.
 |===
 
 === Technical Debts
@@ -44,4 +45,5 @@ endif::arc42help[]
 | Session Reload | On page reload the frontend must call `GET /api/me` to re-hydrate auth state; if this call is slow or fails the UI briefly shows an unauthenticated state. Needs a loading state or optimistic restore. | Medium
 | Code Duplication | Identified logic redundancy across modules. | Low
 | Redis single point of failure | The Users Gateway's session store is a single Redis container with no replica. A Redis crash invalidates all active sessions. A replica or persistence strategy should be evaluated. | Medium
+| Firebase vendor lock-in | All authentication and persistence depends on Firebase. Migrating to a different provider would require rewriting the Auth Engine and Game Manager data layers. Accepted trade-off for the project scale. No mitigation planned. | Low
 |===

@@ -1,6 +1,8 @@
 import React, { useMemo, useRef } from 'react';
 import type { GameMode } from '../gameModes/GameMode';
 import { NormalMode } from '../gameModes/NormalMode';
+import { OnlineMode } from '../gameModes/OnlineMode';
+import { OnlinePrivateMode } from '../gameModes/OnlinePrivateMode';
 import { GameModeContainer } from '../gameModes/GameModeContainer';
 import styles from './SelectionPanel.module.css';
 import { LocalMode } from '../gameModes/LocalMode';
@@ -9,6 +11,8 @@ const SelectionPanel: React.FC = () => {
   const gameModes = useMemo<GameMode[]>(() => [
     new NormalMode(),
     new LocalMode(),
+    new OnlineMode(),
+    new OnlinePrivateMode(),
   ], []);
 
   const scrollRef = useRef<HTMLDivElement>(null);

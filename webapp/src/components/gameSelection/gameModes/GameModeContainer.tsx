@@ -1,10 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { useTranslation } from "react-i18next";
 import { type GameMode, Difficulty } from "./GameMode";
 import { Difficulty as DifficultyValues } from "./GameMode";
 import styles from "./GameModeContainer.module.css";
 import imagenGameY from "../../../assets/background_image_gameY.png";
+import {
+    createOnlineMatch,
+    joinOnlineMatch,
+    isNoMatchesAvailable,
+} from "../../online/online";
+import { getPlayerId } from "../../online/playerId";
+import { useUser } from "../../../contexts/UserContext";
 
 const VARIANTS = [
   { value: "standard", label: "Standard" },
@@ -14,120 +20,237 @@ const VARIANTS = [
   { value: "tabu_y",   label: "Tabu Y"   },
   { value: "holey_y",  label: "Holey Y"  },
 ];
-
 type Props = {
-  mode: GameMode;
+    mode: GameMode;
 };
 
 export const GameModeContainer: React.FC<Props> = ({ mode }) => {
-  const { t } = useTranslation();
-  const difficulties: Difficulty[] = Object.values(DifficultyValues);
-
-  const navigate = useNavigate();
-  const location = useLocation();
-  const isGuest = location.state?.guest === true;
+    const difficulties: Difficulty[] = Object.values(DifficultyValues);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { user: currentUser } = useUser();
+    const isGuest = location.state?.guest === true || !currentUser;
 
   const [currentDifficultyIndex, setCurrentDifficultyIndex] = useState(
-    difficulties.indexOf(mode.currentLevel)
-  );
-
-  const [currentSize, setCurrentSize] = useState(mode.size || 8);
+        difficulties.indexOf(mode.currentLevel)
+    );
+    const [currentSize, setCurrentSize] = useState(mode.size || 8);
+    const [matchId, setMatchId] = useState(mode.matchId ?? "");
+    const [password, setPassword] = useState(mode.password ?? "");
+    const [busy, setBusy] = useState<null | "create" | "join" | "play">(null);
+    const [error, setError] = useState<string | null>(null);
   const [currentVariant, setCurrentVariant] = useState("standard");
   const [currentHoleCount, setCurrentHoleCount] = useState(Math.max(1, Math.floor((mode.size || 8) / 3)));
 
-  const minSize = 4;
-  const maxSize = 12;
+    const minSize = 4;
+    const maxSize = 12;
 
-  const decreaseDifficulty = () => {
-    setCurrentDifficultyIndex((prev) => Math.max(prev - 1, 0));
-  };
+    const decreaseDifficulty = () => setCurrentDifficultyIndex((prev) => Math.max(prev - 1, 0));
+    const increaseDifficulty = () => setCurrentDifficultyIndex((prev) => Math.min(prev + 1, difficulties.length - 1));
+    const decreaseSize = () => setCurrentSize((prev) => Math.max(prev - 1, minSize));
+    const increaseSize = () => setCurrentSize((prev) => Math.min(prev + 1, maxSize));
 
-  const increaseDifficulty = () => {
-    setCurrentDifficultyIndex((prev) =>
-      Math.min(prev + 1, difficulties.length - 1)
-    );
-  };
+    const currentDifficulty = difficulties[currentDifficultyIndex];
 
-  const decreaseSize = () => {
-    setCurrentSize((prev) => Math.max(prev - 1, minSize));
-  };
+    const handleLocalPlay = () => {
+        mode.currentLevel = currentDifficulty;
+        mode.size = currentSize;
 
-  const increaseSize = () => {
-    setCurrentSize((prev) => Math.min(prev + 1, maxSize));
-  };
+        if (mode.showDifficulty) {
+            const navState = { state: { ...(isGuest && { guest: true }) } };
+            navigate(`/play/${currentSize}/${currentDifficulty[1]}`, navState);
+        } else if (mode.showVariant) {
+            const urlMode = currentVariant === "standard" ? "multi" : currentVariant;
+            const stateObj = {
+                ...(isGuest ? { guest: true } : {}),
+                ...(currentVariant === "holey_y" ? { holeCount: currentHoleCount } : {}),
+            };
+            const navOptions = Object.keys(stateObj).length > 0 ? { state: stateObj } : undefined;
+            navigate(`/play/${currentSize}/${urlMode}`, navOptions);
+        } else {
+            const navState = { state: { ...(isGuest && { guest: true }) } };
+            navigate(`/play/${currentSize}/multi`, navState);
+        }
+    };
 
-  const currentDifficulty = difficulties[currentDifficultyIndex];
+    const goToWaiting = (
+        matchIdValue: string,
+        role: "create" | "join",
+        turnNumber: number,
+        resolvedSize: number
+    ) => {
+        navigate(`/waiting/${matchIdValue}`, {
+            state: {
+                ...(isGuest && { guest: true }),
+                role,
+                turnNumber,
+                size: resolvedSize,
+                isPrivate: !!mode.showMatchId,
+                password: role === "create" ? password : undefined,
+            },
+        });
+    };
 
-  const label = t(`gameModes.${mode.id}.label`, { defaultValue: mode.label });
-  const description = t(`gameModes.${mode.id}.description`, { defaultValue: mode.description });
+    const createFlow = async (): Promise<void> => {
+        // Public mode is always 8×8 regardless of the selector (which is
+        // hidden anyway). Private rooms respect the creator's choice.
+        const sizeForCreate = mode.hideSize ? 8 : currentSize;
 
-  return (
-    <div className={styles.gameModeContainer}>
-      <div className={styles.header}>
-        <h2 className={styles.title}>{label}</h2>
-        <div className={styles.tooltipContainer}>
-          <button className={styles.infoButton}>?</button>
-          <div className={styles.tooltip}>{description}</div>
-        </div>
-      </div>
+        const playerId = getPlayerId();
+        const res = await createOnlineMatch({
+            player1id: playerId,
+            size: sizeForCreate,
+            match_id: matchId,
+            match_password: password,
+        });
+        goToWaiting(res.match_id, "create", res.turn_number, sizeForCreate);
+    };
 
-      <div className={styles.imageContainer}>
-        <img src={mode.image ?? imagenGameY} alt={label} />
-      </div>
+    const handleCreate = async () => {
+        setError(null);
+        setBusy("create");
+        try {
+            await createFlow();
+        } catch (e: any) {
+            setError(e?.message || "Could not create match");
+        } finally {
+            setBusy(null);
+        }
+    };
 
-      <div className={styles.controlsWrapper}>
+    const handleJoin = async () => {
+        setError(null);
+        setBusy("join");
+        try {
+            const playerId = getPlayerId();
+            const res = await joinOnlineMatch({
+                player2id: playerId,
+                match_id: matchId,
+                match_password: password,
+            });
+            // The server owns the authoritative size (creator set it). We
+            // forward what we locally think it is; GameWindowOnline re-derives
+            // it from the URL so inconsistencies resolve themselves.
+            goToWaiting(res.match_id, "join", res.turn_number, currentSize);
+        } catch (e: any) {
+            if (mode.showOnlyJoin && !matchId && isNoMatchesAvailable(e)) {
+                try {
+                    await createFlow();
+                    return;
+                } catch (e2: any) {
+                    setError(e2?.message || "Could not create match");
+                    return;
+                }
+            }
+            setError(e?.message || "Could not join match");
+        } finally {
+            setBusy(null);
+        }
+    };
 
-        {mode.showDifficulty && (
-          <div className={styles.difficultySection}>
-            <span className={styles.difficultyLabel}>{t('gameSelection.difficulty')}</span>
-            <div className={styles.difficultySelector}>
-              <button
-                className={styles.arrow}
-                onClick={decreaseDifficulty}
-                style={{ visibility: currentDifficultyIndex > 0 ? "visible" : "hidden" }}
-              >
-                ←
-              </button>
-              <div className={styles.difficultyBox}>{currentDifficulty[0]}</div>
-              <button
-                className={styles.arrow}
-                onClick={increaseDifficulty}
-                style={{
-                  visibility: currentDifficultyIndex < difficulties.length - 1 ? "visible" : "hidden",
-                }}
-              >
-                →
-              </button>
+    const buttonMode: "play" | "createJoin" | "joinOnly" =
+        mode.showJoinCreate ? "createJoin"
+            : mode.showOnlyJoin ? "joinOnly"
+                : "play";
+
+
+    return (
+        <div className={styles.gameModeContainer}>
+            <div className={styles.header}>
+                <h2 className={styles.title}>{mode.label}</h2>
+                <div className={styles.tooltipContainer}>
+                    <button className={styles.infoButton}>?</button>
+                    <div className={styles.tooltip}>{mode.description}</div>
+                </div>
             </div>
-          </div>
-        )}
 
-        <div className={styles.sizeSection}>
-          <span className={styles.difficultyLabel}>{t('gameSelection.size')}</span>
-          <div className={styles.difficultySelector}>
-            <button
-              className={styles.arrow}
-              onClick={decreaseSize}
-              style={{ visibility: currentSize > minSize ? "visible" : "hidden" }}
-            >
-              ←
-            </button>
-            <div className={styles.difficultyBox}>{currentSize}</div>
-            <button
-              className={styles.arrow}
-              onClick={increaseSize}
-              style={{ visibility: currentSize < maxSize ? "visible" : "hidden" }}
-            >
-              →
-            </button>
-          </div>
-        </div>
+            <div className={styles.imageContainer}>
+                <img src={imagenGameY} alt={mode.label} />
+            </div>
 
-      </div>
+            <div className={styles.controlsWrapper}>
+                {mode.showDifficulty && (
+                    <div className={styles.difficultySection}>
+                        <span className={styles.difficultyLabel}>Difficulty</span>
+                        <div className={styles.difficultySelector}>
+                            <button
+                                className={styles.arrow}
+                                onClick={decreaseDifficulty}
+                                style={{ visibility: currentDifficultyIndex > 0 ? "visible" : "hidden" }}
+                            >
+                                ←
+                            </button>
+                            <div className={styles.difficultyBox}>{currentDifficulty[0]}</div>
+                            <button
+                                className={styles.arrow}
+                                onClick={increaseDifficulty}
+                                style={{
+                                    visibility: currentDifficultyIndex < difficulties.length - 1 ? "visible" : "hidden",
+                                }}
+                            >
+                                →
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {(
+                    <div className={styles.sizeSection}>
+                        <span className={styles.difficultyLabel}>Size</span>
+                        <div className={styles.difficultySelector}>
+                            <button
+                                className={styles.arrow}
+                                onClick={decreaseSize}
+                                style={{ visibility: currentSize > minSize ? "visible" : "hidden" }}
+                            >
+                                ←
+                            </button>
+                            <div className={styles.difficultyBox}>{currentSize}</div>
+                            <button
+                                className={styles.arrow}
+                                onClick={increaseSize}
+                                style={{ visibility: currentSize < maxSize ? "visible" : "hidden" }}
+                            >
+                                →
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {mode.showMatchId && (
+                    <div className={styles.difficultySection}>
+                        <span className={styles.difficultyLabel}>Match ID</span>
+                        <div className={styles.difficultySelector}>
+                            <input
+                                className={styles.inputField}
+                                type="text"
+                                value={matchId}
+                                onChange={(e) => setMatchId(e.target.value)}
+                                placeholder="ID..."
+                            />
+                        </div>
+                    </div>
+                )}
+
+                {mode.showPassword && (
+                    <div className={styles.difficultySection}>
+                        <span className={styles.difficultyLabel}>Password</span>
+                        <div className={styles.difficultySelector}>
+                            <input
+                                className={styles.inputField}
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="****"
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
 
       {mode.showVariant && (
         <div className={styles.variantSection}>
-          <span className={styles.difficultyLabel}>{t('gameSelection.variant', { defaultValue: 'Game Variant' })}</span>
+          <span className={styles.difficultyLabel}>Game Variant</span>
           <select
             className={styles.variantSelect}
             value={currentVariant}
@@ -140,7 +263,7 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
 
           {currentVariant === "holey_y" && (
             <div className={styles.holeCountRow}>
-              <span className={styles.difficultyLabel}>{t('gameSelection.holes', { defaultValue: 'Holes' })}</span>
+              <span className={styles.difficultyLabel}>Holes</span>
               <div className={styles.difficultySelector}>
                 <button
                   className={styles.arrow}
@@ -159,31 +282,60 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
         </div>
       )}
 
-      <button
-        className={styles.playButton}
-        onClick={() => {
-          mode.currentLevel = currentDifficulty;
-          mode.size = currentSize;
+            {error && (
+                <div
+                    style={{
+                        color: "#fca5a5",
+                        fontSize: "0.75rem",
+                        textAlign: "center",
+                        padding: "0.25rem 0",
+                    }}
+                    role="alert"
+                >
+                    {error}
+                </div>
+            )}
 
-          if (mode.showDifficulty) {
-            const navState = isGuest ? { state: { guest: true } } : undefined;
-            navigate(`/play/${currentSize}/${currentDifficulty[1]}`, navState);
-          } else if (mode.showVariant) {
-            const urlMode = currentVariant === "standard" ? "multi" : currentVariant;
-            const stateObj = {
-              ...(isGuest ? { guest: true } : {}),
-              ...(currentVariant === "holey_y" ? { holeCount: currentHoleCount } : {}),
-            };
-            const navOptions = Object.keys(stateObj).length > 0 ? { state: stateObj } : undefined;
-            navigate(`/play/${currentSize}/${urlMode}`, navOptions);
-          } else {
-            const navState = isGuest ? { state: { guest: true } } : undefined;
-            navigate(`/play/${currentSize}/${mode.mode}`, navState);
-          }
-        }}
-      >
-        {t('gameSelection.play')}
-      </button>
-    </div>
-  );
+            {buttonMode === "createJoin" && (
+                <div style={{ display: "flex", gap: "0.5rem", width: "100%" }}>
+                    <button
+                        className={styles.playButton}
+                        onClick={handleCreate}
+                        disabled={busy !== null}
+                        style={{ flex: 1, opacity: busy !== null && busy !== "create" ? 0.6 : 1 }}
+                    >
+                        {busy === "create" ? "…" : "CREATE"}
+                    </button>
+                    <button
+                        className={styles.playButton}
+                        onClick={handleJoin}
+                        disabled={busy !== null}
+                        style={{ flex: 1, opacity: busy !== null && busy !== "join" ? 0.6 : 1 }}
+                    >
+                        {busy === "join" ? "…" : "JOIN"}
+                    </button>
+                </div>
+            )}
+
+            {buttonMode === "joinOnly" && (
+                <button
+                    className={styles.playButton}
+                    onClick={handleJoin}
+                    disabled={busy !== null}
+                >
+                    {busy === "join" ? "…" : "JOIN"}
+                </button>
+            )}
+
+            {buttonMode === "play" && (
+                <button
+                    className={styles.playButton}
+                    onClick={handleLocalPlay}
+                    disabled={busy !== null}
+                >
+                    PLAY
+                </button>
+            )}
+        </div>
+    );
 };
