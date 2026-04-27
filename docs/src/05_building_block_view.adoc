@@ -93,6 +93,7 @@ database "Firebase" as Firebase #FFF3E0
 Webapp -right-> Users : All API & game requests
 Users -left-> Auth : /api (Proxy)
 Users -down-> GameMgr : /game (Proxy)
+Users -right-> Gamey : /play (Proxy)
 Users -right-> Redis : Session storage
 Auth -down-> Firebase : User auth
 GameMgr -right-> Gamey : Game logic
