@@ -469,71 +469,68 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_technical_decisions">4.1. Technical Decisions</a></li>
 <li><a href="#_organizational_decisions">4.2. Organizational Decisions</a></li>
-<li><a href="#_level_1">4.3. Level 1</a></li>
 </ul>
 </li>
 <li><a href="#section-building-block-view">5. Building Block View</a>
 <ul class="sectlevel2">
-<li><a href="#_whitebox_overall_system">5.1. Whitebox Overall System</a></li>
+<li><a href="#_level_1">5.1. Level 1</a></li>
 <li><a href="#_level_2">5.2. Level 2</a></li>
 <li><a href="#_level_3">5.3. Level 3</a></li>
 </ul>
 </li>
-<li><a href="#_whitebox_game_manager_rust">6. Whitebox Game Manager (Rust)</a></li>
-<li><a href="#_whitebox_gamey_engine_rust">7. Whitebox Gamey Engine (Rust)</a></li>
-<li><a href="#section-runtime-view">8. Runtime View</a>
+<li><a href="#section-runtime-view">6. Runtime View</a>
 <ul class="sectlevel2">
-<li><a href="#_user_registration_and_login">8.1. User Registration and Login</a></li>
-<li><a href="#_post_login_session_usage">8.2. Post-Login Session Usage</a></li>
-<li><a href="#_match_creation">8.3. Match Creation</a></li>
-<li><a href="#_player_move">8.4. Player Move</a></li>
-<li><a href="#_bot_move">8.5. Bot Move</a></li>
-<li><a href="#_game_end_and_result_persistence">8.6. Game End and Result Persistence</a></li>
+<li><a href="#_user_registration_and_login">6.1. User Registration and Login</a></li>
+<li><a href="#_post_login_session_usage">6.2. Post-Login Session Usage</a></li>
+<li><a href="#_match_creation">6.3. Match Creation</a></li>
+<li><a href="#_player_move">6.4. Player Move</a></li>
+<li><a href="#_bot_move">6.5. Bot Move</a></li>
+<li><a href="#_game_end_and_result_persistence">6.6. Game End and Result Persistence</a></li>
 </ul>
 </li>
-<li><a href="#section-deployment-view">9. Deployment View</a>
+<li><a href="#section-deployment-view">7. Deployment View</a>
 <ul class="sectlevel2">
-<li><a href="#_infrastructure_level_1">9.1. Infrastructure Level 1</a></li>
-<li><a href="#_infrastructure_level_2">9.2. Infrastructure Level 2</a></li>
-<li><a href="#_https_request_flow">9.3. HTTPS Request Flow</a></li>
+<li><a href="#_infrastructure_level_1">7.1. Infrastructure Level 1</a></li>
+<li><a href="#_infrastructure_level_2">7.2. Infrastructure Level 2</a></li>
+<li><a href="#_https_request_flow">7.3. HTTPS Request Flow</a></li>
 </ul>
 </li>
-<li><a href="#section-concepts">10. Cross-cutting Concepts</a>
+<li><a href="#section-concepts">8. Cross-cutting Concepts</a>
 <ul class="sectlevel2">
-<li><a href="#_domain_model_yen_notation">10.1. Domain Model: YEN Notation</a></li>
-<li><a href="#_security_layered_authentication_sessions_and_csrf">10.2. Security: Layered Authentication, Sessions, and CSRF</a></li>
-<li><a href="#_https_lets_encrypt_and_nginx_via_sslip_io">10.3. HTTPS: Let&#8217;s Encrypt and nginx via sslip.io</a></li>
-<li><a href="#_persistency_hybrid_state_management">10.4. Persistency: Hybrid State Management</a></li>
-<li><a href="#_deterministic_logic_rust_engine">10.5. Deterministic Logic (Rust Engine)</a></li>
-<li><a href="#_deployment_containerization_docker">10.6. Deployment: Containerization (Docker)</a></li>
-<li><a href="#_testing_strategy">10.7. Testing Strategy</a></li>
+<li><a href="#_domain_model_yen_notation">8.1. Domain Model: YEN Notation</a></li>
+<li><a href="#_security_layered_authentication_sessions_and_csrf">8.2. Security: Layered Authentication, Sessions, and CSRF</a></li>
+<li><a href="#_https_lets_encrypt_and_nginx_via_sslip_io">8.3. HTTPS: Let&#8217;s Encrypt and nginx via sslip.io</a></li>
+<li><a href="#_persistency_hybrid_state_management">8.4. Persistency: Hybrid State Management</a></li>
+<li><a href="#_deterministic_logic_rust_engine">8.5. Deterministic Logic (Rust Engine)</a></li>
+<li><a href="#_deployment_containerization_docker">8.6. Deployment: Containerization (Docker)</a></li>
+<li><a href="#_testing_strategy">8.7. Testing Strategy</a></li>
 </ul>
 </li>
-<li><a href="#section-design-decisions">11. Architecture Decisions</a>
+<li><a href="#section-design-decisions">9. Architecture Decisions</a>
 <ul class="sectlevel2">
-<li><a href="#_adr_001_separation_into_web_application_and_rust_game_engine">11.1. ADR-001: Separation into Web Application and Rust Game Engine</a></li>
-<li><a href="#_adr_002_communication_via_json_using_yen_notation">11.2. ADR-002: Communication via JSON using YEN Notation</a></li>
-<li><a href="#_adr_003_use_of_firebase_as_the_database">11.3. ADR-003: Use of Firebase as the Database</a></li>
-<li><a href="#_adr_004_cloud_deployment_of_the_application">11.4. ADR-004: Cloud Deployment of the Application</a></li>
-<li><a href="#_adr_005_server_side_sessions_via_redis_with_cookie_based_identity">11.5. ADR-005: Server-side Sessions via Redis with Cookie-based Identity</a></li>
-<li><a href="#_adr_006_https_via_lets_encrypt_and_jonasalnginx_certbot">11.6. ADR-006: HTTPS via Let&#8217;s Encrypt and jonasal/nginx-certbot</a></li>
-<li><a href="#_adr_007_external_rest_api_for_bots">11.7. ADR-007: External REST API for Bots</a></li>
-<li><a href="#_adr_008_internationalisation_via_react_i18next">11.8. ADR-008: Internationalisation via react-i18next</a></li>
+<li><a href="#_adr_001_separation_into_web_application_and_rust_game_engine">9.1. ADR-001: Separation into Web Application and Rust Game Engine</a></li>
+<li><a href="#_adr_002_communication_via_json_using_yen_notation">9.2. ADR-002: Communication via JSON using YEN Notation</a></li>
+<li><a href="#_adr_003_use_of_firebase_as_the_database">9.3. ADR-003: Use of Firebase as the Database</a></li>
+<li><a href="#_adr_004_cloud_deployment_of_the_application">9.4. ADR-004: Cloud Deployment of the Application</a></li>
+<li><a href="#_adr_005_server_side_sessions_via_redis_with_cookie_based_identity">9.5. ADR-005: Server-side Sessions via Redis with Cookie-based Identity</a></li>
+<li><a href="#_adr_006_https_via_lets_encrypt_and_jonasalnginx_certbot">9.6. ADR-006: HTTPS via Let&#8217;s Encrypt and jonasal/nginx-certbot</a></li>
+<li><a href="#_adr_007_external_rest_api_for_bots">9.7. ADR-007: External REST API for Bots</a></li>
+<li><a href="#_adr_008_internationalisation_via_react_i18next">9.8. ADR-008: Internationalisation via react-i18next</a></li>
 </ul>
 </li>
-<li><a href="#section-quality-scenarios">12. Quality Requirements</a>
+<li><a href="#section-quality-scenarios">10. Quality Requirements</a>
 <ul class="sectlevel2">
-<li><a href="#_quality_tree">12.1. Quality Tree</a></li>
-<li><a href="#_quality_scenarios">12.2. Quality Scenarios</a></li>
+<li><a href="#_quality_tree">10.1. Quality Tree</a></li>
+<li><a href="#_quality_scenarios">10.2. Quality Scenarios</a></li>
 </ul>
 </li>
-<li><a href="#section-technical-risks">13. Risks and Technical Debts</a>
+<li><a href="#section-technical-risks">11. Risks and Technical Debts</a>
 <ul class="sectlevel2">
-<li><a href="#_technical_risks">13.1. Technical Risks</a></li>
-<li><a href="#_technical_debts">13.2. Technical Debts</a></li>
+<li><a href="#_technical_risks">11.1. Technical Risks</a></li>
+<li><a href="#_technical_debts">11.2. Technical Debts</a></li>
 </ul>
 </li>
-<li><a href="#section-glossary">14. Glossary</a></li>
+<li><a href="#section-glossary">12. Glossary</a></li>
 </ul>
 </div>
 </div>
@@ -1413,17 +1410,15 @@ Refer to details in the following sections.</p>
 </div>
 <div style="page-break-after: always;"></div>
 </div>
-<div class="sect2">
-<h3 id="_level_1">4.3. Level 1</h3>
-
-</div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="section-building-block-view">5. Building Block View</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_whitebox_overall_system">5.1. Whitebox Overall System</h3>
+<h3 id="_level_1">5.1. Level 1</h3>
+<div class="sect3">
+<h4 id="_whitebox_overall_system">5.1.1. Whitebox Overall System</h4>
 <div class="imageblock">
 <div class="content">
 <img src="./images/level1.png" alt="level1" width="513" height="132">
@@ -1460,8 +1455,9 @@ Refer to details in the following sections.</p>
 </tr>
 </tbody>
 </table>
+</div>
 <div class="sect3">
-<h4 id="_gamey_system">5.1.1. Gamey System</h4>
+<h4 id="_gamey_system">5.1.2. Gamey System</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1">Purpose/Responsibility</dt>
@@ -1472,7 +1468,7 @@ Refer to details in the following sections.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_firebase">5.1.2. Firebase</h4>
+<h4 id="_firebase">5.1.3. Firebase</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1">Purpose/Responsibility</dt>
@@ -1483,7 +1479,7 @@ Refer to details in the following sections.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_game_engine">5.1.3. Game Engine</h4>
+<h4 id="_game_engine">5.1.4. Game Engine</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1">Purpose/Responsibility</dt>
@@ -1563,12 +1559,8 @@ Refer to details in the following sections.</p>
 <img src="./images/level3.png" alt="level3" width="515" height="687">
 </div>
 </div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_whitebox_game_manager_rust">6. Whitebox Game Manager (Rust)</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_whitebox_game_manager_rust">5.3.1. Whitebox Game Manager (Rust)</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1">Purpose/Responsibility</dt>
@@ -1609,10 +1601,8 @@ Refer to details in the following sections.</p>
 </tbody>
 </table>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_whitebox_gamey_engine_rust">7. Whitebox Gamey Engine (Rust)</h2>
-<div class="sectionbody">
+<div class="sect3">
+<h4 id="_whitebox_gamey_engine_rust">5.3.2. Whitebox Gamey Engine (Rust)</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1">Purpose/Responsibility</dt>
@@ -1659,8 +1649,10 @@ Refer to details in the following sections.</p>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
+</div>
+</div>
 <div class="sect1">
-<h2 id="section-runtime-view">8. Runtime View</h2>
+<h2 id="section-runtime-view">6. Runtime View</h2>
 <div class="sectionbody">
 <div class="paragraph arc42help">
 <div class="title">Contents</div>
@@ -1671,7 +1663,7 @@ Refer to details in the following sections.</p>
 <p>You should understand how building blocks of your system perform their job and communicate at runtime.</p>
 </div>
 <div class="sect2">
-<h3 id="_user_registration_and_login">8.1. User Registration and Login</h3>
+<h3 id="_user_registration_and_login">6.1. User Registration and Login</h3>
 <div class="paragraph">
 <p>Both flows follow the same pattern: the client first fetches a CSRF token, then submits credentials. The Gateway validates the CSRF token, forwards the request to the Auth Engine, and on success creates a server-side session in Redis, returning an httpOnly session cookie. The only difference is what the Auth Engine does with Firebase.</p>
 </div>
@@ -1682,7 +1674,7 @@ Refer to details in the following sections.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_post_login_session_usage">8.2. Post-Login Session Usage</h3>
+<h3 id="_post_login_session_usage">6.2. Post-Login Session Usage</h3>
 <div class="paragraph">
 <p>After login, every request that reads or mutates user state goes through the session stored in Redis. Read requests only need the <code>sessionId</code> cookie; state-changing requests additionally require the <code>X-CSRF-Token</code> header to match the <code>csrf_token</code> cookie.</p>
 </div>
@@ -1693,7 +1685,7 @@ Refer to details in the following sections.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_match_creation">8.3. Match Creation</h3>
+<h3 id="_match_creation">6.3. Match Creation</h3>
 <div class="paragraph">
 <p>This view illustrates how the system initializes a game session. The Users Gateway routes the request to the Game Manager, which prepares the environment for a new match.</p>
 </div>
@@ -1710,7 +1702,7 @@ Refer to details in the following sections.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_player_move">8.4. Player Move</h3>
+<h3 id="_player_move">6.4. Player Move</h3>
 <div class="paragraph">
 <p>The player move scenario represents the core interactive loop of the application. It involves real-time validation and state synchronization across the engine and the cache.</p>
 </div>
@@ -1730,7 +1722,7 @@ Refer to details in the following sections.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_bot_move">8.5. Bot Move</h3>
+<h3 id="_bot_move">6.5. Bot Move</h3>
 <div class="paragraph">
 <p>This scenario covers automated gameplay. It is triggered by the frontend as a second HTTP call immediately after the player&#8217;s move response returns — the Game Manager does not initiate it automatically.</p>
 </div>
@@ -1744,7 +1736,7 @@ Refer to details in the following sections.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_game_end_and_result_persistence">8.6. Game End and Result Persistence</h3>
+<h3 id="_game_end_and_result_persistence">6.6. Game End and Result Persistence</h3>
 <div class="paragraph">
 <p>This scenario describes what happens when the final move of a match is played. The Gamey Engine detects the win condition, and the Game Manager persists the result to Firebase Firestore before clearing the now-finished match from Redis.</p>
 </div>
@@ -1758,10 +1750,10 @@ Refer to details in the following sections.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-deployment-view">9. Deployment View</h2>
+<h2 id="section-deployment-view">7. Deployment View</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_infrastructure_level_1">9.1. Infrastructure Level 1</h3>
+<h3 id="_infrastructure_level_1">7.1. Infrastructure Level 1</h3>
 <div class="imageblock">
 <div class="content">
 <img src="./images/deployment-lvl1.png" alt="deployment lvl1" width="685" height="717">
@@ -1847,9 +1839,9 @@ Refer to details in the following sections.</p>
 </table>
 </div>
 <div class="sect2">
-<h3 id="_infrastructure_level_2">9.2. Infrastructure Level 2</h3>
+<h3 id="_infrastructure_level_2">7.2. Infrastructure Level 2</h3>
 <div class="sect3">
-<h4 id="_docker_environment">9.2.1. Docker Environment</h4>
+<h4 id="_docker_environment">7.2.1. Docker Environment</h4>
 <div class="paragraph">
 <p>Each service is defined as a container in <code>docker-compose.yml</code> and shares a common internal Docker network, allowing inter-service communication by service name.</p>
 </div>
@@ -1958,7 +1950,7 @@ Refer to details in the following sections.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_https_request_flow">9.3. HTTPS Request Flow</h3>
+<h3 id="_https_request_flow">7.3. HTTPS Request Flow</h3>
 <div class="paragraph">
 <p>This sequence shows how a browser request travels through the TLS termination layer and the internal Docker network. All external traffic enters exclusively through nginx on port 443; no backend port is exposed to the public internet.</p>
 </div>
@@ -1972,7 +1964,7 @@ Refer to details in the following sections.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-concepts">10. Cross-cutting Concepts</h2>
+<h2 id="section-concepts">8. Cross-cutting Concepts</h2>
 <div class="sectionbody">
 <div class="sidebarblock arc42help">
 <div class="content">
@@ -2074,24 +2066,24 @@ on this list.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_domain_model_yen_notation">10.1. Domain Model: YEN Notation</h3>
+<h3 id="_domain_model_yen_notation">8.1. Domain Model: YEN Notation</h3>
 <div class="paragraph">
 <p>The core domain concept is the <strong>YEN Notation</strong>. To ensure all components (Frontend, Gateway, and Engine) communicate seamlessly, a standardized JSON format has been established. This format describes the hexagonal board, edge connections, and the current turn, preventing logical interpretation errors when passing data between JavaScript and Rust environments.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_security_layered_authentication_sessions_and_csrf">10.2. Security: Layered Authentication, Sessions, and CSRF</h3>
+<h3 id="_security_layered_authentication_sessions_and_csrf">8.2. Security: Layered Authentication, Sessions, and CSRF</h3>
 <div class="paragraph">
 <p>Security is implemented across several layers:</p>
 </div>
 <div class="sect3">
-<h4 id="_identity_firebase_auth">10.2.1. Identity — Firebase Auth</h4>
+<h4 id="_identity_firebase_auth">8.2.1. Identity — Firebase Auth</h4>
 <div class="paragraph">
 <p>User registration and login are handled by the dedicated <strong>Auth Engine</strong> (Rust/Axum), which communicates with <strong>Firebase Auth</strong>. The Auth Engine validates credentials and returns the authenticated user&#8217;s profile to the Gateway. The browser never interacts with Firebase directly.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_server_side_sessions_redis">10.2.2. Server-side Sessions — Redis</h4>
+<h4 id="_server_side_sessions_redis">8.2.2. Server-side Sessions — Redis</h4>
 <div class="paragraph">
 <p>After a successful login or registration, the <strong>Users Gateway</strong> creates a server-side session in <strong>Redis</strong> using a cryptographically random 64-character hex session ID. The session record (<code>session:{id}</code>) stores the user&#8217;s username and email with a 30-minute TTL (<code>setex</code>). Only the opaque session ID is sent to the browser as an <code>httpOnly</code>, <code>SameSite=Lax</code> cookie named <code>sessionId</code>. Because the cookie is <code>httpOnly</code>, JavaScript cannot read it, which prevents session hijacking via XSS. In production the cookie is also marked <code>Secure</code> so it is only transmitted over HTTPS.</p>
 </div>
@@ -2100,7 +2092,7 @@ on this list.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_csrf_protection_double_submit_cookie_pattern">10.2.3. CSRF Protection — Double-Submit Cookie Pattern</h4>
+<h4 id="_csrf_protection_double_submit_cookie_pattern">8.2.3. CSRF Protection — Double-Submit Cookie Pattern</h4>
 <div class="paragraph">
 <p>All state-changing requests (<code>POST</code>, <code>PUT</code>, <code>DELETE</code>) are protected against Cross-Site Request Forgery using the <strong>double-submit cookie</strong> pattern:</p>
 </div>
@@ -2123,7 +2115,7 @@ on this list.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_https_lets_encrypt_and_nginx_via_sslip_io">10.3. HTTPS: Let&#8217;s Encrypt and nginx via sslip.io</h3>
+<h3 id="_https_lets_encrypt_and_nginx_via_sslip_io">8.3. HTTPS: Let&#8217;s Encrypt and nginx via sslip.io</h3>
 <div class="paragraph">
 <p>In production, TLS is handled entirely by the <strong>Webapp</strong> container using the <code>jonasal/nginx-certbot</code> Docker image:</p>
 </div>
@@ -2145,7 +2137,7 @@ on this list.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_persistency_hybrid_state_management">10.4. Persistency: Hybrid State Management</h3>
+<h3 id="_persistency_hybrid_state_management">8.4. Persistency: Hybrid State Management</h3>
 <div class="paragraph">
 <p>The system distinguishes between two data lifecycles:</p>
 </div>
@@ -2164,19 +2156,19 @@ on this list.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_deterministic_logic_rust_engine">10.5. Deterministic Logic (Rust Engine)</h3>
+<h3 id="_deterministic_logic_rust_engine">8.5. Deterministic Logic (Rust Engine)</h3>
 <div class="paragraph">
 <p>Since Game Y requires complex graph pathfinding to detect wins, all computational logic is centralized in <strong>Rust</strong>. This ensures that rules are applied deterministically and with maximum CPU efficiency, regardless of whether the move comes from the Web UI or the Bot API.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_deployment_containerization_docker">10.6. Deployment: Containerization (Docker)</h3>
+<h3 id="_deployment_containerization_docker">8.6. Deployment: Containerization (Docker)</h3>
 <div class="paragraph">
 <p>To ensure "it works on my machine" consistency, every sub-service is encapsulated in a <strong>Docker</strong> container. This cross-cutting concept simplifies local development and cloud deployment, ensuring identical runtimes for the Node.js gateway and the compiled Rust binary.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_testing_strategy">10.7. Testing Strategy</h3>
+<h3 id="_testing_strategy">8.7. Testing Strategy</h3>
 <div class="paragraph">
 <p>The project applies a multi-layer testing approach enforced through CI/CD:</p>
 </div>
@@ -2201,7 +2193,7 @@ on this list.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-design-decisions">11. Architecture Decisions</h2>
+<h2 id="section-design-decisions">9. Architecture Decisions</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>This section documents the most important architectural decisions made during the development of the system.
@@ -2209,7 +2201,7 @@ Each decision includes its context, the chosen option, and the rationale.</p>
 </div>
 <hr>
 <div class="sect2">
-<h3 id="_adr_001_separation_into_web_application_and_rust_game_engine">11.1. ADR-001: Separation into Web Application and Rust Game Engine</h3>
+<h3 id="_adr_001_separation_into_web_application_and_rust_game_engine">9.1. ADR-001: Separation into Web Application and Rust Game Engine</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -2239,7 +2231,7 @@ The system will follow a <strong>service-oriented architecture</strong> where:
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_adr_002_communication_via_json_using_yen_notation">11.2. ADR-002: Communication via JSON using YEN Notation</h3>
+<h3 id="_adr_002_communication_via_json_using_yen_notation">9.2. ADR-002: Communication via JSON using YEN Notation</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -2267,7 +2259,7 @@ All communication between the web application and the Rust service will use:
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_adr_003_use_of_firebase_as_the_database">11.3. ADR-003: Use of Firebase as the Database</h3>
+<h3 id="_adr_003_use_of_firebase_as_the_database">9.3. ADR-003: Use of Firebase as the Database</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -2301,7 +2293,7 @@ Use <strong>Firebase</strong> as the main data storage solution.</p>
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_adr_004_cloud_deployment_of_the_application">11.4. ADR-004: Cloud Deployment of the Application</h3>
+<h3 id="_adr_004_cloud_deployment_of_the_application">9.4. ADR-004: Cloud Deployment of the Application</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -2335,7 +2327,7 @@ Deploy all services on an <strong>Azure Virtual Machine</strong> (20.250.145.156
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_adr_005_server_side_sessions_via_redis_with_cookie_based_identity">11.5. ADR-005: Server-side Sessions via Redis with Cookie-based Identity</h3>
+<h3 id="_adr_005_server_side_sessions_via_redis_with_cookie_based_identity">9.5. ADR-005: Server-side Sessions via Redis with Cookie-based Identity</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -2365,7 +2357,7 @@ Use <strong>server-side sessions stored in Redis</strong>. After a successful lo
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_adr_006_https_via_lets_encrypt_and_jonasalnginx_certbot">11.6. ADR-006: HTTPS via Let&#8217;s Encrypt and jonasal/nginx-certbot</h3>
+<h3 id="_adr_006_https_via_lets_encrypt_and_jonasalnginx_certbot">9.6. ADR-006: HTTPS via Let&#8217;s Encrypt and jonasal/nginx-certbot</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -2396,7 +2388,7 @@ Use the <strong><code>jonasal/nginx-certbot</code></strong> Docker image for the
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_adr_007_external_rest_api_for_bots">11.7. ADR-007: External REST API for Bots</h3>
+<h3 id="_adr_007_external_rest_api_for_bots">9.7. ADR-007: External REST API for Bots</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -2424,7 +2416,7 @@ Expose a REST-style HTTP API that:
 </div>
 </div>
 <div class="sect2">
-<h3 id="_adr_008_internationalisation_via_react_i18next">11.8. ADR-008: Internationalisation via react-i18next</h3>
+<h3 id="_adr_008_internationalisation_via_react_i18next">9.8. ADR-008: Internationalisation via react-i18next</h3>
 <div class="paragraph">
 <p><strong>Status:</strong> Accepted</p>
 </div>
@@ -2495,10 +2487,10 @@ There you will find links and examples about ADR.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-quality-scenarios">12. Quality Requirements</h2>
+<h2 id="section-quality-scenarios">10. Quality Requirements</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_quality_tree">12.1. Quality Tree</h3>
+<h3 id="_quality_tree">10.1. Quality Tree</h3>
 <div class="imageblock">
 <div class="content">
 <img src="./images/quality_tree.png" alt="quality tree" width="2250" height="269">
@@ -2511,7 +2503,7 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <hr>
 </div>
 <div class="sect2">
-<h3 id="_quality_scenarios">12.2. Quality Scenarios</h3>
+<h3 id="_quality_scenarios">10.2. Quality Scenarios</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 16.6666%;">
@@ -2635,7 +2627,7 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-technical-risks">13. Risks and Technical Debts</h2>
+<h2 id="section-technical-risks">11. Risks and Technical Debts</h2>
 <div class="sectionbody">
 <div class="sidebarblock arc42help">
 <div class="content">
@@ -2661,7 +2653,7 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 </div>
 </div>
 <div class="sect2">
-<h3 id="_technical_risks">13.1. Technical Risks</h3>
+<h3 id="_technical_risks">11.1. Technical Risks</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 20%;">
@@ -2700,7 +2692,7 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 </table>
 </div>
 <div class="sect2">
-<h3 id="_technical_debts">13.2. Technical Debts</h3>
+<h3 id="_technical_debts">11.2. Technical Debts</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 25%;">
@@ -2750,6 +2742,11 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <td class="tableblock halign-left valign-top"><p class="tableblock">No rate limiting is applied to the login endpoint, and a race condition window exists during user creation. Accepted as-is; will not be addressed. Wontfix.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The original version of GameY did not have any scenarios where the game could end on a draw</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Due to the implementation of new gamemodes (ex. Holey Y) now that scenario can occur, and it is not covered. A new method to check if game can not end on a win or lose has to be included.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Medium</p></td>
+</tr>
 </tbody>
 </table>
 <div style="page-break-after: always;"></div>
@@ -2757,7 +2754,7 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-glossary">14. Glossary</h2>
+<h2 id="section-glossary">12. Glossary</h2>
 <div class="sectionbody">
 <div class="sidebarblock arc42help">
 <div class="content">
