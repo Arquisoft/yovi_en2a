@@ -554,5 +554,76 @@ mod tests {
         assert!(debug.contains("Place"));
         assert!(debug.contains("5"));
     }
+
+    // ── apply_move ────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_apply_move_success_returns_true() {
+        let mut game = game::GameY::new(3);
+        let mv = Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(0, 0, 2),
+        };
+        assert!(apply_move(&mut game, mv, "error"));
+    }
+
+    #[test]
+    fn test_apply_move_occupied_returns_false() {
+        let mut game = game::GameY::new(3);
+        let coords = Coordinates::new(0, 0, 2);
+        game.add_move(Movement::Placement { player: PlayerId::new(0), coords }).unwrap();
+        let mv = Movement::Placement { player: PlayerId::new(1), coords };
+        assert!(!apply_move(&mut game, mv, "error"));
+    }
+
+    // ── trigger_bot_move ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_trigger_bot_move_places_a_piece() {
+        let mut game = game::GameY::new(5);
+        let total_before = game.available_cells().len() as u32;
+        let bot = Arc::new(RandomBot);
+        trigger_bot_move(&mut game, bot.as_ref());
+        let total_after = game.available_cells().len() as u32;
+        // Bot should have placed exactly one piece
+        assert_eq!(total_before - total_after, 1);
+    }
+
+    #[test]
+    fn test_trigger_bot_move_on_finished_game_no_change() {
+        // A 1×1 board is immediately finished when B is placed
+        let yen_str = r#"{"size":1,"turn":1,"players":["B","R"],"layout":"B"}"#;
+        let yen: crate::YEN = serde_json::from_str(yen_str).unwrap();
+        let mut game = game::GameY::try_from(yen).unwrap();
+        assert!(game.check_game_over());
+        let available_before = game.available_cells().len();
+        let bot = Arc::new(RandomBot);
+        trigger_bot_move(&mut game, bot.as_ref());
+        assert_eq!(game.available_cells().len(), available_before);
+    }
+
+    // ── handle_place_command ──────────────────────────────────────────────
+
+    #[test]
+    fn test_handle_place_human_places_one_piece() {
+        let mut game = game::GameY::new(5);
+        let total_before = game.available_cells().len() as u32;
+        let bot = Arc::new(RandomBot);
+        handle_place_command(&mut game, 0, PlayerId::new(0), Mode::Human, bot.as_ref());
+        let total_after = game.available_cells().len() as u32;
+        // Human-only: exactly one piece placed, bot did not move
+        assert_eq!(total_before - total_after, 1);
+    }
+
+    #[test]
+    fn test_handle_place_computer_triggers_bot() {
+        let mut game = game::GameY::new(5);
+        let total_before = game.available_cells().len() as u32;
+        let bot = Arc::new(RandomBot);
+        handle_place_command(&mut game, 0, PlayerId::new(0), Mode::Computer, bot.as_ref());
+        let total_after = game.available_cells().len() as u32;
+        // Human + bot = 2 pieces placed
+        assert_eq!(total_before - total_after, 2);
+    }
 }
 

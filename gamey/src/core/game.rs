@@ -1371,4 +1371,304 @@ mod tests {
             _ => panic!("Game should be ongoing"),
         }
     }
+
+    // ── GameVariant conversions ───────────────────────────────────────────
+
+    #[test]
+    fn test_game_variant_from_str_all() {
+        assert_eq!(GameVariant::from_str("why_not"), GameVariant::WhyNot);
+        assert_eq!(GameVariant::from_str("master_y"), GameVariant::MasterY);
+        assert_eq!(GameVariant::from_str("fortune_y"), GameVariant::FortuneY);
+        assert_eq!(GameVariant::from_str("tabu_y"), GameVariant::TabuY);
+        assert_eq!(GameVariant::from_str("holey_y"), GameVariant::HoleyY);
+        assert_eq!(GameVariant::from_str("unknown"), GameVariant::Standard);
+        assert_eq!(GameVariant::from_str(""), GameVariant::Standard);
+    }
+
+    #[test]
+    fn test_game_variant_as_str_all() {
+        assert_eq!(GameVariant::Standard.as_str(), None);
+        assert_eq!(GameVariant::WhyNot.as_str(), Some("why_not"));
+        assert_eq!(GameVariant::MasterY.as_str(), Some("master_y"));
+        assert_eq!(GameVariant::FortuneY.as_str(), Some("fortune_y"));
+        assert_eq!(GameVariant::TabuY.as_str(), Some("tabu_y"));
+        assert_eq!(GameVariant::HoleyY.as_str(), Some("holey_y"));
+    }
+
+    // ── check_player_turn error ───────────────────────────────────────────
+
+    #[test]
+    fn test_check_player_turn_wrong_player_returns_error() {
+        let game = GameY::new(3);
+        // P0 is next, but we submit with P1
+        let mv = Movement::Placement {
+            player: PlayerId::new(1),
+            coords: Coordinates::new(0, 0, 2),
+        };
+        let result = game.check_player_turn(&mv);
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            GameYError::InvalidPlayerTurn { expected, found } => {
+                assert_eq!(expected, PlayerId::new(0));
+                assert_eq!(found, PlayerId::new(1));
+            }
+            e => panic!("Expected InvalidPlayerTurn, got {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_check_player_turn_correct_player_ok() {
+        let game = GameY::new(3);
+        let mv = Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(0, 0, 2),
+        };
+        assert!(game.check_player_turn(&mv).is_ok());
+    }
+
+    // ── cell_owner ────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_cell_owner_empty_returns_none() {
+        let game = GameY::new(3);
+        let coords = Coordinates::new(0, 0, 2);
+        assert!(game.cell_owner(&coords).is_none());
+    }
+
+    #[test]
+    fn test_cell_owner_occupied_returns_player() {
+        let mut game = GameY::new(3);
+        let coords = Coordinates::new(0, 0, 2);
+        game.add_move(Movement::Placement { player: PlayerId::new(0), coords }).unwrap();
+        assert_eq!(game.cell_owner(&coords), Some(PlayerId::new(0)));
+    }
+
+    // ── hole_indices / neighbor_indices ───────────────────────────────────
+
+    #[test]
+    fn test_hole_indices_returns_flat_index() {
+        // (1,0,1) on size-3: row = size-1-x = 1, col = y = 0 → idx = 1*(1+1)/2 + 0 = 1
+        let hole = Coordinates::new(1, 0, 1);
+        let holes: HashSet<Coordinates> = [hole].into_iter().collect();
+        let game = GameY::new_holey_from_positions(3, holes);
+        let indices = game.hole_indices();
+        assert_eq!(indices.len(), 1);
+        assert!(indices.contains(&1));
+    }
+
+    #[test]
+    fn test_neighbor_indices_interior_cell() {
+        let coords = Coordinates::new(2, 1, 1);
+        let indices = GameY::neighbor_indices(coords, 5);
+        assert_eq!(indices.len(), 6);
+    }
+
+    #[test]
+    fn test_neighbor_indices_corner_cell() {
+        let coords = Coordinates::new(4, 0, 0);
+        let indices = GameY::neighbor_indices(coords, 5);
+        assert_eq!(indices.len(), 2);
+    }
+
+    // ── TryFrom error paths ───────────────────────────────────────────────
+
+    #[test]
+    fn test_try_from_wrong_row_count_returns_error() {
+        let yen_str = r#"{"size": 3, "turn": 0, "players": ["B","R"], "layout": "./.."}  "#;
+        let yen: YEN = serde_json::from_str(yen_str).unwrap();
+        let result = GameY::try_from(yen);
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            GameYError::InvalidYENLayout { expected, found } => {
+                assert_eq!(expected, 3);
+                assert_eq!(found, 2);
+            }
+            e => panic!("Expected InvalidYENLayout, got {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_try_from_wrong_row_length_returns_error() {
+        // Row 2 has 4 chars instead of 3
+        let yen_str = r#"{"size": 3, "turn": 0, "players": ["B","R"], "layout": "./../...."}  "#;
+        let yen: YEN = serde_json::from_str(yen_str).unwrap();
+        let result = GameY::try_from(yen);
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            GameYError::InvalidYENLayoutLine { found, line, .. } => {
+                assert_eq!(found, 4);
+                assert_eq!(line, 2);
+            }
+            e => panic!("Expected InvalidYENLayoutLine, got {:?}", e),
+        }
+    }
+
+    #[test]
+    fn test_try_from_invalid_char_returns_error() {
+        let yen_str = r#"{"size": 3, "turn": 0, "players": ["B","R"], "layout": "./../X.."}  "#;
+        let yen: YEN = serde_json::from_str(yen_str).unwrap();
+        let result = GameY::try_from(yen);
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            GameYError::InvalidCharInLayout { char, .. } => assert_eq!(char, 'X'),
+            e => panic!("Expected InvalidCharInLayout, got {:?}", e),
+        }
+    }
+
+    // ── new_holey error ───────────────────────────────────────────────────
+
+    #[test]
+    fn test_new_holey_too_many_holes_returns_error() {
+        // size=1 has 1 cell, requesting 2 holes is impossible
+        let result = GameY::new_holey(1, 2);
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            GameYError::TooManyHoles { requested, .. } => assert_eq!(requested, 2),
+            e => panic!("Expected TooManyHoles, got {:?}", e),
+        }
+    }
+
+    // ── save_to_file / load_from_file ─────────────────────────────────────
+
+    #[test]
+    fn test_save_and_load_roundtrip() {
+        use tempfile::NamedTempFile;
+        let mut game = GameY::new(3);
+        game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(0, 0, 2),
+        }).unwrap();
+
+        let tmp = NamedTempFile::new().unwrap();
+        game.save_to_file(tmp.path()).unwrap();
+
+        let loaded = GameY::load_from_file(tmp.path()).unwrap();
+        let yen_orig: YEN = (&game).into();
+        let yen_loaded: YEN = (&loaded).into();
+        assert_eq!(yen_orig.layout(), yen_loaded.layout());
+    }
+
+    #[test]
+    fn test_load_from_file_nonexistent_returns_error() {
+        let result = GameY::load_from_file("this_file_does_not_exist_xyz.json");
+        assert!(result.is_err());
+        match result.unwrap_err() {
+            GameYError::IoError { .. } => {}
+            e => panic!("Expected IoError, got {:?}", e),
+        }
+    }
+
+    // ── force_turn ────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_force_turn_changes_next_player() {
+        let mut game = GameY::new(3);
+        game.force_turn(PlayerId::new(1));
+        assert_eq!(game.next_player(), Some(PlayerId::new(1)));
+    }
+
+    #[test]
+    fn test_force_turn_on_finished_game_does_nothing() {
+        let mut game = GameY::new(1);
+        game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(0, 0, 0),
+        }).unwrap();
+        assert!(game.check_game_over());
+        game.force_turn(PlayerId::new(1));
+        assert!(game.check_game_over());
+    }
+
+    // ── render options ────────────────────────────────────────────────────
+
+    #[test]
+    fn test_render_default_options() {
+        let game = GameY::new(3);
+        let output = game.render(&RenderOptions::default());
+        assert!(output.contains("Game of Y"));
+    }
+
+    #[test]
+    fn test_render_show_3d_coords() {
+        let game = GameY::new(3);
+        let opts = RenderOptions { show_3d_coords: true, show_idx: false, show_colors: false };
+        let output = game.render(&opts);
+        assert!(output.contains('('));
+    }
+
+    #[test]
+    fn test_render_show_idx() {
+        let game = GameY::new(3);
+        let opts = RenderOptions { show_3d_coords: false, show_idx: true, show_colors: false };
+        let output = game.render(&opts);
+        assert!(output.contains('('));
+    }
+
+    #[test]
+    fn test_render_show_colors_with_pieces() {
+        let mut game = GameY::new(3);
+        game.add_move(Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(0, 0, 2),
+        }).unwrap();
+        let opts = RenderOptions { show_3d_coords: false, show_idx: false, show_colors: true };
+        let output = game.render(&opts);
+        assert!(output.contains("\x1b["));
+    }
+
+    #[test]
+    fn test_get_indent_multiplier_all_cases() {
+        let game = GameY::new(3);
+        assert_eq!(game.get_indent_multiplier(&RenderOptions { show_3d_coords: true,  show_idx: true,  show_colors: false }), 8);
+        assert_eq!(game.get_indent_multiplier(&RenderOptions { show_3d_coords: true,  show_idx: false, show_colors: false }), 4);
+        assert_eq!(game.get_indent_multiplier(&RenderOptions { show_3d_coords: false, show_idx: true,  show_colors: false }), 4);
+        assert_eq!(game.get_indent_multiplier(&RenderOptions { show_3d_coords: false, show_idx: false, show_colors: false }), 2);
+    }
+
+    // ── apply_player_color ────────────────────────────────────────────────
+
+    #[test]
+    fn test_apply_player_color_none_returns_unchanged() {
+        let s = "test".to_string();
+        assert_eq!(apply_player_color(s.clone(), None), s);
+    }
+
+    #[test]
+    fn test_apply_player_color_player0_blue() {
+        let result = apply_player_color("B".to_string(), Some(PlayerId::new(0)));
+        assert!(result.contains("\x1b[34m"));
+    }
+
+    #[test]
+    fn test_apply_player_color_player1_red() {
+        let result = apply_player_color("R".to_string(), Some(PlayerId::new(1)));
+        assert!(result.contains("\x1b[31m"));
+    }
+
+    // ── render holey cell ─────────────────────────────────────────────────
+
+    #[test]
+    fn test_render_hole_cell_shows_h() {
+        let hole = Coordinates::new(0, 0, 2);
+        let holes: HashSet<Coordinates> = [hole].into_iter().collect();
+        let game = GameY::new_holey_from_positions(3, holes);
+        let opts = RenderOptions { show_3d_coords: false, show_idx: false, show_colors: false };
+        let output = game.render(&opts);
+        assert!(output.contains('H'));
+    }
+
+    // ── handle_action Swap ────────────────────────────────────────────────
+
+    #[test]
+    fn test_swap_action_changes_turn() {
+        let mut game = GameY::new(3);
+        game.add_move(Movement::Action {
+            player: PlayerId::new(0),
+            action: GameAction::Swap,
+        }).unwrap();
+        match &game.status {
+            GameStatus::Ongoing { next_player } => assert_eq!(*next_player, PlayerId::new(1)),
+            _ => panic!("Expected Ongoing after Swap"),
+        }
+    }
 }

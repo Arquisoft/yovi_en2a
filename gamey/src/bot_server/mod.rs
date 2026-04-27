@@ -173,4 +173,145 @@ pub async fn process_move(
     }))
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use axum::body::Body;
+    use axum::http::{Method, Request, StatusCode};
+    use http_body_util::BodyExt;
+    use tower::ServiceExt;
+
+    async fn call(app: axum::Router, method: Method, uri: &str, body: &str) -> (StatusCode, String) {
+        let req = Request::builder()
+            .method(method)
+            .uri(uri)
+            .header("content-type", "application/json")
+            .body(Body::from(body.to_owned()))
+            .unwrap();
+        let resp = app.oneshot(req).await.unwrap();
+        let status = resp.status();
+        let bytes = resp.into_body().collect().await.unwrap().to_bytes();
+        (status, String::from_utf8_lossy(&bytes).into_owned())
+    }
+
+    #[test]
+    fn test_create_default_state_has_all_bots() {
+        let state = create_default_state();
+        let names = state.bots().names();
+        assert!(names.iter().any(|n| n == "random_bot"));
+        assert!(names.iter().any(|n| n == "greedy_bot"));
+        assert!(names.iter().any(|n| n == "minimax_bot"));
+    }
+
+    #[tokio::test]
+    async fn test_status_returns_ok() {
+        let app = create_router(create_default_state());
+        let (status, body) = call(app, Method::GET, "/status", "").await;
+        assert_eq!(status, StatusCode::OK);
+        assert_eq!(body, "OK");
+    }
+
+    #[tokio::test]
+    async fn test_init_game_standard() {
+        let app = create_router(create_default_state());
+        let (status, body) = call(app, Method::POST, "/engine/init", r#"{"size": 3}"#).await;
+        assert_eq!(status, StatusCode::OK);
+        let json: serde_json::Value = serde_json::from_str(&body).unwrap();
+        assert_eq!(json["yen"]["size"], 3);
+        assert_eq!(json["hole_cells"], serde_json::json!([]));
+    }
+
+    #[tokio::test]
+    async fn test_init_game_why_not_variant() {
+        let app = create_router(create_default_state());
+        let (status, body) = call(
+            app, Method::POST, "/engine/init",
+            r#"{"size": 3, "variant": "why_not"}"#,
+        ).await;
+        assert_eq!(status, StatusCode::OK);
+        let json: serde_json::Value = serde_json::from_str(&body).unwrap();
+        assert_eq!(json["yen"]["variant"], "why_not");
+    }
+
+    #[tokio::test]
+    async fn test_init_game_holey_y_with_count() {
+        let app = create_router(create_default_state());
+        let (status, body) = call(
+            app, Method::POST, "/engine/init",
+            r#"{"size": 5, "variant": "holey_y", "hole_count": 2}"#,
+        ).await;
+        assert_eq!(status, StatusCode::OK);
+        let json: serde_json::Value = serde_json::from_str(&body).unwrap();
+        assert!(json["hole_cells"].is_array());
+        assert!(json["hole_cells"].as_array().unwrap().len() <= 2);
+    }
+
+    #[tokio::test]
+    async fn test_init_game_holey_y_default_count() {
+        let app = create_router(create_default_state());
+        let (status, _) = call(
+            app, Method::POST, "/engine/init",
+            r#"{"size": 6, "variant": "holey_y"}"#,
+        ).await;
+        assert_eq!(status, StatusCode::OK);
+    }
+
+    #[tokio::test]
+    async fn test_process_move_valid_placement() {
+        let app = create_router(create_default_state());
+        // Empty size-3 board, P0 places at (0,0,2) – bottom-left corner
+        let body = serde_json::json!({
+            "state": {"size": 3, "turn": 0, "players": ["B","R"], "layout": "./../..."},
+            "x": 0, "y": 0, "z": 2
+        }).to_string();
+        let (status, resp) = call(app, Method::POST, "/engine/move", &body).await;
+        assert_eq!(status, StatusCode::OK);
+        let json: serde_json::Value = serde_json::from_str(&resp).unwrap();
+        assert!(json["new_yen_json"].is_object());
+        assert!(json["game_over"].is_boolean());
+        assert_eq!(json["hole_cells"], serde_json::json!([]));
+        assert_eq!(json["blocked_cells"], serde_json::json!([]));
+    }
+
+    #[tokio::test]
+    async fn test_process_move_occupied_cell_returns_400() {
+        let app = create_router(create_default_state());
+        // B already at (2,0,0) in "B/../..." layout; try to place there again
+        let body = serde_json::json!({
+            "state": {"size": 3, "turn": 0, "players": ["B","R"], "layout": "B/../..."},
+            "x": 2, "y": 0, "z": 0
+        }).to_string();
+        let (status, _) = call(app, Method::POST, "/engine/move", &body).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_process_move_invalid_yen_returns_400() {
+        let app = create_router(create_default_state());
+        // Only 2 rows for a size-3 board → invalid layout
+        let body = serde_json::json!({
+            "state": {"size": 3, "turn": 0, "players": ["B","R"], "layout": "./../.."},
+            "x": 0, "y": 0, "z": 2
+        }).to_string();
+        let (status, _) = call(app, Method::POST, "/engine/move", &body).await;
+        assert_eq!(status, StatusCode::BAD_REQUEST);
+    }
+
+    #[tokio::test]
+    async fn test_process_move_tabu_y_returns_blocked_cells() {
+        let app = create_router(create_default_state());
+        // Empty size-3 board with tabu_y; place at (0,2,0)
+        // Neighbors: (1,1,0) → idx 2, (0,1,1) → idx 4
+        let body = serde_json::json!({
+            "state": {"size": 3, "turn": 0, "players": ["B","R"], "layout": "./../...", "variant": "tabu_y"},
+            "x": 0, "y": 2, "z": 0
+        }).to_string();
+        let (status, resp) = call(app, Method::POST, "/engine/move", &body).await;
+        assert_eq!(status, StatusCode::OK);
+        let json: serde_json::Value = serde_json::from_str(&resp).unwrap();
+        let blocked = json["blocked_cells"].as_array().unwrap();
+        assert!(!blocked.is_empty(), "tabu_y move must return non-empty blocked_cells");
+    }
+}
+
 

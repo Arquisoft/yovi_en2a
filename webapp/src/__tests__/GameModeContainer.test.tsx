@@ -489,3 +489,117 @@ describe('GameModeContainer — busy state', () => {
     });
   });
 });
+
+// ── Variant selector (showVariant) ────────────────────────────────────────
+
+function makeVariantMode(): GameMode {
+  return {
+    id: 'variant',
+    label: 'Variant Mode',
+    description: 'Choose a game variant.',
+    mode: 'multi',
+    currentLevel: Difficulty.Normal,
+    size: 8,
+    showVariant: true,
+    start: () => null,
+  };
+}
+
+describe('GameModeContainer — variant selector', () => {
+  test('shows Game Variant selector when showVariant is true', () => {
+    render(<GameModeContainer mode={makeVariantMode()} />);
+    expect(screen.getByText('Game Variant')).toBeInTheDocument();
+  });
+
+  test('variant selector defaults to Standard', () => {
+    render(<GameModeContainer mode={makeVariantMode()} />);
+    const select = screen.getByRole('combobox');
+    expect((select as HTMLSelectElement).value).toBe('standard');
+  });
+
+  test('selecting holey_y shows the Holes count row', () => {
+    render(<GameModeContainer mode={makeVariantMode()} />);
+    const select = screen.getByRole('combobox');
+    fireEvent.change(select, { target: { value: 'holey_y' } });
+    expect(screen.getByText('Holes')).toBeInTheDocument();
+  });
+
+  test('hole count decrements correctly', () => {
+    render(<GameModeContainer mode={makeVariantMode()} />);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'holey_y' } });
+    // Default hole count = Math.max(1, floor(8/3)) = 2
+    const arrows = Array.from(document.querySelectorAll('button')).filter(
+      (el) => el.textContent === '→'
+    );
+    // Increase hole count first so we can decrement
+    if (arrows.at(-1)) fireEvent.click(arrows.at(-1) as Element);
+    const leftArrows = Array.from(document.querySelectorAll('button')).filter(
+      (el) => el.textContent === '←'
+    );
+    if (leftArrows.at(-1)) fireEvent.click(leftArrows.at(-1) as Element);
+    // Count should be back to initial
+    expect(screen.getByText('2')).toBeInTheDocument();
+  });
+
+  test('PLAY with standard variant navigates to /play/:size/multi with guest', () => {
+    render(<GameModeContainer mode={makeVariantMode()} />);
+    fireEvent.click(screen.getByText('PLAY'));
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/play/8/multi',
+      expect.objectContaining({ state: expect.objectContaining({ guest: true }) })
+    );
+  });
+
+  test('PLAY with why_not variant navigates to /play/:size/why_not', () => {
+    render(<GameModeContainer mode={makeVariantMode()} />);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'why_not' } });
+    fireEvent.click(screen.getByText('PLAY'));
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/play/8/why_not',
+      expect.objectContaining({ state: expect.objectContaining({ guest: true }) })
+    );
+  });
+
+  test('PLAY with holey_y navigates with holeCount in state', () => {
+    render(<GameModeContainer mode={makeVariantMode()} />);
+    fireEvent.change(screen.getByRole('combobox'), { target: { value: 'holey_y' } });
+    fireEvent.click(screen.getByText('PLAY'));
+    expect(mockNavigate).toHaveBeenCalledWith(
+      '/play/8/holey_y',
+      expect.objectContaining({
+        state: expect.objectContaining({ holeCount: expect.any(Number) }),
+      })
+    );
+  });
+
+  test('PLAY with standard variant and logged-in user navigates without state', () => {
+    mockUseLocation.mockReturnValue({ state: { guest: false } });
+    mockUseUser.mockReturnValue({ user: { username: 'Alice' } });
+
+    render(<GameModeContainer mode={makeVariantMode()} />);
+    fireEvent.click(screen.getByText('PLAY'));
+
+    expect(mockNavigate).toHaveBeenCalledWith('/play/8/multi', undefined);
+  });
+});
+
+// ── hideSize flag ─────────────────────────────────────────────────────────
+
+describe('GameModeContainer — hideSize', () => {
+  test('CREATE uses fixed size 8 when hideSize is true', async () => {
+    mockCreateOnlineMatch.mockResolvedValue({ match_id: 'room-1', turn_number: 0 });
+
+    const mode = makeOnlinePrivateMode();
+    (mode as any).hideSize = true;
+    (mode as any).size = 10; // Would be 10, but hideSize forces 8
+
+    render(<GameModeContainer mode={mode} />);
+    fireEvent.click(screen.getByText('CREATE'));
+
+    await waitFor(() => {
+      expect(mockCreateOnlineMatch).toHaveBeenCalledWith(
+        expect.objectContaining({ size: 8 })
+      );
+    });
+  });
+});
