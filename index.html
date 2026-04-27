@@ -1500,7 +1500,7 @@ Refer to details in the following sections.</p>
 <h4 id="_white_box_game_engine_rust">5.2.1. White Box <em>Game Engine (Rust)</em></h4>
 <div class="imageblock">
 <div class="content">
-<img src="./images/level2.png" alt="level2" width="717" height="403">
+<img src="./images/level2.png" alt="level2" width="748" height="403">
 </div>
 </div>
 <div class="dlist">
@@ -2733,6 +2733,21 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Firebase vendor lock-in</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">All authentication and persistence depends on Firebase. Migrating to a different provider would require rewriting the Auth Engine and Game Manager data layers. Accepted trade-off for the project scale. No mitigation planned.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CORS allow localhost URLs in prod</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CORS configuration permits localhost origins in the production environment. Accepted as a known misconfiguration; will not be addressed. Wontfix.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bilingual comments in code</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Source code contains comments written in multiple languages, reducing consistency and maintainability.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rate limiting in login / Race condition on user creation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No rate limiting is applied to the login endpoint, and a race condition window exists during user creation. Accepted as-is; will not be addressed. Wontfix.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
 </tr>
 </tbody>
