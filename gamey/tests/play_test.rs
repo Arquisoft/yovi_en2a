@@ -1,4 +1,4 @@
-use gamey::play::{player_play, play, play_get, PlayParams, PlayQuery, PlayResponse};
+use gamey::play::{player_play, play, play_get, PlayParams, PlayQuery, PlayResponse, PlayCoordsResponse};
 use gamey::{GameY, YEN, create_default_state};
 use axum::{
     Json,
@@ -151,6 +151,42 @@ async fn test_play_no_bot() {
         result.is_ok(),
         "play should fall back to minimax bot, got: {:?}",
         result.err().map(|Json(e)| e)
+    );
+}
+
+#[tokio::test]
+async fn test_play_response_wraps_coords_in_object() {
+    let bot_id = any_available_bot_id();
+    let yen = YEN::new(3, 0, vec!['B', 'R'], empty_board_size_3());
+
+    let resp = play(Option::from(&*bot_id), Json(yen))
+        .await
+        .expect("valid empty board should succeed");
+
+    let serialized = serde_json::to_string(&resp).expect("response must be serializable");
+    assert!(
+        serialized.contains("\"coords\""),
+        "response JSON should contain a 'coords' field, got: {}",
+        serialized
+    );
+}
+
+#[tokio::test]
+async fn test_play_response_roundtrip() {
+    let bot_id = any_available_bot_id();
+    let yen = YEN::new(3, 0, vec!['B', 'R'], empty_board_size_3());
+
+    let resp = play(Option::from(&*bot_id), Json(yen))
+        .await
+        .expect("valid empty board should succeed");
+
+    let serialized = serde_json::to_string(&resp).expect("response must be serializable");
+    let parsed: PlayCoordsResponse =
+        serde_json::from_str(&serialized).expect("response must round-trip through JSON");
+
+    assert_eq!(
+        serde_json::to_string(&parsed.coords).unwrap(),
+        serde_json::to_string(&resp.coords).unwrap()
     );
 }
 
@@ -462,7 +498,8 @@ async fn test_play_get_returns_coordinates() {
         bot_id: Some(any_available_bot_id()),
     };
 
-    let Json(_coords) = play_get(Query(query)).await.unwrap();
+    let Json(resp) = play_get(Query(query)).await.unwrap();
+    let _coords = resp.coords;
     assert!(true); // Placeholder for coordinate validation
 }
 
@@ -514,9 +551,19 @@ async fn test_play_get_returns_in_bounds_coordinates() {
         bot_id: Some(any_available_bot_id()),
     };
 
-    let Json(coords) = play_get(Query(query)).await.expect("valid position must yield coordinates");
-    let serialized = serde_json::to_string(&coords).expect("coordinates must be serializable");
-    assert!(!serialized.is_empty() && serialized != "null", "coordinates should be non-empty, got: {}", serialized);
+    let Json(resp) = play_get(Query(query)).await.expect("valid position must yield coordinates");
+    let serialized = serde_json::to_string(&resp).expect("response must be serializable");
+    assert!(
+        serialized.contains("\"coords\""),
+        "response JSON should contain a 'coords' field, got: {}",
+        serialized
+    );
+    let coords_serialized = serde_json::to_string(&resp.coords).expect("coordinates must be serializable");
+    assert!(
+        !coords_serialized.is_empty() && coords_serialized != "null",
+        "coordinates should be non-empty, got: {}",
+        coords_serialized
+    );
 }
 
 #[tokio::test]

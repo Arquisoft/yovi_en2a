@@ -125,6 +125,11 @@ pub async fn player_play(
     }))
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct PlayCoordsResponse {
+    pub coords: crate::Coordinates,
+}
+
 
 /// Computes the move a bot would play for a given YEN position.
 ///
@@ -138,12 +143,12 @@ pub async fn player_play(
 /// * `yen`    - The current game state in YEN format.
 ///
 /// # Returns
-/// On success, the [`Coordinates`](crate::Coordinates) chosen by the bot.
+/// On success, the PlayCoordsResponse chosen by the bot.
 /// On failure, a JSON [`ErrorResponse`] describing what went wrong.
 pub async fn play(
     bot_id: Option<&str>,
     Json(yen): Json<YEN>,
-) -> Result<crate::Coordinates, Json<ErrorResponse>> {
+) -> Result<PlayCoordsResponse, Json<ErrorResponse>> {
     let bot_id = bot_id.unwrap_or_else(|| "minimax_bot");
 
     let mut game = match GameY::try_from(yen.clone()) {
@@ -172,7 +177,7 @@ pub async fn play(
     };
 
     match bot.choose_move(&game) {
-        Some(c) => Ok(c),
+        Some(c) => Ok(PlayCoordsResponse { coords: c }),
         None => Err(Json(ErrorResponse::error(
             "No valid moves available for the bot",
             Some("v1".to_string()),
@@ -191,7 +196,7 @@ pub struct PlayQuery {
 #[axum::debug_handler]
 pub async fn play_get(
     Query(query): Query<PlayQuery>,
-) -> Result<Json<crate::Coordinates>, Json<ErrorResponse>> {
+) -> Result<Json<PlayCoordsResponse>, Json<ErrorResponse>> {
     let yen: YEN = serde_json::from_str(&query.position).map_err(|err| {
         Json(ErrorResponse::error(
             &format!("Invalid position query parameter: {}", err),
@@ -199,6 +204,6 @@ pub async fn play_get(
             Some("bot".to_string()),
         ))
     })?;
-    let coords = play(query.bot_id.as_deref(), Json(yen)).await?;
-    Ok(Json(coords))
+    let resp = play(query.bot_id.as_deref(), Json(yen)).await?;
+    Ok(Json(resp))
 }

@@ -646,7 +646,7 @@ pub fn build_router(state: Arc<AppState>) -> Router {
         .route("/executeMove", post(execute_move))
         .route("/executeMoveOnline", post(execute_move_online))
         .route("/reqBotMove", post(request_bot_move))
-        .route("/debug/redis", get(dump_redis))
+        //.route("/debug/redis", get(dump_redis))
         .route("/localRankings", post(get_local_rankings))
         .route("/bestTimes", get(get_best_times))
         .route("/updateScore", post(update_user_score))
