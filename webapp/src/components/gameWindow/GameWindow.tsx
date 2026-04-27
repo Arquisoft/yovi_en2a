@@ -1,6 +1,6 @@
 import "./GameWindow.css";
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import TopLeftHeader from "../topLeftHeader/TopLeftHeader";
 import TopRightMenu from "../topRightMenu/TopRightMenu";
@@ -30,12 +30,15 @@ const GameWindow = () => {
   const { t } = useTranslation();
   const { size: urlSize, mode: urlMode } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user: currentUser } = useUser();
   const { playMoveSound, playGameOverSound, playGameStartSound, playGameVictorySound } = useAudio();
 
   const size = urlSize ? Number.parseInt(urlSize, 10) : 8;
   const mode = urlMode;
-  const isMultiplayer = mode === "multi" || mode === "why_not";
+  const localModes = ["multi", "why_not", "master_y", "fortune_y", "tabu_y", "holey_y"];
+  const isMultiplayer = localModes.includes(mode ?? "");
+  const holeCount: number | undefined = location.state?.holeCount;
   const player1 = currentUser ? currentUser.username : t('rightPanel.player1');
   const player2 = isMultiplayer ? t('rightPanel.player2') : mode+"";
 
@@ -56,6 +59,8 @@ const GameWindow = () => {
     newGame.moves = [...source.moves];
     newGame.turn = source.turn;
     newGame.gameOver = source.gameOver;
+    newGame.holeCells = new Set(source.holeCells);
+    newGame.blockedCells = new Set(source.blockedCells);
     return newGame;
   }
 
@@ -63,11 +68,12 @@ const GameWindow = () => {
     setLoading(true);
     setModalMessage(null);
     try {
-      const variant = mode === "why_not" ? "why_not" : undefined;
-      const data = await createMatch(player1, player2, size, variant);
+      const variant = isMultiplayer && mode !== "multi" ? mode : undefined;
+      const data = await createMatch(player1, player2, size, variant, holeCount);
       if (data?.match_id) {
         const newGame = new Game(size, player1, player2);
         newGame.setMatchId(data.match_id);
+        if (data.hole_cells?.length) newGame.setHoleCells(data.hole_cells);
         setGame(newGame);
         setPaused(false);
         resetTimer();
@@ -111,6 +117,9 @@ const GameWindow = () => {
 
       const updatedGame = cloneGame(game);
       updatedGame.addMove(row, col);
+      if (data.turn !== undefined) updatedGame.setTurn(data.turn as 0 | 1);
+      if (data.hole_cells) updatedGame.setHoleCells(data.hole_cells);
+      if (data.blocked_cells) updatedGame.setBlockedCells(data.blocked_cells);
       updatedGame.setGameOver(data.game_over);
       setGame(updatedGame);
       playMoveSound();
@@ -177,6 +186,8 @@ const GameWindow = () => {
           size={game.size}
           moves={game.moves}
           blocked={loading || game.gameOver || isBotTurn}
+          holeCells={game.holeCells}
+          blockedCells={game.blockedCells}
           onPlace={handlePlace}
         />
 

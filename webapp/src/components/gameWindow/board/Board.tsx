@@ -6,33 +6,39 @@ type Props = {
   size: number;
   moves: Move[];
   blocked: boolean;
+  holeCells: Set<string>;
+  blockedCells: Set<string>;
   onPlace: (row: number, col: number) => void;
 };
 
-export default function Board({ size, moves, blocked, onPlace }: Props) {
+export default function Board({ size, moves, blocked, holeCells, blockedCells, onPlace }: Readonly<Props>) {
   const rows = [];
 
-  for (let row = 0; row < size; row++) {   
-    const cells = []; 
+  for (let row = 0; row < size; row++) {
+    const cells = [];
 
     for (let col = 0; col <= row; col++) {
       let owner: 0 | 1 | null = null;
 
-      // Check if there's a move for this cell
       for (const move of moves) {
         if (move.row === row && move.col === col) {
           owner = move.player;
           break;
         }
       }
-      // Get the cell from the board model
-      const disabled = owner !== null || blocked;
+
+      const key = `${row},${col}`;
+      const isHole = holeCells.has(key);
+      const isTabuBlocked = blockedCells.has(key);
+      const disabled = owner !== null || blocked || isHole || isTabuBlocked;
 
       cells.push(
         <HexButton
           key={`${row}-${col}`}
           owner={owner}
           isDisabled={disabled}
+          isHole={isHole}
+          isTabuBlocked={isTabuBlocked}
           onClick={() => onPlace(row, col)}
         />
       );

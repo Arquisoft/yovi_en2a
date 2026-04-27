@@ -54,4 +54,30 @@ describe('HexButton component', () => {
 
     expect(button.hasAttribute('disabled')).toBe(true);
   });
+
+  test('HexButton applies hole class when isHole is true', () => {
+    render(<HexButton isHole={true} />);
+    const button = screen.getByRole('button');
+    expect(button.className).toContain('hex--hole');
+  });
+
+  test('HexButton applies tabu-blocked class when isTabuBlocked is true', () => {
+    render(<HexButton isTabuBlocked={true} />);
+    const button = screen.getByRole('button');
+    expect(button.className).toContain('hex--tabu-blocked');
+  });
+
+  test('HexButton owner takes priority over isHole', () => {
+    render(<HexButton owner={0} isHole={true} />);
+    const button = screen.getByRole('button');
+    expect(button.className).toContain('hex--player1');
+    expect(button.className).not.toContain('hex--hole');
+  });
+
+  test('HexButton isHole takes priority over isTabuBlocked', () => {
+    render(<HexButton isHole={true} isTabuBlocked={true} />);
+    const button = screen.getByRole('button');
+    expect(button.className).toContain('hex--hole');
+    expect(button.className).not.toContain('hex--tabu-blocked');
+  });
 });

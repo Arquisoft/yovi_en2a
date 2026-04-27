@@ -5,6 +5,8 @@ import Board from '../components/gameWindow/board/Board'
 import HexButton from '../components/gameWindow/board/HexButton'
 import '@testing-library/jest-dom'
 
+const emptySet = new Set<string>()
+
 describe('HexButton', () => {
   afterEach(cleanup)
 
@@ -44,26 +46,26 @@ describe('Board', () => {
 
   test('renders (size × size+1) / 2 cells for a size-3 board', () => {
     const onPlace = vi.fn()
-    render(<Board size={3} moves={[]} blocked={false} onPlace={onPlace} />)
+    render(<Board size={3} moves={[]} blocked={false} holeCells={emptySet} blockedCells={emptySet} onPlace={onPlace} />)
     // size=3 → rows 0,1,2 → 1+2+3 = 6 cells
     const buttons = screen.getAllByRole('button')
     expect(buttons).toHaveLength(6)
   })
 
   test('all cells are enabled when blocked is false and no moves', () => {
-    render(<Board size={2} moves={[]} blocked={false} onPlace={vi.fn()} />)
+    render(<Board size={2} moves={[]} blocked={false} holeCells={emptySet} blockedCells={emptySet} onPlace={vi.fn()} />)
     screen.getAllByRole('button').forEach(btn => expect(btn).not.toBeDisabled())
   })
 
   test('all cells are disabled when blocked is true', () => {
-    render(<Board size={2} moves={[]} blocked={true} onPlace={vi.fn()} />)
+    render(<Board size={2} moves={[]} blocked={true} holeCells={emptySet} blockedCells={emptySet} onPlace={vi.fn()} />)
     screen.getAllByRole('button').forEach(btn => expect(btn).toBeDisabled())
   })
 
   test('cell with a matching move is disabled and has correct owner class', () => {
     const onPlace = vi.fn()
     const moves = [{ row: 0, col: 0, player: 0 as 0 | 1 }]
-    render(<Board size={2} moves={moves} blocked={false} onPlace={onPlace} />)
+    render(<Board size={2} moves={moves} blocked={false} holeCells={emptySet} blockedCells={emptySet} onPlace={onPlace} />)
     const buttons = screen.getAllByRole('button')
     // First cell (row=0, col=0) should be occupied by player 0 → disabled
     expect(buttons[0]).toBeDisabled()
@@ -72,7 +74,7 @@ describe('Board', () => {
 
   test('cells without a matching move remain enabled', () => {
     const moves = [{ row: 1, col: 0, player: 1 as 0 | 1 }]
-    render(<Board size={2} moves={moves} blocked={false} onPlace={vi.fn()} />)
+    render(<Board size={2} moves={moves} blocked={false} holeCells={emptySet} blockedCells={emptySet} onPlace={vi.fn()} />)
     const buttons = screen.getAllByRole('button')
     // row=0 col=0 has no move → enabled
     expect(buttons[0]).not.toBeDisabled()
@@ -80,7 +82,7 @@ describe('Board', () => {
 
   test('clicking a cell calls onPlace with the correct row and col', () => {
     const onPlace = vi.fn()
-    render(<Board size={2} moves={[]} blocked={false} onPlace={onPlace} />)
+    render(<Board size={2} moves={[]} blocked={false} holeCells={emptySet} blockedCells={emptySet} onPlace={onPlace} />)
     const buttons = screen.getAllByRole('button')
     // Second cell is row=1, col=0
     fireEvent.click(buttons[1])

@@ -108,11 +108,14 @@
         pub size: u32,
         #[serde(default)]
         pub variant: Option<String>,
+        #[serde(default)]
+        pub hole_count: Option<u32>,
     }
 
     #[derive(Serialize)]
     pub struct NewMatchResponse {
         pub match_id: String,
+        pub hole_cells: Vec<u32>,
     }
 
     #[derive(Deserialize)]
@@ -163,12 +166,23 @@
     pub struct MoveResponse {
         pub match_id: String,
         pub game_over: bool,
+        pub turn: u32,
+        pub hole_cells: Vec<u32>,
+        pub blocked_cells: Vec<u32>,
     }
 
     #[derive(serde::Deserialize)]
     pub struct EngineResponse {
         pub new_yen_json: YEN,
         pub game_over: bool,
+        pub hole_cells: Vec<u32>,
+        pub blocked_cells: Vec<u32>,
+    }
+
+    #[derive(serde::Deserialize)]
+    pub struct EngineInitResponse {
+        pub yen: YEN,
+        pub hole_cells: Vec<u32>,
     }
 
     #[derive(serde::Deserialize, serde::Serialize)]

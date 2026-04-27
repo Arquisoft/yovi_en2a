@@ -17,11 +17,12 @@ bb8-redis = "0.26"
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json", "__rustls-ring"] }
 thiserror = "2.0.18"
 serde_json = "1.0.146"
-rand = "0.8"
 tower = "0.5.2"
 ctor = "0.6.3"
+rand = "0.8"
 
 [dev-dependencies]
+wiremock = "0.6.3"
 serial_test = "3.0"
 
 [[bin]]

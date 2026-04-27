@@ -116,11 +116,37 @@ pub enum GameYError {
         line: u32,
     },
 
+    /// Placement violates the Tabu rule (adjacent to opponent's last move).
+    #[error("Player {player} cannot place at {coordinates}: cell is adjacent to the opponent's last move (Tabu Y rule)")]
+    TabuViolation {
+        /// The coordinates where placement was attempted.
+        coordinates: Coordinates,
+        /// The player who attempted the placement.
+        player: PlayerId,
+    },
+
+    /// Attempted to place a piece on a hole cell (HoleyY variant).
+    #[error("Player {player} tries to place on a hole at position: {coordinates}")]
+    HoleCell {
+        /// The coordinates of the hole cell.
+        coordinates: Coordinates,
+        /// The player who attempted the placement.
+        player: PlayerId,
+    },
+
     /// Server operation failed.
     #[error("Server error: {message}")]
     ServerError {
         /// Description of what went wrong.
         message: String,
+    },
+
+    /// Requested more holes than half the total cells.
+    #[error("Too many holes: {requested} requested but maximum allowed is {max} (half of {total_cells} total_cells)")]
+    TooManyHoles {
+        requested: u32,
+        max: u32,
+        total_cells: u32,
     },
 }
 

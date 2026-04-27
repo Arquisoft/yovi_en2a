@@ -1,5 +1,5 @@
 use crate::redis_client;
-use crate::data::{EngineMoveRequest, EngineMoveResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, Match, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, SaveMatchRequest, SaveMatchResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN, CreateOnlineMatchRequest, CreateOnlineMatchResponse,
+use crate::data::{EngineMoveRequest, EngineMoveResponse, EngineInitResponse, EngineResponse, LocalRankingsRequest, LocalRankingsResponse, Match, MoveRequest, MoveResponse, NewMatchRequest, NewMatchResponse, PlayResponse, RankingTimeResponse, SaveMatchRequest, SaveMatchResponse, UpdateScoreRequest, UpdateScoreResponse, ValidResponse, YEN, CreateOnlineMatchRequest, CreateOnlineMatchResponse,
                   JoinOnlineMatchRequest, JoinOnlineMatchResponse, UpdateOnlineMatchRequest, UpdateOnlineMatchResponse, MoveRequestOnline };
 
 use std::net::SocketAddr;
@@ -21,9 +21,7 @@ use axum::http::StatusCode;
 
 /// How long after the 10s turn clock a player must be silent before the
 /// opponent can claim the win by forfeit. Total wall-clock limit before a
-/// forfeit is eligible is TURN_MS + FORFEIT_GRACE_MS.
 const TURN_MS: u64 = 10_000;
-const FORFEIT_GRACE_MS: u64 = 20_000;
 
 pub fn get_gamey_url() -> String {
     let host = std::env::var("GAMEY").unwrap_or_else(|_| "localhost".to_string());
@@ -60,8 +58,37 @@ async fn create_match(
     Json(payload): Json<NewMatchRequest>
 ) -> Json<NewMatchResponse> {
     let new_id = Uuid::new_v4().to_string();
-    let _ = redis_client::create_match(&state.redis_pool, &new_id, &payload.size, &payload.player1, &payload.player2).await;
-    Json(NewMatchResponse { match_id: new_id })
+
+    let (init_layout, hole_cells) = if payload.variant.as_deref() == Some("holey_y") {
+        let engine_url = format!("{}/engine/init", state.gamey_url);
+        let client = Client::new();
+        let body = serde_json::json!({
+            "size": payload.size,
+            "variant": "holey_y",
+            "hole_count": payload.hole_count,
+        });
+        if let Ok(resp) = client.post(&engine_url).json(&body).send().await {
+            if let Ok(init) = resp.json::<EngineInitResponse>().await {
+                (Some(init.yen.layout().to_string()), init.hole_cells)
+            } else {
+                (None, Vec::new())
+            }
+        } else {
+            (None, Vec::new())
+        }
+    } else {
+        (None, Vec::new())
+    };
+
+    let layout = init_layout.unwrap_or_else(|| {
+        (1u32..=payload.size)
+            .map(|row| ".".repeat(row as usize))
+            .collect::<Vec<_>>()
+            .join("/")
+    });
+
+    let _ = redis_client::create_match(&state.redis_pool, &new_id, &payload.size, &payload.player1, &payload.player2, payload.variant, Some(layout)).await;
+    Json(NewMatchResponse { match_id: new_id, hole_cells })
 }
 
 async fn execute_move(
@@ -145,6 +172,9 @@ async fn execute_move(
     Ok(Json(MoveResponse {
         match_id: payload.match_id,
         game_over: engine_result.game_over,
+        turn: engine_result.new_yen_json.turn(),
+        hole_cells: engine_result.hole_cells,
+        blocked_cells: engine_result.blocked_cells,
     }))
 }
 
@@ -178,9 +208,9 @@ async fn request_bot_move(
     let current_yen: serde_json::Value = serde_json::from_str(&current_yen_json)
         .map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))?;
 
-    let (player1, bot_id) = redis_client::get_match_players(&state.redis_pool, &payload.match_id).await.unwrap();
+    let (_player1, bot_id) = redis_client::get_match_players(&state.redis_pool, &payload.match_id).await.unwrap();
 
-    let engine_url = format!("{}/{}/ybot/play/{}", state.gamey_url, "v1", bot_id);
+    let engine_url = format!("{}/{}/ybot/player_play/{}", state.gamey_url, "v1", bot_id);
     let client = Client::new();
 
     let engine_payload = current_yen;
@@ -715,6 +745,47 @@ mod tests {
             got.abs_diff(expected) < 1_000,
             "now_ms() = {got}, expected ≈ {expected}"
         );
+    }
+    #[tokio::test]
+    #[serial]
+    #[ignore = "requires a running Redis instance"]
+    async fn request_bot_move_reaches_get_players_and_engine_url_lines() {
+        use tower::ServiceExt;
+
+        let redis_host = std::env::var("REDIS_HOST").unwrap_or_else(|_| "127.0.0.1".to_string());
+        let redis_port = std::env::var("REDIS_PORT").unwrap_or_else(|_| "6379".to_string());
+        let pool = crate::redis_client::create_pool(
+            &format!("redis://{}:{}/", redis_host, redis_port)
+        ).await;
+
+        let match_id = "test-bot-cov-001".to_string();
+        crate::redis_client::create_match(
+            &pool, &match_id, &3,
+            &"human".to_string(), &"easy".to_string(),
+            None,None).await.unwrap();
+
+        let state = Arc::new(AppState {
+            redis_pool: pool,
+            // Port 19999 is intentionally unreachable — the test only needs
+            // execution to reach the get_match_players and engine_url lines
+            // before the HTTP call to gamey fails with 500.
+            gamey_url: "http://127.0.0.1:19999".to_string(),
+        });
+
+        let body = serde_json::json!({ "match_id": match_id }).to_string();
+        let response = build_router(state)
+            .oneshot(
+                axum::http::Request::builder()
+                    .method("POST")
+                    .uri("/reqBotMove")
+                    .header("content-type", "application/json")
+                    .body(axum::body::Body::from(body))
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), StatusCode::INTERNAL_SERVER_ERROR);
     }
 }
 

@@ -6,10 +6,12 @@ import * as GameApi from '../api/GameApi';
 // Mock router
 const mockNavigate = vi.fn();
 const mockUseUser = vi.fn().mockReturnValue({ user: null, setUser: vi.fn() });
+const mockUseParams = vi.fn(() => ({ size: '3', mode: 'bot' }));
 
 vi.mock('react-router-dom', () => ({
-  useParams: () => ({ size: '3', mode: 'bot' }),
+  useParams: () => mockUseParams(),
   useNavigate: () => mockNavigate,
+  useLocation: () => ({ state: {} }),
   Link: ({ children }: { children: React.ReactNode }) => <a>{children}</a>,
 }));
 
@@ -70,6 +72,7 @@ describe('GameWindow component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseUser.mockReturnValue({ user: null, setUser: vi.fn() });
+    mockUseParams.mockReturnValue({ size: '3', mode: 'bot' });
     document.cookie = '';
   });
 
@@ -96,7 +99,7 @@ describe('GameWindow component', () => {
     render(<GameWindow />);
 
     await waitFor(() => {
-      expect(createMatchSpy).toHaveBeenCalledWith('Player 1', 'bot', 3, undefined);
+      expect(createMatchSpy).toHaveBeenCalledWith('Player 1', 'bot', 3, undefined, undefined);
     });
   });
 
@@ -250,5 +253,95 @@ describe('GameWindow component', () => {
 
     fireEvent.click(screen.getByText('✕'));
     expect(screen.queryByText('Game finished! Player 1 won.')).toBeNull();
+  });
+
+  test('GameWindow shows Player 2 as winner in why_not mode (inverted logic)', async () => {
+    mockUseParams.mockReturnValue({ size: '3', mode: 'why_not' });
+
+    vi.spyOn(GameApi, 'createMatch').mockResolvedValue({ match_id: 'match-123' });
+    vi.spyOn(GameApi, 'sendMove').mockResolvedValue({ game_over: true });
+
+    render(<GameWindow />);
+    await waitFor(() => expect(GameApi.createMatch).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByText('MockBoard'));
+
+    await waitFor(() => {
+      expect(screen.getByText('Game finished! Player 2 won.')).toBeTruthy();
+    });
+  });
+
+  test('GameWindow does not call requestBotMove in multiplayer mode', async () => {
+    mockUseParams.mockReturnValue({ size: '3', mode: 'multi' });
+
+    vi.spyOn(GameApi, 'createMatch').mockResolvedValue({ match_id: 'match-123' });
+    vi.spyOn(GameApi, 'sendMove').mockResolvedValue({ game_over: false, turn: 1 });
+    const requestBotMoveSpy = vi.spyOn(GameApi, 'requestBotMove');
+
+    render(<GameWindow />);
+    await waitFor(() => expect(GameApi.createMatch).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByText('MockBoard'));
+
+    await waitFor(() => expect(GameApi.sendMove).toHaveBeenCalled());
+    expect(requestBotMoveSpy).not.toHaveBeenCalled();
+  });
+
+  test('GameWindow handles hole_cells returned from sendMove', async () => {
+    vi.spyOn(GameApi, 'createMatch').mockResolvedValue({ match_id: 'match-123' });
+    vi.spyOn(GameApi, 'sendMove').mockResolvedValue({
+      game_over: false,
+      turn: 1,
+      hole_cells: [0, 1, 2],
+    });
+    vi.spyOn(GameApi, 'requestBotMove').mockResolvedValue({
+      coordinates: { x: 2, y: 0, z: 0 },
+      game_over: false,
+    });
+
+    render(<GameWindow />);
+    await waitFor(() => expect(GameApi.createMatch).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByText('MockBoard'));
+
+    await waitFor(() => expect(GameApi.sendMove).toHaveBeenCalled());
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  test('GameWindow handles blocked_cells returned from sendMove', async () => {
+    vi.spyOn(GameApi, 'createMatch').mockResolvedValue({ match_id: 'match-123' });
+    vi.spyOn(GameApi, 'sendMove').mockResolvedValue({
+      game_over: false,
+      turn: 1,
+      blocked_cells: [3, 4],
+    });
+    vi.spyOn(GameApi, 'requestBotMove').mockResolvedValue({
+      coordinates: { x: 2, y: 0, z: 0 },
+      game_over: false,
+    });
+
+    render(<GameWindow />);
+    await waitFor(() => expect(GameApi.createMatch).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByText('MockBoard'));
+
+    await waitFor(() => expect(GameApi.sendMove).toHaveBeenCalled());
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  test('GameWindow handles undefined bot coordinates gracefully', async () => {
+    vi.spyOn(GameApi, 'createMatch').mockResolvedValue({ match_id: 'match-123' });
+    vi.spyOn(GameApi, 'sendMove').mockResolvedValue({ game_over: false, turn: 1 });
+    vi.spyOn(GameApi, 'requestBotMove').mockResolvedValue({
+      game_over: false,
+    });
+
+    render(<GameWindow />);
+    await waitFor(() => expect(GameApi.createMatch).toHaveBeenCalled());
+
+    fireEvent.click(screen.getByText('MockBoard'));
+
+    await waitFor(() => expect(GameApi.sendMove).toHaveBeenCalled());
+    expect(screen.queryByRole('alert')).toBeNull();
   });
 });

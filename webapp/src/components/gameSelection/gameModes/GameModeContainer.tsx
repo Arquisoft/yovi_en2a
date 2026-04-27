@@ -12,6 +12,14 @@ import {
 import { getPlayerId } from "../../online/playerId";
 import { useUser } from "../../../contexts/UserContext";
 
+const VARIANTS = [
+  { value: "standard", label: "Standard" },
+  { value: "why_not",  label: "Why Not"  },
+  { value: "master_y", label: "Master Y" },
+  { value: "fortune_y",label: "Fortune Y"},
+  { value: "tabu_y",   label: "Tabu Y"   },
+  { value: "holey_y",  label: "Holey Y"  },
+];
 type Props = {
     mode: GameMode;
 };
@@ -23,7 +31,7 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
     const { user: currentUser } = useUser();
     const isGuest = location.state?.guest === true || !currentUser;
 
-    const [currentDifficultyIndex, setCurrentDifficultyIndex] = useState(
+  const [currentDifficultyIndex, setCurrentDifficultyIndex] = useState(
         difficulties.indexOf(mode.currentLevel)
     );
     const [currentSize, setCurrentSize] = useState(mode.size || 8);
@@ -31,6 +39,8 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
     const [password, setPassword] = useState(mode.password ?? "");
     const [busy, setBusy] = useState<null | "create" | "join" | "play">(null);
     const [error, setError] = useState<string | null>(null);
+  const [currentVariant, setCurrentVariant] = useState("standard");
+  const [currentHoleCount, setCurrentHoleCount] = useState(Math.max(1, Math.floor((mode.size || 8) / 3)));
 
     const minSize = 4;
     const maxSize = 12;
@@ -46,12 +56,20 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
         mode.currentLevel = currentDifficulty;
         mode.size = currentSize;
 
-        const navState = { state: { ...(isGuest && { guest: true }) } };
-
         if (mode.showDifficulty) {
-            navigate(`/play/${currentSize}/${currentDifficulty[1]}`, navState);
+            const navState = { state: { ...(isGuest && { guest: true }) } };
+            navigate(`/player_play/${currentSize}/${currentDifficulty[1]}`, navState);
+        } else if (mode.showVariant) {
+            const urlMode = currentVariant === "standard" ? "multi" : currentVariant;
+            const stateObj = {
+                ...(isGuest ? { guest: true } : {}),
+                ...(currentVariant === "holey_y" ? { holeCount: currentHoleCount } : {}),
+            };
+            const navOptions = Object.keys(stateObj).length > 0 ? { state: stateObj } : undefined;
+            navigate(`/play/${currentSize}/${urlMode}`, navOptions);
         } else {
-            navigate(`/play/${currentSize}/multi`, navState);
+            const navState = { state: { ...(isGuest && { guest: true }) } };
+            navigate(`/player_play/${currentSize}/multi`, navState);
         }
     };
 
@@ -229,6 +247,40 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
                     </div>
                 )}
             </div>
+
+      {mode.showVariant && (
+        <div className={styles.variantSection}>
+          <span className={styles.difficultyLabel}>Game Variant</span>
+          <select
+            className={styles.variantSelect}
+            value={currentVariant}
+            onChange={(e) => setCurrentVariant(e.target.value)}
+          >
+            {VARIANTS.map((v) => (
+              <option key={v.value} value={v.value}>{v.label}</option>
+            ))}
+          </select>
+
+          {currentVariant === "holey_y" && (
+            <div className={styles.holeCountRow}>
+              <span className={styles.difficultyLabel}>Holes</span>
+              <div className={styles.difficultySelector}>
+                <button
+                  className={styles.arrow}
+                  onClick={() => setCurrentHoleCount((n) => Math.max(1, n - 1))}
+                  style={{ visibility: currentHoleCount > 1 ? "visible" : "hidden" }}
+                >←</button>
+                <div className={styles.difficultyBox}>{currentHoleCount}</div>
+                <button
+                  className={styles.arrow}
+                  onClick={() => setCurrentHoleCount((n) => Math.min(currentSize, n + 1))}
+                  style={{ visibility: currentHoleCount < currentSize ? "visible" : "hidden" }}
+                >→</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
             {error && (
                 <div

@@ -7,6 +7,8 @@ import p1vsp2 from "../../../assets/p1vsp2.webp";
 export class LocalMode implements GameMode {
   showDifficulty = false;
 
+  showVariant = true;
+
   mode = "multi";
 
   id = "local";
