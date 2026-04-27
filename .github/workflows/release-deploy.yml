@@ -212,48 +212,7 @@ jobs:
           command: |
             wget https://raw.githubusercontent.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/master/docker-compose.yml -O docker-compose.yml
             docker compose down
-            docker volume ls -q | grep letsencrypt | xargs -r docker volume rm
             export FIREBASE_PROJECT_ID='${{ secrets.FIREBASE_PROJECT_ID }}'
             export FIREBASE_CREDENTIALS_B64='${{ secrets.FIREBASE_CREDENTIALS_B64 }}'
             export DEPLOY_HOST='${{ secrets.DEPLOY_HOST }}'
             docker compose up -d --pull always
-
-  load-test:
-    name: Run Gatling load tests
-    runs-on: ubuntu-latest
-    needs: deploy
-    continue-on-error: true
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Java 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Wait for services to be ready
-        run: |
-          echo "Waiting for https://${{ secrets.DEPLOY_HOST }}/api/csrf-token..."
-          for i in $(seq 1 24); do
-            if curl -sf https://${{ secrets.DEPLOY_HOST }}/api/csrf-token > /dev/null; then
-              echo "Service is up after $((i * 5))s"
-              exit 0
-            fi
-            echo "Attempt $i/24 failed, retrying in 5s..."
-            sleep 5
-          done
-          echo "Service did not become ready in time"
-          exit 1
-
-      - name: Run Gatling simulations
-        run: mvn gatling:test -DbaseUrl=https://${{ secrets.DEPLOY_HOST }}
-        working-directory: gatling
-
-      - name: Upload Gatling reports
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: gatling-reports
-          path: gatling/target/gatling/

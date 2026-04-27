@@ -26,6 +26,7 @@ function App() {
           <Route path="/waiting/:matchId" element={<ProtectedRoute><WaitingRoom/></ProtectedRoute>}/>
           <Route path="/online/:size/:matchId" element={<ProtectedRoute><GameWindowOnline/></ProtectedRoute>}/>
           <Route path="/play/:size/:mode" element={<ProtectedRoute><GameWindow/></ProtectedRoute>}/>
+          <Route path="/player_play/:size/:mode" element={<ProtectedRoute><GameWindow/></ProtectedRoute>}/>
         </Routes>
       </Router>
     </UserProvider>
