@@ -66,7 +66,7 @@ async fn request_bot_move_reaches_get_players_and_engine_url_lines() {
     redis_client::create_match(
         &pool, &match_id, &3,
         &"human".to_string(), &"easy".to_string(),
-    ).await.unwrap();
+        None,None).await.unwrap();
 
     let state = Arc::new(AppState {
         redis_pool: pool,

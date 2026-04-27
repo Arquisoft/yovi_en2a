@@ -534,6 +534,8 @@ const GameWindowOnline = () => {
                     size={game.size}
                     moves={game.moves as Move[]}
                     blocked={boardBlocked}
+                    holeCells={new Set()}
+                    blockedCells={new Set()}
                     onPlace={handlePlace}
                 />
 

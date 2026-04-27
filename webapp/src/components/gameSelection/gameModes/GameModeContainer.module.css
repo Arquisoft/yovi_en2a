@@ -168,6 +168,47 @@
     padding: 0 0.1rem;
 }
 
+/* Variant Section */
+.variantSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 0.6rem clamp(0.4rem, 1.5vw, 0.8rem);
+    border-radius: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+
+.variantSelect {
+    width: 100%;
+    background-color: #202320;
+    color: #4ADE80;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.4rem;
+    padding: 0.3rem 0.5rem;
+    font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+    font-weight: 700;
+    font-family: var(--font-heading, var(--font-main)), serif;
+    cursor: pointer;
+    outline: none;
+    text-align: center;
+}
+
+.variantSelect:focus {
+    border-color: rgba(22, 163, 74, 0.45);
+}
+
+.holeCountRow {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    width: 100%;
+}
 /* Text inputs (Match ID, Password) — match the "chip" look of the selectors */
 .inputField {
     flex: 1;

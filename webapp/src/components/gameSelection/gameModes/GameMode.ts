@@ -2,11 +2,9 @@
 import React from "react";
 
 export const Difficulty = {
-  VeryEasy:   ["Very Easy",   "random_bot"]   as const,
-  Easy:   ["Easy",   "greedy_bot"]   as const,
-  Normal: ["Normal", "minimax_bot"] as const,
+  Easy:   ["Easy",   "random_bot"]   as const,
+  Normal: ["Normal", "greedy_bot"] as const,
   Hard:   ["Hard",   "minimax_bot"]   as const,
-  VeryHard:   ["Very Hard",   "minimax_bot"]   as const,
 } as const;
 
 export type Difficulty = typeof Difficulty[keyof typeof Difficulty];
@@ -22,6 +20,7 @@ export interface GameMode {
 
   // UI flags — every mode enables only what it needs.
   showDifficulty?: boolean;
+  showVariant?: boolean;
   showMatchId?: boolean;
   showPassword?: boolean;
 

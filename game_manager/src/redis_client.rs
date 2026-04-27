@@ -125,19 +125,24 @@ pub async fn create_match(
     match_id: &String,
     size: &u32,
     player1: &String,
-    player2: &String
+    player2: &String,
+    variant: Option<String>,
+    initial_layout: Option<String>,
 ) -> Result<(), MatchError> {
 
-    let layout: String = (1u32..=*size)
-        .map(|row| ".".repeat(row as usize))
-        .collect::<Vec<_>>()
-        .join("/");
+    let layout = initial_layout.unwrap_or_else(|| {
+        (1u32..=*size)
+            .map(|row| ".".repeat(row as usize))
+            .collect::<Vec<_>>()
+            .join("/")
+    });
 
-    let initial_state = YEN::new(
+    let initial_state = YEN::new_with_variant(
         *size,
         0,
         vec!['B', 'R'],
-        layout
+        layout,
+        variant,
     );
 
     let state_json = serde_json::to_string(&initial_state)?;
@@ -170,7 +175,7 @@ pub async fn create_random_online_match(
         if !exists { break id; }
     };
 
-    create_match(pool, &match_id, &size, player1, &"waiting".to_string()).await?;
+    create_match(pool, &match_id, &size, player1, &"waiting".to_string(), None, None).await?;
 
     let mut conn = pool.get().await.map_err(|_| MatchError::Pool)?;
     let _: () = conn
@@ -201,7 +206,7 @@ pub async fn create_private_online_match(
         return Err(MatchError::MatchIdAlreadyExists);
     }
 
-    create_match(pool, &match_id.to_string(), &size, player1, &"waiting".to_string()).await?;
+    create_match(pool, &match_id.to_string(), &size, player1, &"waiting".to_string(), None, None).await?;
 
     // Always store a password entry (even if empty) so joiners can distinguish
     // "no password set" from "key missing because of TTL expiry".

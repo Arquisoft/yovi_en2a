@@ -155,6 +155,38 @@ describe('updateScore', () => {
   })
 })
 
+describe('createMatch with optional params', () => {
+  test('includes variant and hole_count when both are provided', async () => {
+    let capturedBody: Record<string, unknown> = {}
+    globalThis.fetch = vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+      capturedBody = JSON.parse(init.body as string)
+      return Promise.resolve({
+        ok: true,
+        text: async () => JSON.stringify({ match_id: 'xyz' })
+      } as any)
+    })
+
+    await createMatch('p1', 'bot', 5, 'holey_y', 3)
+    expect(capturedBody.variant).toBe('holey_y')
+    expect(capturedBody.hole_count).toBe(3)
+  })
+
+  test('omits variant when not provided', async () => {
+    let capturedBody: Record<string, unknown> = {}
+    globalThis.fetch = vi.fn().mockImplementation((_url: string, init: RequestInit) => {
+      capturedBody = JSON.parse(init.body as string)
+      return Promise.resolve({
+        ok: true,
+        text: async () => JSON.stringify({ match_id: 'xyz' })
+      } as any)
+    })
+
+    await createMatch('p1', 'bot', 5)
+    expect(capturedBody.variant).toBeUndefined()
+    expect(capturedBody.hole_count).toBeUndefined()
+  })
+})
+
 describe('saveMatch', () => {
   test('returns parsed JSON on success', async () => {
     globalThis.fetch = vi.fn().mockResolvedValue({

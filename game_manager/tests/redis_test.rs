@@ -57,7 +57,7 @@ async fn test_create_match_persists_initial_state() {
     let pool = test_pool().await;
     let id = random_id();
 
-    create_match(&pool, &id, &4, &"p1".to_string(), &"p2".to_string())
+    create_match(&pool, &id, &4, &"p1".to_string(), &"p2".to_string(), None, None)
         .await
         .expect("create_match");
 
@@ -83,7 +83,7 @@ async fn test_save_match_state_overwrites_previous() {
     let pool = test_pool().await;
     let id = random_id();
 
-    create_match(&pool, &id, &3, &"alice".to_string(), &"bob".to_string())
+    create_match(&pool, &id, &3, &"alice".to_string(), &"bob".to_string(), None, None)
         .await
         .expect("create");
 
@@ -103,7 +103,7 @@ async fn test_save_match_players_updates_record() {
     let pool = test_pool().await;
     let id = random_id();
 
-    create_match(&pool, &id, &3, &"p1".to_string(), &"waiting".to_string())
+    create_match(&pool, &id, &3, &"p1".to_string(), &"waiting".to_string(), None, None)
         .await
         .expect("create");
 

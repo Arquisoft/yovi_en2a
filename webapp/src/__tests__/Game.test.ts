@@ -81,4 +81,40 @@ describe('Game', () => {
     expect(game.isOccupied(0, 0)).toBe(false)
     expect(game.isOccupied(3, 5)).toBe(false)
   })
+
+  test('setTurn changes the current turn', () => {
+    game.setTurn(1)
+    expect(game.turn).toBe(1)
+    game.setTurn(0)
+    expect(game.turn).toBe(0)
+  })
+
+  test('setHoleCells stores cells as row,col keys', () => {
+    // flatToRowColKey: idx 0 → "0,0", idx 1 → "1,0", idx 2 → "1,1", idx 3 → "2,0"
+    game.setHoleCells([0, 2])
+    expect(game.holeCells.has('0,0')).toBe(true)
+    expect(game.holeCells.has('1,1')).toBe(true)
+    expect(game.holeCells.has('1,0')).toBe(false)
+  })
+
+  test('setHoleCells with empty array clears holeCells', () => {
+    game.setHoleCells([0, 1])
+    game.setHoleCells([])
+    expect(game.holeCells.size).toBe(0)
+  })
+
+  test('setBlockedCells stores cells as row,col keys', () => {
+    // idx 1 → "1,0", idx 3 → "2,0"
+    game.setBlockedCells([1, 3])
+    expect(game.blockedCells.has('1,0')).toBe(true)
+    expect(game.blockedCells.has('2,0')).toBe(true)
+  })
+
+  test('reset clears holeCells and blockedCells', () => {
+    game.setHoleCells([0])
+    game.setBlockedCells([1])
+    game.reset()
+    expect(game.holeCells.size).toBe(0)
+    expect(game.blockedCells.size).toBe(0)
+  })
 })

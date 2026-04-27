@@ -37,3 +37,9 @@
 
 /* Player2: color rojo */
 .hex--player2 { background: rgba(255,80,80,0.62); border-color: rgb(255, 3, 3); }
+
+/* Hole: permanently blocked cell */
+.hex--hole { background: rgba(30, 30, 30, 0.95); border-color: rgba(80, 80, 80, 0.4); opacity: 0.6; }
+
+/* Tabu-blocked: temporarily forbidden this turn */
+.hex--tabu-blocked { background: rgba(200, 140, 0, 0.35); border-color: rgba(220, 160, 0, 0.8); }

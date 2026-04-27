@@ -38,9 +38,19 @@ pub struct CliArgs {
     #[arg(short, long, default_value_t = 3000)]
     pub port: u16,
 
-    /// Game variant: "standard" or "why_not" (misère: connecting all three sides loses)
+    /// Game variant. Options:
+    ///   standard  — default rules
+    ///   why_not   — connecting all three sides loses (misère)
+    ///   master_y  — each player places two pieces per turn
+    ///   fortune_y — a coin flip decides who plays next each turn
+    ///   tabu_y    — cannot place adjacent to the opponent's last move
+    ///   hole_y    — some cells are holes (specify with --holes)
     #[arg(long, default_value = "standard")]
     pub variant: String,
+
+    /// Number of holes to randomly place (only for --variant=hole_y). Defaults to board_size/2.
+    #[arg(long)]
+    pub hole_count: Option<u32>,
 }
 
 /// The game mode determining how the game is played.
@@ -90,12 +100,32 @@ pub fn run_cli_game() -> Result<()> {
     };
     let variant = match args.variant.as_str() {
         "why_not" => GameVariant::WhyNot,
+        "master_y" => GameVariant::MasterY,
+        "fortune_y" => GameVariant::FortuneY,
+        "tabu_y" => GameVariant::TabuY,
+        "hole_y" => GameVariant::HoleyY,
         _ => GameVariant::Standard,
     };
-    if variant == GameVariant::WhyNot {
-        println!("Variant: WhY not — connecting all three sides LOSES!");
+    match variant {
+        GameVariant::WhyNot => println!("Variant: WhY not — connecting all three sides LOSES!"),
+        GameVariant::MasterY => println!("Variant: Master Y — each player places two pieces per turn."),
+        GameVariant::FortuneY => println!("Variant: Fortune Y — a coin flip decides who plays next each turn."),
+        GameVariant::TabuY => println!("Variant: Tabu Y — you may not place adjacent to your opponent's last move."),
+        GameVariant::HoleyY => println!("Variant: Holey Y — some cells are holes and cannot be used."),
+        GameVariant::Standard => {}
     }
-    let mut game = game::GameY::new_with_variant(args.size, variant);
+    let mut game = if variant == GameVariant::HoleyY {
+        let hole_count = args.hole_count.unwrap_or(args.size);
+        match game::GameY::new_holey(args.size, hole_count) {
+            Ok(g) => g,
+            Err(e) => {
+                println!("Error creating holey game: {}", e);
+                return Ok(());
+            }
+        }
+    } else {
+        game::GameY::new_with_variant(args.size, variant)
+    };
     loop {
         println!("{}", game.render(&render_options));
         let status = game.status();
@@ -523,6 +553,77 @@ mod tests {
         let debug = format!("{:?}", cmd);
         assert!(debug.contains("Place"));
         assert!(debug.contains("5"));
+    }
+
+    // ── apply_move ────────────────────────────────────────────────────────
+
+    #[test]
+    fn test_apply_move_success_returns_true() {
+        let mut game = game::GameY::new(3);
+        let mv = Movement::Placement {
+            player: PlayerId::new(0),
+            coords: Coordinates::new(0, 0, 2),
+        };
+        assert!(apply_move(&mut game, mv, "error"));
+    }
+
+    #[test]
+    fn test_apply_move_occupied_returns_false() {
+        let mut game = game::GameY::new(3);
+        let coords = Coordinates::new(0, 0, 2);
+        game.add_move(Movement::Placement { player: PlayerId::new(0), coords }).unwrap();
+        let mv = Movement::Placement { player: PlayerId::new(1), coords };
+        assert!(!apply_move(&mut game, mv, "error"));
+    }
+
+    // ── trigger_bot_move ──────────────────────────────────────────────────
+
+    #[test]
+    fn test_trigger_bot_move_places_a_piece() {
+        let mut game = game::GameY::new(5);
+        let total_before = game.available_cells().len() as u32;
+        let bot = Arc::new(RandomBot);
+        trigger_bot_move(&mut game, bot.as_ref());
+        let total_after = game.available_cells().len() as u32;
+        // Bot should have placed exactly one piece
+        assert_eq!(total_before - total_after, 1);
+    }
+
+    #[test]
+    fn test_trigger_bot_move_on_finished_game_no_change() {
+        // A 1×1 board is immediately finished when B is placed
+        let yen_str = r#"{"size":1,"turn":1,"players":["B","R"],"layout":"B"}"#;
+        let yen: crate::YEN = serde_json::from_str(yen_str).unwrap();
+        let mut game = game::GameY::try_from(yen).unwrap();
+        assert!(game.check_game_over());
+        let available_before = game.available_cells().len();
+        let bot = Arc::new(RandomBot);
+        trigger_bot_move(&mut game, bot.as_ref());
+        assert_eq!(game.available_cells().len(), available_before);
+    }
+
+    // ── handle_place_command ──────────────────────────────────────────────
+
+    #[test]
+    fn test_handle_place_human_places_one_piece() {
+        let mut game = game::GameY::new(5);
+        let total_before = game.available_cells().len() as u32;
+        let bot = Arc::new(RandomBot);
+        handle_place_command(&mut game, 0, PlayerId::new(0), Mode::Human, bot.as_ref());
+        let total_after = game.available_cells().len() as u32;
+        // Human-only: exactly one piece placed, bot did not move
+        assert_eq!(total_before - total_after, 1);
+    }
+
+    #[test]
+    fn test_handle_place_computer_triggers_bot() {
+        let mut game = game::GameY::new(5);
+        let total_before = game.available_cells().len() as u32;
+        let bot = Arc::new(RandomBot);
+        handle_place_command(&mut game, 0, PlayerId::new(0), Mode::Computer, bot.as_ref());
+        let total_after = game.available_cells().len() as u32;
+        // Human + bot = 2 pieces placed
+        assert_eq!(total_before - total_after, 2);
     }
 }
 
