@@ -5,6 +5,11 @@
   "scripts": {
     "load-test": "powershell -File gatling/run-load-tests.ps1",
     "load-test:baseline": "powershell -File gatling/run-load-tests.ps1 BaselineSimulation",
-    "load-test:auth": "powershell -File gatling/run-load-tests.ps1 AuthSimulation"
+    "load-test:auth": "powershell -File gatling/run-load-tests.ps1 AuthSimulation",
+    "load-test:game": "powershell -File gatling/run-load-tests.ps1 GameSimulation",
+    "load-test:rankings": "powershell -File gatling/run-load-tests.ps1 RankingsSimulation",
+    "load-test:profile": "powershell -File gatling/run-load-tests.ps1 ProfileSimulation",
+    "load-test:bots": "powershell -File gatling/run-load-tests.ps1 BotSimulation",
+    "load-test:online": "powershell -File gatling/run-load-tests.ps1 OnlineMatchSimulation"
   }
 }
