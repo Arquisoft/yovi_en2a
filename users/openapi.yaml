@@ -11,6 +11,8 @@ tags:
     description: Session and CSRF token management
   - name: User
     description: User profile management
+  - name: Game
+    description: Match lifecycle, moves, history and rankings (proxied to game_manager)
   - name: Legacy
     description: Legacy endpoints kept for backwards compatibility
 
@@ -31,6 +33,87 @@ components:
         error:
           type: string
           example: "Error message"
+    Coordinates:
+      type: object
+      description: Barycentric coordinates on the triangular board (x + y + z == size - 1).
+      required: [x, y, z]
+      properties:
+        x:
+          type: integer
+          example: 2
+        y:
+          type: integer
+          example: 1
+        z:
+          type: integer
+          example: 0
+    YEN:
+      type: object
+      description: Y Engine Notation — compact wire format for a Y position.
+      required: [size, turn, players, layout]
+      properties:
+        size:
+          type: integer
+          example: 8
+        turn:
+          type: integer
+          example: 0
+        players:
+          type: array
+          items:
+            type: string
+          example: ["B", "R"]
+        layout:
+          type: string
+          example: "B/.R/..."
+        variant:
+          type: string
+          enum: [why_not]
+          nullable: true
+    Match:
+      type: object
+      properties:
+        player1id:
+          type: string
+        player2id:
+          type: string
+        result:
+          type: string
+          example: "Win"
+        board_status:
+          $ref: '#/components/schemas/YEN'
+        time:
+          type: number
+          format: float
+          example: 124.5
+        moves:
+          type: array
+          items:
+            $ref: '#/components/schemas/Coordinates'
+        created_at:
+          type: integer
+          format: int64
+    Score:
+      type: object
+      properties:
+        playerid:
+          type: string
+        username:
+          type: string
+        total_matches:
+          type: integer
+        wins:
+          type: integer
+        losses:
+          type: integer
+        win_rate:
+          type: number
+          format: float
+        elo:
+          type: integer
+        best_time:
+          type: number
+          format: float
   securitySchemes:
     sessionCookie:
       type: apiKey
@@ -269,6 +352,349 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+
+  /play/{size}/{mode}:
+    get:
+      tags: [Game]
+      summary: Render the game window
+      description: >
+        Front-end route handled by the React SPA, served as `index.html` by nginx.
+        Documented here so it appears alongside the rest of the user-facing surface.
+        The browser hits this URL after the user picks a mode in the lobby; the SPA
+        then issues `/game/new` to bootstrap a real match.
+      parameters:
+        - name: size
+          in: path
+          required: true
+          description: Side length of the triangular board.
+          schema:
+            type: integer
+            example: 8
+        - name: mode
+          in: path
+          required: true
+          description: >
+            One of `bot` (vs Bot, default difficulty), `multi` (local two-player),
+            `why_not` (misère variant).
+          schema:
+            type: string
+            enum: [bot, multi, why_not]
+      responses:
+        '200':
+          description: SPA HTML returned by nginx
+          content:
+            text/html:
+              schema:
+                type: string
+
+  /game/new:
+    post:
+      tags: [Game]
+      summary: Create a new match
+      description: >
+        Proxied to game_manager. Generates a UUID, builds the empty YEN for the given
+        size and variant, and stores the match in Redis with a 1-hour TTL. The returned
+        `match_id` is then used in every subsequent per-match endpoint.
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [player1, player2, size]
+              properties:
+                player1:
+                  type: string
+                  example: "alice@example.com"
+                player2:
+                  type: string
+                  description: >
+                    The opponent's identifier. For vs-Bot games this is the bot id
+                    (`random_bot`, `greedy_bot`, `minimax_bot`).
+                  example: "minimax_bot"
+                size:
+                  type: integer
+                  example: 8
+                variant:
+                  type: string
+                  enum: [why_not]
+                  nullable: true
+      responses:
+        '200':
+          description: Match created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                    format: uuid
+        '500':
+          description: Game manager or Redis unreachable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/executeMove:
+    post:
+      tags: [Game]
+      summary: Apply a human move
+      description: >
+        Reads the YEN from Redis, posts it together with the move coordinates to the
+        engine, persists the new YEN under the per-match Redis lock and returns the
+        `game_over` flag.
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [match_id, coord_x, coord_y, coord_z]
+              properties:
+                match_id:
+                  type: string
+                coord_x:
+                  type: integer
+                coord_y:
+                  type: integer
+                coord_z:
+                  type: integer
+      responses:
+        '200':
+          description: Move applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                  game_over:
+                    type: boolean
+        '400':
+          description: Move rejected by the engine (illegal move, wrong turn)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Match not found in Redis (likely expired)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/reqBotMove:
+    post:
+      tags: [Game]
+      summary: Request a move from the configured bot
+      description: >
+        Polls the per-match Redis lock for up to one second so the bot does not read
+        a half-written state, looks up the bot id stored as `player2`, asks the engine
+        for a move and persists the resulting YEN.
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [match_id]
+              properties:
+                match_id:
+                  type: string
+      responses:
+        '200':
+          description: Bot played
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  coordinates:
+                    $ref: '#/components/schemas/Coordinates'
+                  game_over:
+                    type: boolean
+        '400':
+          description: Engine refused to generate a move
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Match not found in Redis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/saveMatch:
+    post:
+      tags: [Game]
+      summary: Persist a finished match
+      description: >
+        Reads the final YEN from Redis and writes a `Match` document to Firestore.
+        Should be called by the front-end once when `game_over: true` is received.
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [match_id, player1id, player2id, result, time]
+              properties:
+                match_id:
+                  type: string
+                player1id:
+                  type: string
+                player2id:
+                  type: string
+                result:
+                  type: string
+                  example: "Win"
+                time:
+                  type: number
+                  format: float
+                moves:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Coordinates'
+      responses:
+        '200':
+          description: Match saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Partida guardada en el historial correctamente"
+        '404':
+          description: Match not found in Redis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Firestore write failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/updateScore:
+    post:
+      tags: [Game]
+      summary: Update the player's ELO and score record
+      description: >
+        Increments total matches and applies +20/-15 ELO depending on `is_win`,
+        clamped at zero. Updates `best_time` if `time` is lower than the stored value.
+        Creates the score record on first call.
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [playerid, username, is_win, time]
+              properties:
+                playerid:
+                  type: string
+                  description: User email — used as document id in the `Scores` collection.
+                  example: "alice@example.com"
+                username:
+                  type: string
+                is_win:
+                  type: boolean
+                time:
+                  type: number
+                  format: float
+      responses:
+        '200':
+          description: Score updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Score actualizado correctamente"
+        '500':
+          description: Firestore error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/localRankings:
+    post:
+      tags: [Game]
+      summary: List a user's match history
+      description: >
+        Returns every `Match` where the user is `player1id` or `player2id`, sorted
+        chronologically. On any Firestore error this endpoint returns an empty list
+        with HTTP 200 so the front-end never crashes.
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [user_id]
+              properties:
+                user_id:
+                  type: string
+                  example: "alice@example.com"
+      responses:
+        '200':
+          description: User's matches (possibly empty)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  matches:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Match'
+
+  /game/bestTimes:
+    get:
+      tags: [Game]
+      summary: Global top-20 fastest games
+      description: >
+        Returns the `Scores` collection ordered by `best_time` ascending, limited to
+        20 entries. The front-end re-sorts client-side for the Wins / Loses / ELO
+        sub-tabs in the global rankings.
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Global ranking
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  rankings:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Score'
 
   /createuser:
     post:

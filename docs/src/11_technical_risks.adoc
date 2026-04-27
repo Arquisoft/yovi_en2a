@@ -49,4 +49,5 @@ endif::arc42help[]
 | CORS allow localhost URLs in prod | CORS configuration permits localhost origins in the production environment. Accepted as a known misconfiguration; will not be addressed. Wontfix. | Low
 | Bilingual comments in code | Source code contains comments written in multiple languages, reducing consistency and maintainability. | Low
 | Rate limiting in login / Race condition on user creation | No rate limiting is applied to the login endpoint, and a race condition window exists during user creation. Accepted as-is; will not be addressed. Wontfix. | Low
+| The original version of GameY did not have any scenarios where the game could end on a draw  | Due to the implementation of new gamemodes (ex. Holey Y) now that scenario can occur, and it is not covered. A new method to check if game can not end on a win or lose has to be included. | Medium
 |===

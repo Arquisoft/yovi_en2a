@@ -1,11 +1,12 @@
 ifndef::imagesdir[:imagesdir: ../images]
 
-=== Level 1
 
 [[section-building-block-view]]
 == Building Block View
 
-=== Whitebox Overall System
+=== Level 1
+
+==== Whitebox Overall System
 
 [plantuml, target=level1, format=png]
 ....
@@ -169,7 +170,7 @@ Gateway -right-> Auth : /api requests
 GM_Data -down-> G_BotSrv : Bot move request
 @enduml
 ....
-== Whitebox Game Manager (Rust)
+==== Whitebox Game Manager (Rust)
 Purpose/Responsibility::
 The Game Manager acts as the bridge between the high-level game requests and the data persistence layers. It translates business logic into actionable data operations across NoSQL and cache environments.
 
@@ -183,7 +184,7 @@ Contained Building Blocks (Components)::
 | Redis Client (redis_client.rs) | Manages the connection pool and CRUD operations for the volatile Redis cache.
 |===
 
-== Whitebox Gamey Engine (Rust)
+==== Whitebox Gamey Engine (Rust)
 Purpose/Responsibility::
 This is the computational heart of the ecosystem. It is designed to be highly modular, allowing for different interfaces (CLI or Bot Server) to interact with the same deterministic game logic.
 
