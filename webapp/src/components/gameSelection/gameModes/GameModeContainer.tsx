@@ -58,7 +58,7 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
 
         if (mode.showDifficulty) {
             const navState = { state: { ...(isGuest && { guest: true }) } };
-            navigate(`/play/${currentSize}/${currentDifficulty[1]}`, navState);
+            navigate(`/player_play/${currentSize}/${currentDifficulty[1]}`, navState);
         } else if (mode.showVariant) {
             const urlMode = currentVariant === "standard" ? "multi" : currentVariant;
             const stateObj = {
@@ -69,7 +69,7 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
             navigate(`/play/${currentSize}/${urlMode}`, navOptions);
         } else {
             const navState = { state: { ...(isGuest && { guest: true }) } };
-            navigate(`/play/${currentSize}/multi`, navState);
+            navigate(`/player_play/${currentSize}/multi`, navState);
         }
     };
 

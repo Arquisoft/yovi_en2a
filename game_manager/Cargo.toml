@@ -22,6 +22,7 @@ ctor = "0.6.3"
 rand = "0.8"
 
 [dev-dependencies]
+wiremock = "0.6.3"
 serial_test = "3.0"
 
 [[bin]]
