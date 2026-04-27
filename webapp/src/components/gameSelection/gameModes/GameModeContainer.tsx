@@ -49,9 +49,9 @@ export const GameModeContainer: React.FC<Props> = ({ mode }) => {
         const navState = { state: { ...(isGuest && { guest: true }) } };
 
         if (mode.showDifficulty) {
-            navigate(`/play/${currentSize}/${currentDifficulty[1]}`, navState);
+            navigate(`/player_play/${currentSize}/${currentDifficulty[1]}`, navState);
         } else {
-            navigate(`/play/${currentSize}/multi`, navState);
+            navigate(`/player_play/${currentSize}/multi`, navState);
         }
     };
 
