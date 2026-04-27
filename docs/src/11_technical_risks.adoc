@@ -46,4 +46,7 @@ endif::arc42help[]
 | Code Duplication | Identified logic redundancy across modules. | Low
 | Redis single point of failure | The Users Gateway's session store is a single Redis container with no replica. A Redis crash invalidates all active sessions. A replica or persistence strategy should be evaluated. | Medium
 | Firebase vendor lock-in | All authentication and persistence depends on Firebase. Migrating to a different provider would require rewriting the Auth Engine and Game Manager data layers. Accepted trade-off for the project scale. No mitigation planned. | Low
+| CORS allow localhost URLs in prod | CORS configuration permits localhost origins in the production environment. Accepted as a known misconfiguration; will not be addressed. Wontfix. | Low
+| Bilingual comments in code | Source code contains comments written in multiple languages, reducing consistency and maintainability. | Low
+| Rate limiting in login / Race condition on user creation | No rate limiting is applied to the login endpoint, and a race condition window exists during user creation. Accepted as-is; will not be addressed. Wontfix. | Low
 |===
