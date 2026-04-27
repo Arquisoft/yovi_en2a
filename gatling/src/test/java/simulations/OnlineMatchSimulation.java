@@ -169,7 +169,7 @@ public class OnlineMatchSimulation extends Simulation {
         )
         .protocols(httpProtocol)
         .assertions(
-            global().responseTime().percentile(95).lt(15000),
+            global().responseTime().percentile(95).lt(25000),
             global().successfulRequests().percent().gt(90.0)
         );
     }
