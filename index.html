@@ -506,6 +506,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_persistency_hybrid_state_management">10.4. Persistency: Hybrid State Management</a></li>
 <li><a href="#_deterministic_logic_rust_engine">10.5. Deterministic Logic (Rust Engine)</a></li>
 <li><a href="#_deployment_containerization_docker">10.6. Deployment: Containerization (Docker)</a></li>
+<li><a href="#_testing_strategy">10.7. Testing Strategy</a></li>
 </ul>
 </li>
 <li><a href="#section-design-decisions">11. Architecture Decisions</a>
@@ -517,6 +518,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_adr_005_server_side_sessions_via_redis_with_cookie_based_identity">11.5. ADR-005: Server-side Sessions via Redis with Cookie-based Identity</a></li>
 <li><a href="#_adr_006_https_via_lets_encrypt_and_jonasalnginx_certbot">11.6. ADR-006: HTTPS via Let&#8217;s Encrypt and jonasal/nginx-certbot</a></li>
 <li><a href="#_adr_007_external_rest_api_for_bots">11.7. ADR-007: External REST API for Bots</a></li>
+<li><a href="#_adr_008_internationalisation_via_react_i18next">11.8. ADR-008: Internationalisation via react-i18next</a></li>
 </ul>
 </li>
 <li><a href="#section-quality-scenarios">12. Quality Requirements</a>
@@ -652,6 +654,12 @@ If requirements documents exist this overview should refer to these documents.</
 <li>
 <p>The system must provide a tutorial or help section explaining the rules of Game Y and how to interact with the interface.</p>
 </li>
+<li>
+<p>The application must support multiple game modes, including local 2-player and variant rule sets.</p>
+</li>
+<li>
+<p>The interface must support multiple languages.</p>
+</li>
 </ul>
 </div>
 </div>
@@ -743,7 +751,7 @@ If you as an architect do not know how the quality of your work will be judged&#
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Performance Efficiency</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">For a standard match, the system shall return a computer move or API response within 1 second under normal load. The architecture shall support at least 20 concurrent players without noticeable degradation in responsiveness.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">For a standard match, the system shall return a computer move or API response within 2 seconds under normal load. The architecture shall support at least 20 concurrent players without noticeable degradation in responsiveness.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Reliability</p></td>
@@ -895,7 +903,7 @@ These stakeholders determine the extent and the level of detail of your work and
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Deployment on a cloud platform</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The system must be publicly accessible. The backend services will be deployed on a cloud provider (e.g., Vercel, Railway, or Azure).</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The system must be publicly accessible. The backend services are deployed on an Azure Virtual Machine, with all services containerized via Docker Compose.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Public external API for bots</p></td>
@@ -1724,17 +1732,14 @@ Refer to details in the following sections.</p>
 <div class="sect2">
 <h3 id="_bot_move">8.5. Bot Move</h3>
 <div class="paragraph">
-<p>This scenario covers automated gameplay. It is typically triggered internally by the Game Manager once a player&#8217;s turn is completed.</p>
+<p>This scenario covers automated gameplay. It is triggered by the frontend as a second HTTP call immediately after the player&#8217;s move response returns — the Game Manager does not initiate it automatically.</p>
 </div>
 <div class="paragraph">
-<p>Decision Making: The Bot Logic within the Engine calculates the optimal response.</p>
-</div>
-<div class="paragraph">
-<p>Asynchronous Sync: The resulting state is synchronized with the Redis cache so the player sees the bot&#8217;s reaction upon their next refresh or through a socket.</p>
+<p>Two-step flow: After the player move response confirms the game is not over, the frontend calls <code>/reqBotMove</code>. The Game Manager reads the current state from Redis, requests the bot move from the Gamey Engine, writes the result back to Redis, and returns the bot&#8217;s coordinates. The player sees the update as part of this second response — no polling, refresh, or WebSocket is involved.</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="./images/runtime_bot_move.png" alt="runtime bot move" width="532" height="355">
+<img src="./images/runtime_bot_move.png" alt="runtime bot move" width="751" height="462">
 </div>
 </div>
 </div>
@@ -1759,7 +1764,7 @@ Refer to details in the following sections.</p>
 <h3 id="_infrastructure_level_1">9.1. Infrastructure Level 1</h3>
 <div class="imageblock">
 <div class="content">
-<img src="./images/deployment-lvl1.png" alt="deployment lvl1" width="655" height="716">
+<img src="./images/deployment-lvl1.png" alt="deployment lvl1" width="685" height="717">
 </div>
 </div>
 <div class="dlist">
@@ -1829,6 +1834,14 @@ Refer to details in the following sections.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Firebase Auth + Firestore</strong></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Fully managed by Google Cloud (Firebase Platform). No self-hosted component.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Prometheus</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker container scraping metrics from the Users API for operational monitoring.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Grafana</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Docker container providing dashboards fed by Prometheus for visualizing system health.</p></td>
 </tr>
 </tbody>
 </table>
@@ -2161,6 +2174,28 @@ on this list.</p>
 <div class="paragraph">
 <p>To ensure "it works on my machine" consistency, every sub-service is encapsulated in a <strong>Docker</strong> container. This cross-cutting concept simplifies local development and cloud deployment, ensuring identical runtimes for the Node.js gateway and the compiled Rust binary.</p>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_testing_strategy">10.7. Testing Strategy</h3>
+<div class="paragraph">
+<p>The project applies a multi-layer testing approach enforced through CI/CD:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Unit tests:</strong> Vitest for the webapp and users service; <code>cargo test</code> for the three Rust services (gamey, game_manager, userAuthentification).</p>
+</li>
+<li>
+<p><strong>Integration tests:</strong> Rust integration tests run against real Firebase instances using randomised test data and clean up after themselves.</p>
+</li>
+<li>
+<p><strong>End-to-end tests:</strong> Playwright and Cucumber scenarios covering full user flows, executed against the deployed application on each release.</p>
+</li>
+<li>
+<p><strong>Load tests:</strong> Gatling simulations (Maven) targeting the deployed server, measuring response times and success rates under concurrent load.</p>
+</li>
+</ul>
+</div>
 <div style="page-break-after: always;"></div>
 </div>
 </div>
@@ -2387,6 +2422,30 @@ Expose a REST-style HTTP API that:
 - Requires proper authentication and validation.
 - Must be fully documented.</p>
 </div>
+</div>
+<div class="sect2">
+<h3 id="_adr_008_internationalisation_via_react_i18next">11.8. ADR-008: Internationalisation via react-i18next</h3>
+<div class="paragraph">
+<p><strong>Status:</strong> Accepted</p>
+</div>
+<div class="paragraph">
+<p><strong>Context:</strong>
+The application targets users who may not speak English. The team needed a way to support multiple languages without duplicating components.</p>
+</div>
+<div class="paragraph">
+<p><strong>Decision:</strong>
+Use <strong>react-i18next</strong> as the internationalisation library, with translations stored in JSON locale files (<code>en.json</code>, <code>es.json</code>) loaded at runtime.</p>
+</div>
+<div class="paragraph">
+<p><strong>Rationale:</strong>
+react-i18next is the standard i18n solution for React, well-maintained, and requires no backend changes — all translation logic stays in the frontend.</p>
+</div>
+<div class="paragraph">
+<p><strong>Consequences:</strong>
+- Adding a new language requires only a new locale file.
+- All user-facing strings must be referenced through the library&#8217;s <code>t()</code> function rather than hardcoded.</p>
+</div>
+<hr>
 <div class="sidebarblock arc42help">
 <div class="content">
 <div class="paragraph">
@@ -2495,7 +2554,7 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <td class="tableblock halign-left valign-top"><p class="tableblock">Player requests next move</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Normal load (~1 concurrent player)</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">System calculates AI move</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Response returned within 1 second</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Response returned within 2 seconds</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>Performance Efficiency</strong></p></td>
@@ -2632,6 +2691,11 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <td class="tableblock halign-left valign-top"><p class="tableblock">Steep learning curve affecting development velocity.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Peer programming and strict linting (clippy).</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Single VM infrastructure</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All services share one Azure VM. A hardware failure, reboot, or network issue makes the entire application unreachable.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No automatic failover exists. Mitigation relies on Prometheus/Grafana alerts to detect outages quickly and manual restart procedures.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -2665,6 +2729,11 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <td class="tableblock halign-left valign-top"><p class="tableblock">Redis single point of failure</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The Users Gateway&#8217;s session store is a single Redis container with no replica. A Redis crash invalidates all active sessions. A replica or persistence strategy should be evaluated.</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Medium</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Firebase vendor lock-in</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All authentication and persistence depends on Firebase. Migrating to a different provider would require rewriting the Auth Engine and Game Manager data layers. Accepted trade-off for the project scale. No mitigation planned.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Low</p></td>
 </tr>
 </tbody>
 </table>
@@ -2783,6 +2852,26 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>YEN Notation</em></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><em>Project-specific JSON-based format used for serializing board states and moves between the frontend and backend subsystems.</em></p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Game Y</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Abstract strategy board game played on a triangular hexagonal grid. The goal is to connect all three sides of the board with a continuous chain of pieces.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Why Not</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A variant of Game Y in which the player who completes the winning connection loses instead of winning. Also known as the reverse or "last player loses" rule.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>ELO</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>A numerical rating system used to rank players based on match outcomes. A win increases the rating; a loss decreases it.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>SPA</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Single Page Application. A web application that loads a single HTML page and dynamically updates content without full page reloads. Used to refer to the React frontend.</em></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>i18n</em></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><em>Abbreviation for internationalisation. The process of adapting software to support multiple languages without code changes. In this system it is implemented via the react-i18next library, with translations stored in dedicated locale files (<code>en.json</code>, <code>es.json</code>) and selectable from the settings menu at runtime.</em></p></td>
+</tr>
 </tbody>
 </table>
 <hr>
@@ -2805,7 +2894,7 @@ See <a href="https://arc42.org" class="bare">https://arc42.org</a>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 8.2 EN<br>
-Last updated 2026-04-07 11:14:46 +0200
+Last updated 2026-04-27 00:36:54 +0200
 </div>
 </div>
 </body>
