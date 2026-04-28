@@ -52,8 +52,8 @@ services:
   prometheus:
     image: prom/prometheus
     container_name: prometheus
-    ports:
-      - "9090:9090"
+    expose:
+      - "9090"
     volumes:
       - ./users/monitoring/prometheus:/etc/prometheus
     networks:
@@ -62,8 +62,8 @@ services:
   grafana:
     image: grafana/grafana
     container_name: grafana
-    ports:
-      - "9091:3000"
+    expose:
+      - "3000"
     volumes:
       - ./users/monitoring/grafana/provisioning:/etc/grafana/provisioning
     networks:

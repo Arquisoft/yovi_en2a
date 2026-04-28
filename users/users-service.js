@@ -34,7 +34,22 @@ async function destroySession(sessionId) {
 app.use(cookieParser());
 
 // 2. Metrics Middleware
-const metricsMiddleware = promBundle({includeMethod: true});
+const metricsMiddleware = promBundle({
+  includeMethod: true,
+  includePath: true,
+  normalizePath: [
+    ['^/api/csrf-token.*', '/api/csrf-token'],
+    ['^/api/login.*', '/api/login'],
+    ['^/api/register.*', '/api/register'],
+    ['^/api/logout.*', '/api/logout'],
+    ['^/api/me.*', '/api/me'],
+    ['^/api/update-username.*', '/api/update-username'],
+    ['^/api/.*', '/api/#other'],
+    ['^/play.*', '/play'],
+    ['^/game.*', '/game'],
+    ['^/createuser.*', '/createuser'],
+  ],
+});
 app.use(metricsMiddleware);
 
 const GAME_MANAGER_URL = process.env.GAMEMANAGER_URL || 'http://localhost:5000';
@@ -49,6 +64,26 @@ const allowedOriginsList = [
   'http://localhost:80',
   'http://localhost:5173',
 ];
+
+// PLAY — pide jugada al motor (gamey) y devuelve las coordenadas
+app.get('/play', async (req, res) => {
+  try {
+    const url = new URL(`${ENGINE_URL}/play`);
+    if (req.query.position) url.searchParams.set('position', req.query.position);
+    if (req.query.bot_id)   url.searchParams.set('bot_id', req.query.bot_id);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { 'Accept': 'application/json' },
+    });
+
+    const data = await response.json().catch(() => ({}));
+    res.status(response.status).json(data);
+  } catch (err) {
+    console.error(`[PLAY] Engine unreachable: ${err.message}`);
+    res.status(502).json({ error: 'Unable to reach the game engine.' });
+  }
+});
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
@@ -267,16 +302,6 @@ app.use('/game', createProxyMiddleware({
     proxyReq: fixRequestBody,
   },
 }));
-
-// Play Proxy
-app.use('/play', createProxyMiddleware({
-  target: ENGINE_URL,
-  change_origin: true,
-  pathRewrite: {'^/play': ''},
-  on: {
-    proxyReq: fixRequestBody
-  },
-}))
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   app.listen(port, () => {
