@@ -23,5 +23,6 @@ The `openapi.yaml` file located in the `users/` directory is loaded at startup b
 | User | Update username
 | Game | Match lifecycle, moves, bot, history and rankings (offline and vs-bot)
 | Online | Online match creation, matchmaking, long-poll update, forfeit
+| Interops | Forwards a board state (YEN) to the Gamey engine and returns the coordinates the selected bot would play next (`GET /play`)
 | Legacy | Backwards-compatible endpoints
 |===
