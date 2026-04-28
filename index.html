@@ -530,7 +530,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_technical_debts">11.2. Technical Debts</a></li>
 </ul>
 </li>
-<li><a href="#section-glossary">12. Glossary</a></li>
+<li><a href="#section-api-documentation">12. API Documentation</a>
+<ul class="sectlevel2">
+<li><a href="#_how_it_works">12.1. How it works</a></li>
+<li><a href="#_documented_endpoint_groups">12.2. Documented endpoint groups</a></li>
+</ul>
+</li>
+<li><a href="#section-glossary">13. Glossary</a></li>
 </ul>
 </div>
 </div>
@@ -2754,7 +2760,69 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-glossary">12. Glossary</h2>
+<h2 id="section-api-documentation">12. API Documentation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Gamey REST API is documented using the <a href="https://swagger.io/specification/">OpenAPI 3.0</a> specification and served via <a href="https://swagger.io/tools/swagger-ui/">Swagger UI</a>.</p>
+</div>
+<div class="paragraph">
+<p>The interactive documentation is available at the following URL when the application is deployed:</p>
+</div>
+<div class="paragraph">
+<p><a href="https://20-250-221-153.sslip.io/api-docs/">https://20-250-221-153.sslip.io/api-docs/</a></p>
+</div>
+<div class="sect2">
+<h3 id="_how_it_works">12.1. How it works</h3>
+<div class="paragraph">
+<p>The <code>openapi.yaml</code> file located in the <code>users/</code> directory is loaded at startup by the Users gateway (<code>users-service.js</code>) and served through <code>swagger-ui-express</code> at the <code>/api-docs</code> path. Nginx proxies all <code>/api-docs</code> traffic from the public HTTPS endpoint directly to the Users container, so no separate deployment step is required.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_documented_endpoint_groups">12.2. Documented endpoint groups</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 66.6667%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Tag</th>
+<th class="tableblock halign-left valign-top">Endpoints</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Auth</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Register, login, logout</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Session</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CSRF token, current user (<code>/api/me</code>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">User</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Update username</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Game</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Match lifecycle, moves, bot, history and rankings (offline and vs-bot)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Online</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Online match creation, matchmaking, long-poll update, forfeit</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Legacy</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Backwards-compatible endpoints</p></td>
+</tr>
+</tbody>
+</table>
+<div style="page-break-after: always;"></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="section-glossary">13. Glossary</h2>
 <div class="sectionbody">
 <div class="sidebarblock arc42help">
 <div class="content">
@@ -2906,7 +2974,7 @@ See <a href="https://arc42.org" class="bare">https://arc42.org</a>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 8.2 EN<br>
-Last updated 2026-04-27 00:36:54 +0200
+Last updated 2026-04-28 21:42:04 +0200
 </div>
 </div>
 </body>
