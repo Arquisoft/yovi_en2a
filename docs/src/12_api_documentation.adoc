@@ -1,0 +1,27 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[section-api-documentation]]
+== API Documentation
+
+The Gamey REST API is documented using the https://swagger.io/specification/[OpenAPI 3.0] specification and served via https://swagger.io/tools/swagger-ui/[Swagger UI].
+
+The interactive documentation is available at the following URL when the application is deployed:
+
+https://20-250-221-153.sslip.io/api-docs/[https://20-250-221-153.sslip.io/api-docs/]
+
+=== How it works
+
+The `openapi.yaml` file located in the `users/` directory is loaded at startup by the Users gateway (`users-service.js`) and served through `swagger-ui-express` at the `/api-docs` path. Nginx proxies all `/api-docs` traffic from the public HTTPS endpoint directly to the Users container, so no separate deployment step is required.
+
+=== Documented endpoint groups
+
+[cols="1,2", options="header"]
+|===
+| Tag | Endpoints
+| Auth | Register, login, logout
+| Session | CSRF token, current user (`/api/me`)
+| User | Update username
+| Game | Match lifecycle, moves, bot, history and rankings (offline and vs-bot)
+| Online | Online match creation, matchmaking, long-poll update, forfeit
+| Legacy | Backwards-compatible endpoints
+|===
