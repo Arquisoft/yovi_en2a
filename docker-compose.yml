@@ -64,6 +64,10 @@ services:
     container_name: grafana
     expose:
       - "3000"
+    environment:
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_SERVER_DOMAIN=${DEPLOY_HOST:-localhost}
     volumes:
       - ./users/monitoring/grafana/provisioning:/etc/grafana/provisioning
     networks:

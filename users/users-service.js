@@ -37,18 +37,22 @@ app.use(cookieParser());
 const metricsMiddleware = promBundle({
   includeMethod: true,
   includePath: true,
-  normalizePath: [
-    ['^/api/csrf-token.*', '/api/csrf-token'],
-    ['^/api/login.*', '/api/login'],
-    ['^/api/register.*', '/api/register'],
-    ['^/api/logout.*', '/api/logout'],
-    ['^/api/me.*', '/api/me'],
-    ['^/api/update-username.*', '/api/update-username'],
-    ['^/api/.*', '/api/#other'],
-    ['^/play.*', '/play'],
-    ['^/game.*', '/game'],
-    ['^/createuser.*', '/createuser'],
-  ],
+  normalizePath: (req) => {
+    const p = req.path;
+    if (p.startsWith('/api/csrf-token')) return '/api/csrf-token';
+    if (p.startsWith('/api/login')) return '/api/login';
+    if (p.startsWith('/api/register')) return '/api/register';
+    if (p.startsWith('/api/logout')) return '/api/logout';
+    if (p.startsWith('/api/me')) return '/api/me';
+    if (p.startsWith('/api/update-username')) return '/api/update-username';
+    if (p.startsWith('/play')) return '/play';
+    if (p.startsWith('/game')) return '/game';
+    if (p.startsWith('/createuser')) return '/createuser';
+    if (p.startsWith('/api-docs')) return '/api-docs';
+    if (p === '/metrics') return '/metrics';
+    if (p.startsWith('/api/')) return '/api/#other';
+    return p;
+  },
 });
 app.use(metricsMiddleware);
 

@@ -131,9 +131,9 @@
         "tooltip": { "mode": "multi" }
       },
       "targets": [
-        { "expr": "sum(increase(http_request_duration_seconds_count{route=\"/api/login\",status_code=\"200\"}[1m]))", "legendFormat": "Logins exitosos", "refId": "A" },
-        { "expr": "sum(increase(http_request_duration_seconds_count{route=\"/api/login\",status_code=\"401\"}[1m]))", "legendFormat": "Logins fallidos (credenciales)", "refId": "B" },
-        { "expr": "sum(increase(http_request_duration_seconds_count{route=\"/api/register\",status_code=\"200\"}[1m]))", "legendFormat": "Registros nuevos", "refId": "C" }
+        { "expr": "sum(increase(http_request_duration_seconds_count{path=\"/api/login\",status_code=\"200\"}[1m]))", "legendFormat": "Logins exitosos", "refId": "A" },
+        { "expr": "sum(increase(http_request_duration_seconds_count{path=\"/api/login\",status_code=\"401\"}[1m]))", "legendFormat": "Logins fallidos (credenciales)", "refId": "B" },
+        { "expr": "sum(increase(http_request_duration_seconds_count{path=\"/api/register\",status_code=\"200\"}[1m]))", "legendFormat": "Registros nuevos", "refId": "C" }
       ],
       "title": "Autenticación (logins y registros por minuto)",
       "type": "timeseries"
@@ -154,8 +154,8 @@
         "tooltip": { "mode": "multi" }
       },
       "targets": [
-        { "expr": "sum(increase(http_request_duration_seconds_count{route=~\"/play.*\"}[1m]))", "legendFormat": "Peticiones de jugada (/play)", "refId": "A" },
-        { "expr": "sum(increase(http_request_duration_seconds_count{route=~\"/game.*\"}[1m]))", "legendFormat": "Peticiones al game manager (/game)", "refId": "B" }
+        { "expr": "sum(increase(http_request_duration_seconds_count{path=~\"/play.*\"}[1m]))", "legendFormat": "Peticiones de jugada (/play)", "refId": "A" },
+        { "expr": "sum(increase(http_request_duration_seconds_count{path=~\"/game.*\"}[1m]))", "legendFormat": "Peticiones al game manager (/game)", "refId": "B" }
       ],
       "title": "Actividad de juego (jugadas y partidas por minuto)",
       "type": "timeseries"
