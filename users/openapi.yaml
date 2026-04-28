@@ -13,6 +13,8 @@ tags:
     description: User profile management
   - name: Game
     description: Match lifecycle, moves, history and rankings (proxied to game_manager)
+  - name: Online
+    description: Real-time online match lifecycle (matchmaking, long-poll update, forfeit)
   - name: Legacy
     description: Legacy endpoints kept for backwards compatibility
 
@@ -695,6 +697,465 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Score'
+
+  /game/createMatch:
+    post:
+      tags: [Online]
+      summary: Create a new online match
+      description: >
+        Creates a waiting online match for `player1id`. If `match_id` is empty the
+        server generates a random UUID and places the match in the public matchmaking
+        pool; if a non-empty `match_id` is provided a private room is created
+        protected by `match_password`. Returns the assigned `match_id` and
+        `turn_number: 0` (player 1 moves first).
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [match_id, match_password, player1id, size]
+              properties:
+                match_id:
+                  type: string
+                  description: >
+                    Leave empty for random matchmaking; supply a custom value to
+                    create a private room.
+                  example: ""
+                match_password:
+                  type: string
+                  description: Password for the private room. Ignored for random matches.
+                  example: "secret123"
+                player1id:
+                  type: string
+                  description: Identifier (e-mail) of the player creating the match.
+                  example: "alice@example.com"
+                size:
+                  type: integer
+                  description: Side length of the triangular board.
+                  example: 8
+      responses:
+        '200':
+          description: Match created and waiting for a second player
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                    format: uuid
+                    example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                  turn_number:
+                    type: integer
+                    description: Always 0 — player 1 is next to move.
+                    example: 0
+        '500':
+          description: Redis unavailable or match creation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/joinMatch:
+    post:
+      tags: [Online]
+      summary: Join an existing online match
+      description: >
+        Joins a waiting match as `player2id`. If `match_id` is empty the server
+        dequeues the next available random match from the pool; otherwise the
+        caller must supply the correct `match_password` for the private room.
+        On success a 3-second grace window (`turn_started_at = now + 3 000 ms`)
+        is written to Redis so both players have time to navigate to the game
+        screen before the first move timer starts. Returns `turn_number: 1`
+        (player 2 is the second to move).
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [match_id, match_password, player2id]
+              properties:
+                match_id:
+                  type: string
+                  description: >
+                    Leave empty to join the next available random match; supply
+                    the room id to join a private match.
+                  example: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                match_password:
+                  type: string
+                  description: Password for the private room. Ignored for random matches.
+                  example: "secret123"
+                player2id:
+                  type: string
+                  description: Identifier (e-mail) of the joining player.
+                  example: "bob@example.com"
+      responses:
+        '200':
+          description: Joined successfully; grace period started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                    format: uuid
+                  turn_number:
+                    type: integer
+                    description: Always 1 — player 2 is the second to move.
+                    example: 1
+        '500':
+          description: No open match in pool, wrong password, or Redis error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/executeMoveOnline:
+    post:
+      tags: [Online]
+      summary: Apply a human move in an online match
+      description: >
+        Validates that `player_id` (0 = player 1, 1 = player 2) matches the
+        current turn stored in the YEN, then delegates to the same engine call
+        as the offline `executeMove`. Returns `game_over: true` when the move
+        ends the match. `hole_cells` and `blocked_cells` are non-empty only in
+        the *Holey Y* variant.
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [match_id, coord_x, coord_y, coord_z, player_id]
+              properties:
+                match_id:
+                  type: string
+                coord_x:
+                  type: integer
+                coord_y:
+                  type: integer
+                coord_z:
+                  type: integer
+                player_id:
+                  type: integer
+                  description: 0 for player 1, 1 for player 2.
+                  enum: [0, 1]
+      responses:
+        '200':
+          description: Move applied
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                  game_over:
+                    type: boolean
+                  turn:
+                    type: integer
+                    description: Turn index after this move.
+                  hole_cells:
+                    type: array
+                    items:
+                      type: integer
+                    description: Indices of hole cells (Holey Y variant only).
+                  blocked_cells:
+                    type: array
+                    items:
+                      type: integer
+                    description: Indices of blocked cells (Holey Y variant only).
+        '400':
+          description: Not this player's turn or move rejected by the engine
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Match not found in Redis (likely expired)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/matchStatus/{match_id}:
+    get:
+      tags: [Online]
+      summary: Get the current status of an online match
+      description: >
+        Returns live metadata for the match: whether both players have joined
+        (`ready`), the current `status` (`waiting`, `active`, or `finished`),
+        the player identifiers, and — once the match has been settled — the
+        `winner` and `end_reason` (`normal` or `forfeit`). Both `winner` and
+        `end_reason` are absent while the match is still in progress.
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: match_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Match status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                  status:
+                    type: string
+                    enum: [waiting, active, finished]
+                  player1id:
+                    type: string
+                  player2id:
+                    type: string
+                  ready:
+                    type: boolean
+                    description: True when both players have joined and the match is active.
+                  winner:
+                    type: string
+                    nullable: true
+                    description: Identifier of the winning player; absent while the match is ongoing.
+                  end_reason:
+                    type: string
+                    nullable: true
+                    enum: [normal, forfeit]
+                    description: How the match ended; absent while the match is ongoing.
+        '404':
+          description: Match not found in Redis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/matchTurnInfo/{match_id}:
+    get:
+      tags: [Online]
+      summary: Get timing information for the current turn
+      description: >
+        Returns the data needed by the client to run a server-synchronized
+        countdown. The client computes its clock offset as
+        `offset = clientAfter − (now_server + roundTripMs / 2)` and derives
+        `deadline = turn_started_at + turn_duration_ms + offset`. The
+        `turn_started_at` epoch includes the 3-second grace period added when
+        the second player joins.
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: match_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Turn timing data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                  turn:
+                    type: integer
+                    description: Current turn index (0 = player 1 to move, 1 = player 2 to move).
+                  turn_started_at:
+                    type: integer
+                    format: int64
+                    description: Unix epoch in milliseconds when the current turn began (includes grace period).
+                  now_server:
+                    type: integer
+                    format: int64
+                    description: Server wall-clock time in milliseconds at the moment of the response.
+                  turn_duration_ms:
+                    type: integer
+                    description: Total duration of each turn in milliseconds.
+                    example: 10000
+        '404':
+          description: Match not found in Redis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/requestOnlineGameUpdate:
+    post:
+      tags: [Online]
+      summary: Long-poll for the opponent's move
+      description: >
+        Blocks server-side for up to 20 seconds (40 × 500 ms polls) waiting
+        for the YEN `turn` field to differ from the client-supplied
+        `turn_number`. Returns the new board state as soon as the opponent's
+        move is persisted. The client retries indefinitely on HTTP 408; any
+        other error surfaces to the UI. Should only be called when it is NOT
+        the client's turn and the grace period is over.
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [match_id, turn_number]
+              properties:
+                match_id:
+                  type: string
+                turn_number:
+                  type: integer
+                  description: The turn index the client last saw; the server waits until this changes.
+                  example: 2
+      responses:
+        '200':
+          description: Opponent has moved; updated board returned
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                  board_status:
+                    $ref: '#/components/schemas/YEN'
+        '404':
+          description: Match not found in Redis (likely expired)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '408':
+          description: Timeout — no move was made within the polling window; the client should retry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/cancelMatch/{match_id}:
+    delete:
+      tags: [Online]
+      summary: Cancel a waiting online match
+      description: >
+        Deletes all Redis keys associated with the match and removes it from
+        the random matchmaking pool. Idempotent: succeeds even if the match no
+        longer exists. Rejects active matches (both players joined) with HTTP
+        409 to prevent silently destroying an in-progress game.
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: match_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Match cancelled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                  cancelled:
+                    type: boolean
+                    example: true
+        '409':
+          description: Match is already active and cannot be cancelled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Redis connection error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /game/claimForfeit/{match_id}:
+    post:
+      tags: [Online]
+      summary: Claim a win by forfeit when the opponent's timer has expired
+      description: >
+        The calling player (`claimant_id`) asserts that their opponent has
+        exceeded the turn time limit. The server verifies that `claimant_id`
+        is a participant of the match, then marks the match as finished with
+        `end_reason: forfeit` and `winner: claimant_id`. A player cannot claim
+        a forfeit on themselves (i.e. while it is their own turn). Called by
+        the frontend after a `FORFEIT_GRACE_MS` (10 s) window following the
+        opponent's turn expiry.
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: match_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [claimant_id]
+              properties:
+                claimant_id:
+                  type: string
+                  description: Identifier (e-mail) of the player claiming the forfeit win.
+                  example: "alice@example.com"
+      responses:
+        '200':
+          description: Forfeit accepted; match settled
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  match_id:
+                    type: string
+                  accepted:
+                    type: boolean
+                    example: true
+                  winner:
+                    type: string
+                    description: Identifier of the winning player.
+                  end_reason:
+                    type: string
+                    example: "forfeit"
+        '400':
+          description: claimant_id field missing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: claimant_id is not a participant in this match
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Match not found in Redis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 
   /createuser:
     post:
