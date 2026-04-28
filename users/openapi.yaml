@@ -15,6 +15,8 @@ tags:
     description: Match lifecycle, moves, history and rankings (proxied to game_manager)
   - name: Online
     description: Real-time online match lifecycle (matchmaking, long-poll update, forfeit)
+  - name: Interops
+    description: Interoperability with external/internal services (game engine, etc.)
   - name: Legacy
     description: Legacy endpoints kept for backwards compatibility
 
@@ -29,6 +31,11 @@ components:
         email:
           type: string
           example: "johndoe@example.com"
+    PlayCoordsResponse:
+      type: object
+      properties:
+        coords:
+          $ref: '#/components/schemas/Coordinates'
     Error:
       type: object
       properties:
@@ -1156,7 +1163,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
+  /play:
+    get:
+      tags: [ Interops ]
+      summary: Ask the game engine for a bot move
+      description: >
+        Forwards the request to the game engine (`gamey`) and returns the coordinates
+        the selected bot would play for the given YEN position.
+        If `bot_id` is omitted the engine defaults to `minimax_bot`.
+      parameters:
+        - in: query
+          name: position
+          required: true
+          description: URL-encoded JSON representing the current game state in YEN format.
+          schema:
+            type: string
+          example: '{"size":3,"turn":0,"players":["B","R"],"layout":"./B./..."}'
+        - in: query
+          name: bot_id
+          required: false
+          description: Identifier of the bot to use. Available bots include `random_bot`, `greedy_bot` and `minimax_bot`.
+          schema:
+            type: string
+            enum: [ random_bot, greedy_bot, minimax_bot ]
+          example: "minimax_bot"
+      responses:
+        '200':
+          description: Coordinates chosen by the bot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlayCoordsResponse'
+        '400':
+          description: Invalid YEN position or malformed query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Bot not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '502':
+          description: Game engine unreachable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /createuser:
     post:
       tags: [Legacy]
