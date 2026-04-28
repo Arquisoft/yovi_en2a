@@ -129,4 +129,5 @@ cd webapp && npm install && npm run dev
 
 ## Deeper Documentation
 
-For a granular walkthrough see the [official documantation](arquisoft.github.io/yovi_en2a/).
+For a granular walkthrough see the [official documentation](https://arquisoft.github.io/yovi_en2a/) or explore the 
+interactive API reference at [https://20-250-221-153.sslip.io/api-docs/](https://20-250-221-153.sslip.io/api-docs/).
