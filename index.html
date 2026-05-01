@@ -530,13 +530,23 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_technical_debts">11.2. Technical Debts</a></li>
 </ul>
 </li>
-<li><a href="#section-api-documentation">12. API Documentation</a>
+<li><a href="#section-test-report">12. Test Report</a>
 <ul class="sectlevel2">
-<li><a href="#_how_it_works">12.1. How it works</a></li>
-<li><a href="#_documented_endpoint_groups">12.2. Documented endpoint groups</a></li>
+<li><a href="#_overview">12.1. Overview</a></li>
+<li><a href="#_unit_tests">12.2. Unit Tests</a></li>
+<li><a href="#_acceptance_tests_end_to_end">12.3. Acceptance Tests (End-to-End)</a></li>
+<li><a href="#_load_tests">12.4. Load Tests</a></li>
+<li><a href="#_code_coverage">12.5. Code Coverage</a></li>
+<li><a href="#_ci_integration">12.6. CI Integration</a></li>
 </ul>
 </li>
-<li><a href="#section-glossary">13. Glossary</a></li>
+<li><a href="#section-api-documentation">13. API Documentation</a>
+<ul class="sectlevel2">
+<li><a href="#_how_it_works">13.1. How it works</a></li>
+<li><a href="#_documented_endpoint_groups">13.2. Documented endpoint groups</a></li>
+</ul>
+</li>
+<li><a href="#section-glossary">14. Glossary</a></li>
 </ul>
 </div>
 </div>
@@ -2760,7 +2770,475 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-api-documentation">12. API Documentation</h2>
+<h2 id="section-test-report">12. Test Report</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter documents the testing strategy applied across the YOVI system: the Rust game engine, the Rust backend services, the Node.js gateway, and the React frontend.</p>
+</div>
+<div class="sect2">
+<h3 id="_overview">12.1. Overview</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 14.2857%;">
+<col style="width: 28.5714%;">
+<col style="width: 28.5714%;">
+<col style="width: 28.5715%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Layer</th>
+<th class="tableblock halign-left valign-top">Scope</th>
+<th class="tableblock halign-left valign-top">Tool</th>
+<th class="tableblock halign-left valign-top">Execution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Unit tests</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Functions, services, and components in isolation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vitest (TypeScript) · Rust <code>[test]</code> / <code>[tokio::test]</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Every push to master and every pull request (GitHub Actions)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Integration tests</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">HTTP routes against live infrastructure (Firebase, Redis)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rust <code>[tokio::test]</code> with live services</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Every push to master and every pull request (GitHub Actions)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Acceptance / E2E tests</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Critical user journeys through a real browser</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Playwright + Cucumber (BDD)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">On demand; also runnable in CI via <code>test:e2e:ci</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Load tests</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Throughput and latency of authentication, game lifecycle, bot AI, rankings, profile, and online multiplayer under concurrent load</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gatling (Java DSL)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Run manually; results stored in <code>gatling/target/gatling/</code></p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>All TypeScript suites produce LCOV coverage reports. The three Rust crates use <code>cargo-llvm-cov</code>. All reports are uploaded to SonarQube.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_unit_tests">12.2. Unit Tests</h3>
+<div class="sect3">
+<h4 id="_gamey_rust_game_engine">12.2.1. gamey — Rust Game Engine</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 16.6666%;">
+<col style="width: 50.0001%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">File</th>
+<th class="tableblock halign-left valign-top">Tests</th>
+<th class="tableblock halign-left valign-top">Coverage area</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/core_tests.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">43</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Initialisation, move sequencing, win detection, illegal-move rejection, resign/swap, YEN round-trip serialisation, file save/load, coordinate arithmetic (index round-trips across sizes 1–7, side-touching predicates), board rendering.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/cli_tests.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">54</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>parse_command</code> (valid/invalid/edge cases), <code>parse_idx</code> boundary validation, <code>Mode</code> enum display and equality, <code>CliArgs</code> parsing (default values, custom options, combined flags, error cases).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/bot_server_tests.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">12 async</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/status</code> health endpoint, <code>/v1/ybot/choose/{bot_id}</code> with valid and partially filled boards, unsupported API version, unknown bot-id, invalid JSON, missing content-type, custom and empty bot registry, unknown route (404), wrong HTTP method (405).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/play_test.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>PlayResponse</code> DTO construction and serialisation, including the winner field.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_game_manager_rust_backend_service">12.2.2. game_manager — Rust Backend Service</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 16.6666%;">
+<col style="width: 50.0001%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">File</th>
+<th class="tableblock halign-left valign-top">Tests</th>
+<th class="tableblock halign-left valign-top">Coverage area</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/db_tests.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Firebase round-trip (<code>insert_match_by_id</code> → <code>get_match_by_id</code> → <code>remove_match_by_id</code>), score calculation on win (ELO update, best-time improves), score on loss (best-time must not regress).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/ranking_integration_tests.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">3</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Full ranking lifecycle (save → read history → update score → verify), score accumulation does not duplicate on repeated wins, best-time is monotonically non-increasing.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/api_rest_mock_tests.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">31</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Axum/serde rejections before any handler runs (bad JSON, missing fields, wrong content-type, wrong HTTP method, unknown route), validation before Redis is touched (<code>/claimForfeit</code> missing <code>claimant_id</code>), "infrastructure unreachable" path with a closed-port Redis pool — no handler may panic.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/api_rest_engine_mock_tests.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">22</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Error mapping for <code>/executeMove</code>, <code>/executeMoveOnline</code>, <code>/reqBotMove</code>, <code>/requestOnlineGameUpdate</code>, <code>/matchTurnInfo</code>, <code>/saveMatch</code>; Firebase broken-state paths for <code>/localRankings</code>, <code>/bestTimes</code>, <code>/updateScore</code>; engine mock contract tests for side-effect ordering.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/api_online_test.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">19</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>/createMatch</code> + <code>/joinMatch</code> (random pool and private room with password), <code>/matchStatus</code>, <code>/matchTurnInfo</code>, <code>/requestOnlineGameUpdate</code>, <code>/cancelMatch</code> (waiting and active states), <code>/claimForfeit</code> (player1, player2, outsider rejection, missing claimant, nonexistent match).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/redis_test.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">13</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Exclusive lock acquisition and release, match state round-trips, random matchmaking FIFO ordering and empty pool, private match duplicate-ID rejection, password validation, wrong password, nonexistent match, double-join rejection.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/api_rest_test.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>get_gamey_url</code> environment variable handling (default and custom), <code>now_ms</code> sanity check, <code>request_bot_move</code> handler with real Redis (marked <code>#[ignore]</code>).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_userauthentification_rust_auth_service">12.2.3. userAuthentification — Rust Auth Service</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 33.3333%;">
+<col style="width: 16.6666%;">
+<col style="width: 50.0001%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">File</th>
+<th class="tableblock halign-left valign-top">Tests</th>
+<th class="tableblock halign-left valign-top">Coverage area</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/auth_utils_tests.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Argon2 hash generation, correct-password verification, wrong-password rejection; unique salts (same password produces different hashes).</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/user_auth_tests.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">1 async</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Full cycle: register new user, duplicate registration rejected, login with correct credentials returns user object, login with wrong password rejected, login with non-existent user rejected, Firestore cleanup.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>tests/db_tests.rs</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">4</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Full user document cycle (insert, read, delete), <code>check_username_exists</code> returns false when absent and true when present, <code>update_db</code> persists changed fields.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_users_node_js_gateway">12.2.4. users — Node.js Gateway</h4>
+<div class="paragraph">
+<p>The <code>users</code> service test file (<code><em>tests</em>/users-service.test.js</code>, 21 tests) mocks Redis via <code>vi.hoisted</code> and exercises the Express app with Supertest.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Endpoint</th>
+<th class="tableblock halign-left valign-top">Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>GET /api/csrf-token</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returns <code>csrfToken</code> and sets the <code>csrf_token</code> cookie.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>GET /api/me</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">401 with no session cookie; 401 when session not found in Redis; 200 with user data when session exists; 500 when Redis throws.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>POST /api/logout</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403 without CSRF token; clears session and responds 200.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>POST /api/login</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">403 without CSRF; 200 with session cookie on success; 401 for wrong credentials; generic error for non-401 upstream failure; 500 when auth service unreachable.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>POST /api/register</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">200 with session cookie on success; 409 when email already exists; 400 on other upstream failure.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>POST /api/update-username</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">401 no session cookie; 401 session not found in Redis; 400 missing username; 200 on success; 500 when Redis throws.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>POST /createuser</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Returns a greeting for the provided username.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_webapp_react_frontend">12.2.5. webapp — React Frontend</h4>
+<div class="paragraph">
+<p>Tests run in jsdom with Vitest and React Testing Library (387 tests across 39 files).</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Area</th>
+<th class="tableblock halign-left valign-top">Files (test count)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Pages &amp; Windows</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>App</code> (3), <code>MainMenu</code> (3), <code>SelectionWindow</code> (1), <code>SelectionPanel</code> (2), <code>GameModeContainer</code> (35), <code>GameWindow</code> (14), <code>GameWindowOnline</code> (22), <code>GameReplayWindow</code> (22), <code>LoginForm</code> (4), <code>RegisterForm</code> (4), <code>WaitingRoom</code> (14)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Rankings &amp; Stats</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>GlobalRanking</code> (22), <code>LocalRanking</code> (14), <code>Ranking</code> (2), <code>RankingTables</code> (3), <code>RankingTableGlobal</code> (7), <code>RankingTableLocal</code> (9), <code>StatisticsPanel</code> (21), <code>StatisticsPanelView</code> (19)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Components</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>HexButton</code> (10), <code>NormalMode</code> (3), <code>Board</code> (11), <code>Timer</code> (4), <code>MobileCountdownBar</code> (21), <code>RightPanel</code> (8), <code>RightPanelOnline</code> (18), <code>TopLeftHeader</code> (2), <code>TopRightMenu</code> (5), <code>HelpMenu</code> (4), <code>SettingsMenu</code> (3), <code>AudioSettings</code> (5), <code>LanguageSettingsPanel</code> (6), <code>AccountHelp</code> (4), <code>AccountSettings</code> (3), <code>Pagination</code> (22), <code>ProtectedRoute</code> (4), <code>UserMenu</code> (8)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Contexts</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>UserContext</code> (10), <code>AudioContext</code> (15)</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_acceptance_tests_end_to_end">12.3. Acceptance Tests (End-to-End)</h3>
+<div class="paragraph">
+<p>Acceptance tests validate critical user journeys using Cucumber + Playwright. An in-memory mock server (<code>test/e2e/support/mock-server.mjs</code>) intercepts backend calls where a live backend is not required.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Feature</th>
+<th class="tableblock halign-left valign-top">Scenarios</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>login.feature</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Page shows the form; empty form shows validation error "Please fill in all required fields."; page has a link to the register page.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>register.feature</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Page shows the form; empty form shows validation error "Please fill in all required fields."; page has a link to the login page.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>main-menu.feature</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Displays title "GAMEY"; clicking "Log In" navigates to the login page; clicking "Play as Guest" navigates to the game selection page.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>online-match.feature</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Two guests are paired into the same match after both join the online queue.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>online-navigation.feature</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Guest reaches the Online Mode card; guest reaches the Private Party Mode card.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>online-private.feature</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Two guests join the same private match by sharing a match ID and password.</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p>Step definitions are in <code>webapp/test/e2e/steps/</code> (<code>common.steps.mjs</code>, <code>login.steps.mjs</code>, <code>register.steps.mjs</code>, <code>main-menu.steps.mjs</code>, <code>online-common.steps.mjs</code>, <code>online-lobby.steps.mjs</code>).</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">npm --prefix webapp run test:e2e:install-browsers  # once
+npm --prefix webapp run test:e2e</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_load_tests">12.4. Load Tests</h3>
+<div class="paragraph">
+<p>Seven Gatling simulations (Java DSL) in <code>gatling/src/test/java/simulations/</code> cover the main functional areas of the system.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 50%;">
+<col style="width: 33.3334%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Simulation</th>
+<th class="tableblock halign-left valign-top">Scenarios</th>
+<th class="tableblock halign-left valign-top">Injection profile</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>BaselineSimulation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CSRF token generation (<code>GET /api/csrf-token</code>) + unauthenticated session check (<code>GET /api/me</code>, 401 expected)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">20 at-once + ramp 100 over 30 s per scenario (240 VUs total); p95 &lt; 2 000 ms; 99 % success</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>AuthSimulation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Registration (<code>POST /api/register</code>, unique email per VU), login with wrong password, logout without session</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ramp 20 + (10 at-once, ramp 50) + ramp 20 over 20–30 s (100 VUs total); p95 &lt; 5 000 ms; 95 % success</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>GameSimulation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CSRF → create match → execute player move → request bot move → check match status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ramp 30 over 30 s; p95 &lt; 3 000 ms; 95 % success</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>BotSimulation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bot move for <code>random</code> (ramp 20), <code>greedy</code> (ramp 15), <code>minimax</code> (ramp 5) — each creates a fresh match then requests one move</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ramp over 20 s (40 VUs total); p95 &lt; 5 000 ms; 90 % success</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>RankingsSimulation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Global leaderboard (<code>GET /game/bestTimes</code>) + per-user rankings (<code>POST /game/localRankings</code>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">50 at-once + ramp 150 and 20 at-once + ramp 80 over 30 s (300 VUs total); p95 &lt; 3 000 ms; 95 % success</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>ProfileSimulation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">CSRF → register → refresh CSRF → login → <code>GET /api/me</code> → update username</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ramp 20 over 30 s; p95 &lt; 5 000 ms; 90 % success</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>OnlineMatchSimulation</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Creator (P0) and Joiner (P1) run in parallel with deterministic match IDs; creator creates match, executes a move and polls; joiner joins, polls, and replies</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">5 at-once per scenario (10 VUs total); p95 &lt; 25 000 ms; 90 % success</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_findings">12.4.1. Findings</h4>
+<div class="paragraph">
+<p>The most recent simulation runs (2026-04-26) against the local deployment:</p>
+</div>
+<div class="paragraph">
+<p><strong>BaselineSimulation</strong> (run <code>20260426095128996</code>): 240 requests, 0 KOs. 100 % of responses below 800 ms. Mean 43 ms, p50 15 ms, p95 215 ms, p99 221 ms, max 232 ms. Throughput 8.0 req/s. Passed acceptance criteria.</p>
+</div>
+<div class="paragraph">
+<p><strong>AuthSimulation</strong> (run <code>20260426095055032</code>): 200 requests, 0 KOs. 92.5 % of responses below 800 ms; 6.5 % above 1 200 ms (tail driven by the registration path delegating to Firebase). Mean 279 ms, p50 49 ms, p95 1 496 ms, p99 1 548 ms, max 1 549 ms. Throughput 6.5 req/s. Passed acceptance criteria.</p>
+</div>
+<div class="paragraph">
+<p>Full Gatling HTML reports are available in <code>gatling/target/gatling/</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_code_coverage">12.5. Code Coverage</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 40%;">
+<col style="width: 40%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Service</th>
+<th class="tableblock halign-left valign-top">Tool</th>
+<th class="tableblock halign-left valign-top">Report location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">webapp</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vitest v8 provider</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>webapp/coverage/lcov.info</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">users</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Vitest v8 provider</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>users/coverage/lcov.info</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">gamey</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cargo-llvm-cov</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>gamey/lcov.info</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">game_manager</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cargo-llvm-cov</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>game_manager/lcov.info</code></p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">userAuthentification</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cargo-llvm-cov</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>userAuthentification/lcov.info</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_ci_integration">12.6. CI Integration</h3>
+<div class="paragraph">
+<p>All suites run automatically in GitHub Actions (<code>.github/workflows/build.yml</code>) on every push to master and every pull request:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Checkout (full history for SonarQube blame) + install Rust stable and Node.js 22.</p>
+</li>
+<li>
+<p><code>npm ci</code> for <code>users</code> and <code>webapp</code>; run <code>vitest run --coverage</code> for both.</p>
+</li>
+<li>
+<p>Install <code>cargo-llvm-cov</code>; generate and normalise LCOV for <code>gamey</code>.</p>
+</li>
+<li>
+<p>Decode Firebase credentials from <code>FIREBASE_CREDENTIALS_B64</code>; generate LCOV for <code>game_manager</code> (with Redis service container on port 6379) and for <code>userAuthentification</code>.</p>
+</li>
+<li>
+<p>Upload all five LCOV reports to SonarQube.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>A failed test in any service fails the workflow and blocks the pull request merge.</p>
+</div>
+<div style="page-break-after: always;"></div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="section-api-documentation">13. API Documentation</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>The Gamey REST API is documented using the <a href="https://swagger.io/specification/">OpenAPI 3.0</a> specification and served via <a href="https://swagger.io/tools/swagger-ui/">Swagger UI</a>.</p>
@@ -2772,13 +3250,13 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 <p><a href="https://20-250-221-153.sslip.io/api-docs/">https://20-250-221-153.sslip.io/api-docs/</a></p>
 </div>
 <div class="sect2">
-<h3 id="_how_it_works">12.1. How it works</h3>
+<h3 id="_how_it_works">13.1. How it works</h3>
 <div class="paragraph">
 <p>The <code>openapi.yaml</code> file located in the <code>users/</code> directory is loaded at startup by the Users gateway (<code>users-service.js</code>) and served through <code>swagger-ui-express</code> at the <code>/api-docs</code> path. Nginx proxies all <code>/api-docs</code> traffic from the public HTTPS endpoint directly to the Users container, so no separate deployment step is required.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_documented_endpoint_groups">12.2. Documented endpoint groups</h3>
+<h3 id="_documented_endpoint_groups">13.2. Documented endpoint groups</h3>
 <table class="tableblock frame-all grid-all stretch">
 <colgroup>
 <col style="width: 33.3333%;">
@@ -2826,7 +3304,7 @@ This quality tree is structured from ISO 25010-inspired categories. Each main br
 </div>
 </div>
 <div class="sect1">
-<h2 id="section-glossary">13. Glossary</h2>
+<h2 id="section-glossary">14. Glossary</h2>
 <div class="sectionbody">
 <div class="sidebarblock arc42help">
 <div class="content">
@@ -2978,7 +3456,7 @@ See <a href="https://arc42.org" class="bare">https://arc42.org</a>.</p>
 <div id="footer">
 <div id="footer-text">
 Version 8.2 EN<br>
-Last updated 2026-04-28 21:42:04 +0200
+Last updated 2026-05-01 22:39:47 +0200
 </div>
 </div>
 </body>
