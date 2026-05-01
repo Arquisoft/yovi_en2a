@@ -1,0 +1,286 @@
+ifndef::imagesdir[:imagesdir: ../images]
+
+[[section-test-report]]
+== Test Report
+
+This chapter documents the testing strategy applied across the YOVI system: the Rust game engine, the Rust backend services, the Node.js gateway, and the React frontend.
+
+=== Overview
+
+[cols="1,2,2,2", options="header"]
+|===
+| Layer | Scope | Tool | Execution
+
+| Unit tests
+| Functions, services, and components in isolation
+| Vitest (TypeScript) · Rust `[test]` / `[tokio::test]`
+| Every push to master and every pull request (GitHub Actions)
+
+| Integration tests
+| HTTP routes against live infrastructure (Firebase, Redis)
+| Rust `[tokio::test]` with live services
+| Every push to master and every pull request (GitHub Actions)
+
+| Acceptance / E2E tests
+| Critical user journeys through a real browser
+| Playwright + Cucumber (BDD)
+| On demand; also runnable in CI via `test:e2e:ci`
+
+| Load tests
+| Throughput and latency of authentication, game lifecycle, bot AI, rankings, profile, and online multiplayer under concurrent load
+| Gatling (Java DSL)
+| Run manually; results stored in `gatling/target/gatling/`
+|===
+
+All TypeScript suites produce LCOV coverage reports. The three Rust crates use `cargo-llvm-cov`. All reports are uploaded to SonarQube.
+
+=== Unit Tests
+
+==== gamey — Rust Game Engine
+
+[cols="2,1,3", options="header"]
+|===
+| File | Tests | Coverage area
+
+| `tests/core_tests.rs`
+| 43
+| Initialisation, move sequencing, win detection, illegal-move rejection, resign/swap, YEN round-trip serialisation, file save/load, coordinate arithmetic (index round-trips across sizes 1–7, side-touching predicates), board rendering.
+
+| `tests/cli_tests.rs`
+| 54
+| `parse_command` (valid/invalid/edge cases), `parse_idx` boundary validation, `Mode` enum display and equality, `CliArgs` parsing (default values, custom options, combined flags, error cases).
+
+| `tests/bot_server_tests.rs`
+| 12 async
+| `/status` health endpoint, `/v1/ybot/choose/{bot_id}` with valid and partially filled boards, unsupported API version, unknown bot-id, invalid JSON, missing content-type, custom and empty bot registry, unknown route (404), wrong HTTP method (405).
+
+| `tests/play_test.rs`
+| 4
+| `PlayResponse` DTO construction and serialisation, including the winner field.
+|===
+
+==== game_manager — Rust Backend Service
+
+[cols="2,1,3", options="header"]
+|===
+| File | Tests | Coverage area
+
+| `tests/db_tests.rs`
+| 3
+| Firebase round-trip (`insert_match_by_id` → `get_match_by_id` → `remove_match_by_id`), score calculation on win (ELO update, best-time improves), score on loss (best-time must not regress).
+
+| `tests/ranking_integration_tests.rs`
+| 3
+| Full ranking lifecycle (save → read history → update score → verify), score accumulation does not duplicate on repeated wins, best-time is monotonically non-increasing.
+
+| `tests/api_rest_mock_tests.rs`
+| 31
+| Axum/serde rejections before any handler runs (bad JSON, missing fields, wrong content-type, wrong HTTP method, unknown route), validation before Redis is touched (`/claimForfeit` missing `claimant_id`), "infrastructure unreachable" path with a closed-port Redis pool — no handler may panic.
+
+| `tests/api_rest_engine_mock_tests.rs`
+| 22
+| Error mapping for `/executeMove`, `/executeMoveOnline`, `/reqBotMove`, `/requestOnlineGameUpdate`, `/matchTurnInfo`, `/saveMatch`; Firebase broken-state paths for `/localRankings`, `/bestTimes`, `/updateScore`; engine mock contract tests for side-effect ordering.
+
+| `tests/api_online_test.rs`
+| 19
+| `/createMatch` + `/joinMatch` (random pool and private room with password), `/matchStatus`, `/matchTurnInfo`, `/requestOnlineGameUpdate`, `/cancelMatch` (waiting and active states), `/claimForfeit` (player1, player2, outsider rejection, missing claimant, nonexistent match).
+
+| `tests/redis_test.rs`
+| 13
+| Exclusive lock acquisition and release, match state round-trips, random matchmaking FIFO ordering and empty pool, private match duplicate-ID rejection, password validation, wrong password, nonexistent match, double-join rejection.
+
+| `tests/api_rest_test.rs`
+| 5
+| `get_gamey_url` environment variable handling (default and custom), `now_ms` sanity check, `request_bot_move` handler with real Redis (marked `#[ignore]`).
+|===
+
+==== userAuthentification — Rust Auth Service
+
+[cols="2,1,3", options="header"]
+|===
+| File | Tests | Coverage area
+
+| `tests/auth_utils_tests.rs`
+| 2
+| Argon2 hash generation, correct-password verification, wrong-password rejection; unique salts (same password produces different hashes).
+
+| `tests/user_auth_tests.rs`
+| 1 async
+| Full cycle: register new user, duplicate registration rejected, login with correct credentials returns user object, login with wrong password rejected, login with non-existent user rejected, Firestore cleanup.
+
+| `tests/db_tests.rs`
+| 4
+| Full user document cycle (insert, read, delete), `check_username_exists` returns false when absent and true when present, `update_db` persists changed fields.
+|===
+
+==== users — Node.js Gateway
+
+The `users` service test file (`__tests__/users-service.test.js`, 21 tests) mocks Redis via `vi.hoisted` and exercises the Express app with Supertest.
+
+[cols="1,3", options="header"]
+|===
+| Endpoint | Tests
+
+| `GET /api/csrf-token`
+| Returns `csrfToken` and sets the `csrf_token` cookie.
+
+| `GET /api/me`
+| 401 with no session cookie; 401 when session not found in Redis; 200 with user data when session exists; 500 when Redis throws.
+
+| `POST /api/logout`
+| 403 without CSRF token; clears session and responds 200.
+
+| `POST /api/login`
+| 403 without CSRF; 200 with session cookie on success; 401 for wrong credentials; generic error for non-401 upstream failure; 500 when auth service unreachable.
+
+| `POST /api/register`
+| 200 with session cookie on success; 409 when email already exists; 400 on other upstream failure.
+
+| `POST /api/update-username`
+| 401 no session cookie; 401 session not found in Redis; 400 missing username; 200 on success; 500 when Redis throws.
+
+| `POST /createuser`
+| Returns a greeting for the provided username.
+|===
+
+==== webapp — React Frontend
+
+Tests run in jsdom with Vitest and React Testing Library (387 tests across 39 files).
+
+[cols="1,4", options="header"]
+|===
+| Area | Files (test count)
+
+| Pages & Windows
+| `App` (3), `MainMenu` (3), `SelectionWindow` (1), `SelectionPanel` (2), `GameModeContainer` (35), `GameWindow` (14), `GameWindowOnline` (22), `GameReplayWindow` (22), `LoginForm` (4), `RegisterForm` (4), `WaitingRoom` (14)
+
+| Rankings & Stats
+| `GlobalRanking` (22), `LocalRanking` (14), `Ranking` (2), `RankingTables` (3), `RankingTableGlobal` (7), `RankingTableLocal` (9), `StatisticsPanel` (21), `StatisticsPanelView` (19)
+
+| Components
+| `HexButton` (10), `NormalMode` (3), `Board` (11), `Timer` (4), `MobileCountdownBar` (21), `RightPanel` (8), `RightPanelOnline` (18), `TopLeftHeader` (2), `TopRightMenu` (5), `HelpMenu` (4), `SettingsMenu` (3), `AudioSettings` (5), `LanguageSettingsPanel` (6), `AccountHelp` (4), `AccountSettings` (3), `Pagination` (22), `ProtectedRoute` (4), `UserMenu` (8)
+
+| Contexts
+| `UserContext` (10), `AudioContext` (15)
+|===
+
+=== Acceptance Tests (End-to-End)
+
+Acceptance tests validate critical user journeys using Cucumber + Playwright. An in-memory mock server (`test/e2e/support/mock-server.mjs`) intercepts backend calls where a live backend is not required.
+
+[cols="1,3", options="header"]
+|===
+| Feature | Scenarios
+
+| `login.feature`
+| Page shows the form; empty form shows validation error "Please fill in all required fields."; page has a link to the register page.
+
+| `register.feature`
+| Page shows the form; empty form shows validation error "Please fill in all required fields."; page has a link to the login page.
+
+| `main-menu.feature`
+| Displays title "GAMEY"; clicking "Log In" navigates to the login page; clicking "Play as Guest" navigates to the game selection page.
+
+| `online-match.feature`
+| Two guests are paired into the same match after both join the online queue.
+
+| `online-navigation.feature`
+| Guest reaches the Online Mode card; guest reaches the Private Party Mode card.
+
+| `online-private.feature`
+| Two guests join the same private match by sharing a match ID and password.
+|===
+
+Step definitions are in `webapp/test/e2e/steps/` (`common.steps.mjs`, `login.steps.mjs`, `register.steps.mjs`, `main-menu.steps.mjs`, `online-common.steps.mjs`, `online-lobby.steps.mjs`).
+
+[source,bash]
+----
+npm --prefix webapp run test:e2e:install-browsers  # once
+npm --prefix webapp run test:e2e
+----
+
+=== Load Tests
+
+Seven Gatling simulations (Java DSL) in `gatling/src/test/java/simulations/` cover the main functional areas of the system.
+
+[cols="1,3,2", options="header"]
+|===
+| Simulation | Scenarios | Injection profile
+
+| `BaselineSimulation`
+| CSRF token generation (`GET /api/csrf-token`) + unauthenticated session check (`GET /api/me`, 401 expected)
+| 20 at-once + ramp 100 over 30 s per scenario (240 VUs total); p95 < 2 000 ms; 99 % success
+
+| `AuthSimulation`
+| Registration (`POST /api/register`, unique email per VU), login with wrong password, logout without session
+| ramp 20 + (10 at-once, ramp 50) + ramp 20 over 20–30 s (100 VUs total); p95 < 5 000 ms; 95 % success
+
+| `GameSimulation`
+| CSRF → create match → execute player move → request bot move → check match status
+| ramp 30 over 30 s; p95 < 3 000 ms; 95 % success
+
+| `BotSimulation`
+| Bot move for `random` (ramp 20), `greedy` (ramp 15), `minimax` (ramp 5) — each creates a fresh match then requests one move
+| ramp over 20 s (40 VUs total); p95 < 5 000 ms; 90 % success
+
+| `RankingsSimulation`
+| Global leaderboard (`GET /game/bestTimes`) + per-user rankings (`POST /game/localRankings`)
+| 50 at-once + ramp 150 and 20 at-once + ramp 80 over 30 s (300 VUs total); p95 < 3 000 ms; 95 % success
+
+| `ProfileSimulation`
+| CSRF → register → refresh CSRF → login → `GET /api/me` → update username
+| ramp 20 over 30 s; p95 < 5 000 ms; 90 % success
+
+| `OnlineMatchSimulation`
+| Creator (P0) and Joiner (P1) run in parallel with deterministic match IDs; creator creates match, executes a move and polls; joiner joins, polls, and replies
+| 5 at-once per scenario (10 VUs total); p95 < 25 000 ms; 90 % success
+|===
+
+==== Findings
+
+The most recent simulation runs (2026-04-26) against the local deployment:
+
+*BaselineSimulation* (run `20260426095128996`): 240 requests, 0 KOs. 100 % of responses below 800 ms. Mean 43 ms, p50 15 ms, p95 215 ms, p99 221 ms, max 232 ms. Throughput 8.0 req/s. Passed acceptance criteria.
+
+*AuthSimulation* (run `20260426095055032`): 200 requests, 0 KOs. 92.5 % of responses below 800 ms; 6.5 % above 1 200 ms (tail driven by the registration path delegating to Firebase). Mean 279 ms, p50 49 ms, p95 1 496 ms, p99 1 548 ms, max 1 549 ms. Throughput 6.5 req/s. Passed acceptance criteria.
+
+Full Gatling HTML reports are available in `gatling/target/gatling/`.
+
+=== Code Coverage
+
+[cols="1,2,2", options="header"]
+|===
+| Service | Tool | Report location
+
+| webapp
+| Vitest v8 provider
+| `webapp/coverage/lcov.info`
+
+| users
+| Vitest v8 provider
+| `users/coverage/lcov.info`
+
+| gamey
+| cargo-llvm-cov
+| `gamey/lcov.info`
+
+| game_manager
+| cargo-llvm-cov
+| `game_manager/lcov.info`
+
+| userAuthentification
+| cargo-llvm-cov
+| `userAuthentification/lcov.info`
+|===
+
+=== CI Integration
+
+All suites run automatically in GitHub Actions (`.github/workflows/build.yml`) on every push to master and every pull request:
+
+. Checkout (full history for SonarQube blame) + install Rust stable and Node.js 22.
+. `npm ci` for `users` and `webapp`; run `vitest run --coverage` for both.
+. Install `cargo-llvm-cov`; generate and normalise LCOV for `gamey`.
+. Decode Firebase credentials from `FIREBASE_CREDENTIALS_B64`; generate LCOV for `game_manager` (with Redis service container on port 6379) and for `userAuthentification`.
+. Upload all five LCOV reports to SonarQube.
+
+A failed test in any service fails the workflow and blocks the pull request merge.

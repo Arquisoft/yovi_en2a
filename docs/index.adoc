@@ -91,12 +91,16 @@ include::src/10_quality_requirements.adoc[]
 include::src/11_technical_risks.adoc[]
 
 <<<<
-// 12. API Documentation
-include::src/12_api_documentation.adoc[]
+// 12. Test Report
+include::src/12_test_report.adoc[]
 
 <<<<
-// 13. Glossary
-include::src/13_glossary.adoc[]
+// 13. API Documentation
+include::src/13_api_documentation.adoc[]
+
+<<<<
+// 14. Glossary
+include::src/14_glossary.adoc[]
 
 :numbered:
 
